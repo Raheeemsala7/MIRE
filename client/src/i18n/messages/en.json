@@ -1,0 +1,124 @@
+{
+  "common": {
+    "brand": "MIRÉ",
+    "brandArabic": "ميري",
+    "brandSubtitle": "Contemporary modest womenswear",
+    "brandSubtitleAr": "أزياء نسائية معاصرة محتشمة",
+    "search": "SEARCH",
+    "searchPlaceholder": "Search products or categories...",
+    "bag": "BAG",
+    "bagCount": "BAG ({count})",
+    "langToggle": "العربية",
+    "currency": "EGP",
+    "viewAll": "VIEW ALL",
+    "price": "PRICE"
+  },
+  "nav": {
+    "new": "NEW",
+    "collections": "COLLECTIONS",
+    "products": "PRODUCTS",
+    "about": "ABOUT",
+    "home": "HOME"
+  },
+  "hero": {
+    "kicker": "CONTEMPORARY MODEST WOMENSWEAR",
+    "title": "Only flowers wear MIRÉ",
+    "subtitle": "الزهور فقط ترتدي ميري",
+    "description": "Simply, well made. Abayas, khimars and gilbas in natural fabrics, cut with quiet confidence.",
+    "cta": "SHOP NOW"
+  },
+  "categories": {
+    "title": "Shop by category",
+    "titleAr": "تسوقي حسب الفئة",
+    "items": {
+      "abaya": { "name": "Abaya", "nameEn": "Abaya" },
+      "khimar": { "name": "Khimar", "nameEn": "Khimar" },
+      "isdal": { "name": "Isdal", "nameEn": "Isdal" },
+      "gilba": { "name": "Gilba", "nameEn": "Gilba" }
+    }
+  },
+  "approach": {
+    "kicker": "OUR APPROACH",
+    "title": "Simply, well made.",
+    "titleAr": "ببساطة، صُنعت بإتقان.",
+    "story": "MIRÉ is dedicated to effortless elegance and authentic modest beauty. Every seam is intentional, every fabric breathable, crafted for your daily presence with quiet confidence.",
+    "cta": "READ OUR STORY"
+  },
+  "newArrivals": {
+    "title": "New arrivals",
+    "titleAr": "وصل حديثاً",
+    "viewAll": "VIEW ALL"
+  },
+  "pillars": {
+    "naturalFabrics": {
+      "title": "Natural fabrics",
+      "titleEn": "Natural fabrics",
+      "desc": "Breathable materials chosen for how they fall and feel."
+    },
+    "consideredCuts": {
+      "title": "Considered cuts",
+      "titleEn": "Considered cuts",
+      "desc": "Modest, graceful lines with nothing unnecessary."
+    },
+    "quietlyMade": {
+      "title": "Quietly made",
+      "titleEn": "Quietly made",
+      "desc": "Pieces designed to be worn for years, not seasons."
+    }
+  },
+  "pdp": {
+    "category": "SKIRT",
+    "title": "Pleated Maxi Skirt",
+    "titleEn": "Pleated Maxi Skirt",
+    "price": "850",
+    "description": "A fluid pleated maxi skirt with an elasticated waist, cut to fall softly and move with you.",
+    "colour": "COLOUR",
+    "size": "SIZE",
+    "addToBag": "ADD TO BAG",
+    "addedToast": "Item added to your shopping bag",
+    "viewBag": "View Bag",
+    "colors": {
+      "skyBlue": "Sky Blue",
+      "wine": "Wine",
+      "camel": "Camel"
+    },
+    "accordions": {
+      "details": {
+        "title": "Details",
+        "titleEn": "Details",
+        "content": "Premium Japanese twill blend with permanent pleats. High-recovery elastic waistband. Machine wash gentle, hang to dry."
+      },
+      "sizeFit": {
+        "title": "Size & fit",
+        "titleEn": "Size & fit",
+        "content": "Length: 102 cm (Maxi). Fits true to size with relaxed drape. Model is 174 cm wearing size S."
+      },
+      "shippingReturns": {
+        "title": "Shipping & returns",
+        "titleEn": "Shipping & returns",
+        "content": "Fast delivery within 2-4 business days. Free returns and exchanges within 14 days."
+      }
+    },
+    "related": {
+      "title": "You may also like",
+      "titleEn": "You may also like"
+    }
+  },
+  "newsletter": {
+    "title": "انضمي لعالم ميري",
+    "brand": "MIRÉ",
+    "placeholder": "your@email.com",
+    "subscribe": "SUBSCRIBE",
+    "successToast": "Welcome to the world of MIRÉ! Subscribed successfully."
+  },
+  "footer": {
+    "brandDescription": "Contemporary modest womenswear crafted in natural fabrics with quiet confidence.",
+    "shop": "SHOP",
+    "help": "HELP",
+    "shipping": "Shipping & returns",
+    "contact": "Contact",
+    "sizeGuide": "Size guide",
+    "rights": "All rights reserved."
+  }
+}
+

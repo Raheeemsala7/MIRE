@@ -1,0 +1,124 @@
+{
+  "common": {
+    "brand": "MIRÉ",
+    "brandArabic": "ميري",
+    "brandSubtitle": "Contemporary modest womenswear",
+    "brandSubtitleAr": "أزياء نسائية معاصرة محتشمة",
+    "search": "بحث",
+    "searchPlaceholder": "ابحثي عن المنتجات أو الفئات...",
+    "bag": "حقيبة التسوق",
+    "bagCount": "حقيبة ({count})",
+    "langToggle": "English",
+    "currency": "ج.م",
+    "viewAll": "عرض الكل",
+    "price": "السعر"
+  },
+  "nav": {
+    "new": "وصل حديثاً",
+    "collections": "التشكيلات",
+    "products": "المنتجات",
+    "about": "عن ميري",
+    "home": "الرئيسية"
+  },
+  "hero": {
+    "kicker": "أزياء نسائية معاصرة محتشمة",
+    "title": "Only flowers wear MIRÉ",
+    "subtitle": "الزهور فقط ترتدي ميري",
+    "description": "ببساطة، صُنعت بإتقان. عبايات، خُمُر وجِلبات بأقمشة طبيعية وقصات مفعمة بالهدوء والسكينة والوقار.",
+    "cta": "تسوقي الآن"
+  },
+  "categories": {
+    "title": "Shop by category",
+    "titleAr": "تسوقي حسب الفئة",
+    "items": {
+      "abaya": { "name": "عباية", "nameEn": "Abaya" },
+      "khimar": { "name": "خمار", "nameEn": "Khimar" },
+      "isdal": { "name": "إسدال", "nameEn": "Isdal" },
+      "gilba": { "name": "جبة", "nameEn": "Gilba" }
+    }
+  },
+  "approach": {
+    "kicker": "نهجنا ورؤيتنا",
+    "title": "Simply, well made.",
+    "titleAr": "ببساطة، صُنعت بإتقان.",
+    "story": "تُكرس ميري جهودها للأناقة العفوية والجمال المحتشم الراقي. كل درزة مدروسة، وكل نسيج طبيعي يتنفس، صُممت لتمنحك حضوراً يومياً مفعماً بالوقار يدوم لسنوات.",
+    "cta": "اقرئي قصتنا"
+  },
+  "newArrivals": {
+    "title": "New arrivals",
+    "titleAr": "وصل حديثاً",
+    "viewAll": "عرض الكل"
+  },
+  "pillars": {
+    "naturalFabrics": {
+      "title": "أقمشة طبيعية",
+      "titleEn": "Natural fabrics",
+      "desc": "خامات طبيعية تتنفس اختيرت بعناية لانسدالها وملمسها على البشرة."
+    },
+    "consideredCuts": {
+      "title": "قصات مدروسة",
+      "titleEn": "Considered cuts",
+      "desc": "خطوط محتشمة راقية خالية من أي تفاصيل مصطنعة أو غير ضرورية."
+    },
+    "quietlyMade": {
+      "title": "صُنع بهدوء",
+      "titleEn": "Quietly made",
+      "desc": "قطع أصيلة صُممت لترتديها لسنوات مديدة، وليس لمجرد موسم عابر."
+    }
+  },
+  "pdp": {
+    "category": "جبة / تنورة",
+    "title": "جيبة بليسيه",
+    "titleEn": "Pleated Maxi Skirt",
+    "price": "850",
+    "description": "جيبة ماكسي بليسيه منسدلة مع حزام خصر مطاطي ناعم، مصممة لتتحرك بنعومة وانسيابية مع خطواتك.",
+    "colour": "اللون",
+    "size": "المقاس",
+    "addToBag": "إضافة إلى السلة",
+    "addedToast": "تمت إضافة المنتج إلى حقيبة التسوق بنجاح",
+    "viewBag": "عرض الحقيبة",
+    "colors": {
+      "skyBlue": "سماوي",
+      "wine": "نبيذي",
+      "camel": "جملي"
+    },
+    "accordions": {
+      "details": {
+        "title": "تفاصيل المنتج",
+        "titleEn": "Details",
+        "content": "مزيج تويل ياباني ناعم ومقاوم للتجعد مع كسرات بليسيه دائمة وثابتة. خصر مرن مريح بدون ضغط. يُفضل الغسيل اللطيف بالماء البارد والتجفيف بالتعليق للحفاظ على الكسرات."
+      },
+      "sizeFit": {
+        "title": "المقاسات والتناسب",
+        "titleEn": "Size & fit",
+        "content": "الطول الكلي: 102 سم (ماكسي طويل يغطي الكاحل). المقاس قياسي ومطابق للحجم الحقيقي مع انسدال حر. العارضة بطول 174 سم وترتدي مقاس S."
+      },
+      "shippingReturns": {
+        "title": "الشحن والإرجاع",
+        "titleEn": "Shipping & returns",
+        "content": "شحن سريع لكافة المحافظات خلال 2 إلى 4 أيام عمل. إمكانية المعاينة عند الاستلام، واستبدال أو استرجاع مجاني وسهل خلال 14 يوماً."
+      }
+    },
+    "related": {
+      "title": "قد يعجبك أيضاً",
+      "titleEn": "You may also like"
+    }
+  },
+  "newsletter": {
+    "title": "انضمي لعالم ميري",
+    "brand": "MIRÉ",
+    "placeholder": "أدخلي بريدكِ الإلكتروني",
+    "subscribe": "اشتراك",
+    "successToast": "أهلاً بكِ في عالم ميري! تم الاشتراك بنجاح."
+  },
+  "footer": {
+    "brandDescription": "أزياء نسائية معاصرة محتشمة صُنعت من خامات طبيعية بإتقان وهدوء.",
+    "shop": "تسوقي",
+    "help": "المساعدة والدعم",
+    "shipping": "الشحن والإرجاع",
+    "contact": "تواصل معنا",
+    "sizeGuide": "دليل المقاسات",
+    "rights": "جميع الحقوق محفوظة."
+  }
+}
+

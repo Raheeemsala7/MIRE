@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* ─── MIRÉ Editorial Palette ─── */
+    --background: #fdfbf7;
+    --foreground: #1c1a1f;
+
+    /* Base Surfaces */
+    --bg-plain: #fdfbf7;
+    --bg-subtle: #f8f4ec;
+    --bg-muted: #f1ebe0;
+    --bg-soft: #e5ded2;
+    --bg-elevated: #ffffff;
+    --bg-footer: #161517;
+
+    /* Primary (Signature Dusty Plum / Mauve) */
+    --bg-primary: #746078;
+    --bg-primary-saturated: #5c4960;
+    --bg-primary-faint: #d5cad9;
+    --bg-primary-fade: #f3eef5;
+
+    /* Secondary (Soft Lilac / Lavender Banner) */
+    --bg-secondary: #bfaec4;
+    --bg-secondary-faint: #ede7f0;
+    --bg-secondary-fade: #f7f4f9;
+
+    /* Text */
+    --text-plain: #1c1a1f;
+    --text-muted: #6f6772;
+    --text-soft: #968c99;
+    --text-primary: #5c4960;
+    --text-inverse: #fdfbf7;
+
+    /* Borders */
+    --border-plain: #1c1a1f;
+    --border-subtle: #ece5da;
+    --border-muted: #ded6c9;
+    --border-primary: #746078;
+    --border-primary-faint: #d5cad9;
+
+    /* Swatches */
+    --swatch-sky: #9ec1df;
+    --swatch-wine: #722236;
+    --swatch-camel: #c19a6b;
+    --swatch-forest: #3a5743;
+    --swatch-charcoal: #2c282e;
+    --swatch-lilac: #bfaec4;
+  }
+}
+
+@theme static {
+  --color-ds-plain: var(--bg-plain);
+  --color-ds-subtle: var(--bg-subtle);
+  --color-ds-muted: var(--bg-muted);
+  --color-ds-soft: var(--bg-soft);
+  --color-ds-elevated: var(--bg-elevated);
+  --color-ds-footer: var(--bg-footer);
+
+  --color-ds-primary: var(--bg-primary);
+  --color-ds-primary-saturated: var(--bg-primary-saturated);
+  --color-ds-primary-faint: var(--bg-primary-faint);
+  --color-ds-primary-fade: var(--bg-primary-fade);
+
+  --color-ds-secondary: var(--bg-secondary);
+  --color-ds-secondary-faint: var(--bg-secondary-faint);
+  --color-ds-secondary-fade: var(--bg-secondary-fade);
+
+  --color-ds-text-plain: var(--text-plain);
+  --color-ds-text-muted: var(--text-muted);
+  --color-ds-text-soft: var(--text-soft);
+  --color-ds-text-primary: var(--text-primary);
+  --color-ds-text-inverse: var(--text-inverse);
+
+  --color-ds-border-plain: var(--border-plain);
+  --color-ds-border-subtle: var(--border-subtle);
+  --color-ds-border-muted: var(--border-muted);
+  --color-ds-border-primary: var(--border-primary);
+  --color-ds-border-primary-faint: var(--border-primary-faint);
+
+  --color-swatch-sky: var(--swatch-sky);
+  --color-swatch-wine: var(--swatch-wine);
+  --color-swatch-camel: var(--swatch-camel);
+  --color-swatch-forest: var(--swatch-forest);
+  --color-swatch-charcoal: var(--swatch-charcoal);
+  --color-swatch-lilac: var(--swatch-lilac);
+
+  --font-serif: var(--font-playfair), "Cormorant Garamond", Georgia, serif;
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-arabic: var(--font-tajawal), "Segoe UI", Tahoma, sans-serif;
+  --font-arabic-heading: var(--font-amiri), "Amiri", Georgia, serif;
+}
+
+/* Base text fonts */
+html[lang="ar"] {
+  font-family: var(--font-arabic), system-ui, sans-serif;
+}
+
+html[lang="en"] {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Headings typography: Amiri for Arabic luxury editorial headings */
+html[lang="ar"] h1,
+html[lang="ar"] h2,
+html[lang="ar"] h3,
+html[lang="ar"] .font-brand-serif {
+  font-family: var(--font-arabic-heading);
+  letter-spacing: -0.01em;
+}
+
+html[lang="en"] h1,
+html[lang="en"] h2,
+html[lang="en"] h3,
+html[lang="en"] .font-brand-serif {
+  font-family: var(--font-serif);
+}
+
+body {
+  background-color: var(--bg-plain);
+  color: var(--text-plain);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

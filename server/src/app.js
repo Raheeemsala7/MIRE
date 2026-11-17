@@ -88,7 +88,11 @@ app.use(
   })
 );
 
-// 7. Health Check
+// 7. Root & Health Check Endpoints
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'UP',
@@ -100,6 +104,31 @@ app.get('/health', (req, res) => {
 
 // 8. API Routes Mounting
 const apiRouter = express.Router();
+
+apiRouter.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Welcome to MIRE Women\'s Fashion E-Commerce & Business Management API',
+    version: '1.0.0',
+    documentation: '/api-docs',
+    endpoints: {
+      auth: `${env.API_PREFIX}/auth`,
+      products: `${env.API_PREFIX}/products`,
+      categories: `${env.API_PREFIX}/categories`,
+      bundles: `${env.API_PREFIX}/bundles`,
+      coupons: `${env.API_PREFIX}/coupons`,
+      cart: `${env.API_PREFIX}/cart`,
+      orders: `${env.API_PREFIX}/orders`,
+      returns: `${env.API_PREFIX}/returns`,
+      payments: `${env.API_PREFIX}/payments`,
+      social: `${env.API_PREFIX}/social`,
+      analytics: `${env.API_PREFIX}/analytics/dashboard`,
+      customers: `${env.API_PREFIX}/customers`,
+      employees: `${env.API_PREFIX}/employees`,
+      notifications: `${env.API_PREFIX}/notifications`
+    }
+  });
+});
 
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/employees', employeeRoutes);

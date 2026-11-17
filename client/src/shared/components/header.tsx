@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/src/i18n/navigation";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import { Menu, X, ShoppingBag, UserRound } from "lucide-react";
 import { useCartStore } from "../stores/cart-store";
 import { CartDrawer } from "./cart-drawer";
 
@@ -79,6 +79,15 @@ export function Header() {
               >
                 {t("common.langToggle")}
               </button>
+
+              {/* Customer registration */}
+              <Link
+                href="/auth/register"
+                aria-label={t("register-title")}
+                className="flex size-11 items-center justify-center rounded-full text-ds-text-primary transition-colors hover:bg-ds-secondary-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-primary"
+              >
+                <UserRound className="size-4" aria-hidden="true" />
+              </Link>
 
               {/* Shopping Bag Button with Icon & Badge */}
               <button

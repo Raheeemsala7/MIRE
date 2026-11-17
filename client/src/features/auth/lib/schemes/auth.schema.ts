@@ -1,0 +1,47 @@
+import { z } from "zod";
+
+export function createRegisterSchema(
+  translate: (key: string) => string,
+): z.ZodObject<{
+  name: z.ZodString;
+  email: z.ZodString;
+  password: z.ZodString;
+  phone: z.ZodOptional<z.ZodString>;
+}> {
+  return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(2, translate("register-name-min"))
+      .max(100, translate("register-name-max")),
+    email: z.string().trim().email(translate("register-email-invalid")),
+     password: z
+        .string()
+        .min(8, { message: translate("register-password-min") })
+        .refine(
+          (val) =>
+            /[A-Z]/.test(val) &&
+            /[0-9]/.test(val) &&
+            /[^A-Za-z0-9]/.test(val),
+          {
+            message:translate("register-password-min"),
+          }
+        ),
+    phone: z
+      .string()
+      .trim()
+      .refine(
+        (phone) =>
+          phone === "" ||
+          (/^\+?[\d\s()-]+$/.test(phone) &&
+            phone.replace(/\D/g, "").length >= 7 &&
+            phone.replace(/\D/g, "").length <= 15),
+        translate("register-phone-invalid"),
+      )
+      .optional(),
+  });
+}
+
+export const registerSchema = createRegisterSchema((key) => key);
+
+export type RegistrationFields = z.infer<typeof registerSchema>;

@@ -16,6 +16,15 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Customer registration
+
+Open `/auth/register` (redirects to the selected locale), `/en/auth/register`, or `/ar/auth/register`.
+The form submits `name`, `email`, `password`, and optional `phone` through a validated Server Action to `POST /api/v1/auth/register` on the local Express server.
+
+The default API base is `http://localhost:5000/api/v1`. To change it, copy `.env.example` to `.env.local` and set `API_URL`, then restart Next.js. Keep this variable server-only.
+
+Successful registration shows an account-created confirmation. Sign-in/session handling is separate; API tokens are not returned to the browser.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

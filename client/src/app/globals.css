@@ -39,6 +39,9 @@
     --border-primary: #746078;
     --border-primary-faint: #d5cad9;
 
+    /* Form feedback */
+    --text-error: #a33645;
+
     /* Swatches */
     --swatch-sky: #9ec1df;
     --swatch-wine: #722236;
@@ -77,6 +80,7 @@
   --color-ds-border-muted: var(--border-muted);
   --color-ds-border-primary: var(--border-primary);
   --color-ds-border-primary-faint: var(--border-primary-faint);
+  --color-destructive: var(--text-error);
 
   --color-swatch-sky: var(--swatch-sky);
   --color-swatch-wine: var(--swatch-wine);

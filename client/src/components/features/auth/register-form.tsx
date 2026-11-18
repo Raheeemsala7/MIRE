@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Check, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import { useRegister } from "@/features/auth/hooks/auth/use-register";
 import { Link } from "@/src/i18n/navigation";
@@ -14,13 +14,13 @@ import {
 } from "@/features/auth/lib/schemes/auth.schema";
 import { Button } from "@/src/shared/components/ui/button";
 import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/src/shared/components/ui/field";
+import {
   Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
 } from "@/src/shared/components/ui/form";
 import { Input } from "@/src/shared/components/ui/input";
 import { cn } from "@/src/shared/lib/utils";
@@ -36,9 +36,6 @@ export function RegisterForm(): ReactNode {
   // State
   const [showPassword, setShowPassword] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
-
-  // Ref
-  const submissionInFlight = useRef(false);
 
   // Mutation
   const mutation = useRegister();
@@ -60,9 +57,7 @@ export function RegisterForm(): ReactNode {
 
   // Functions
   async function onSubmit(values: RegistrationFields): Promise<void> {
-    if (submissionInFlight.current) return;
-
-    submissionInFlight.current = true;
+    if (mutation.isPending) return;
     mutation.reset();
 
     try {
@@ -93,8 +88,6 @@ export function RegisterForm(): ReactNode {
       }
     } catch {
       // The mutation hook owns exception feedback and the inline error state.
-    } finally {
-      submissionInFlight.current = false;
     }
   }
 
@@ -142,110 +135,66 @@ export function RegisterForm(): ReactNode {
           className="space-y-5"
         >
           {/* Full name */}
-          <FormField
+          <Controller
             control={form.control}
             name="name"
-            render={({ field }) => (
-              <FormItem>
-                {/* Label */}
-                <FormLabel className="text-sm font-medium">
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-name" className="text-sm font-medium">
                   {t("register-name-label")}
-                </FormLabel>
-                {/* Field */}
-                <FormControl>
-                  <Input
-                    {...field}
-                    autoComplete="name"
-                    placeholder={t("register-name-placeholder")}
-                    maxLength={100}
-                    disabled={isPending}
-                    aria-required="true"
-                    className={INPUT_CLASS_NAME}
-                  />
-                </FormControl>
-                {/* Feedback */}
-                <FormMessage />
-              </FormItem>
+                </FieldLabel>
+                <Input {...field} id="register-name" autoComplete="name" placeholder={t("register-name-placeholder")} maxLength={100} disabled={isPending} aria-required="true" aria-invalid={fieldState.invalid} aria-describedby={fieldState.invalid ? "register-name-error" : undefined} className={INPUT_CLASS_NAME} />
+                {fieldState.invalid && <FieldError id="register-name-error" errors={[fieldState.error]} />}
+              </Field>
             )}
           />
 
           {/* Email */}
-          <FormField
+          <Controller
             control={form.control}
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                {/* Label */}
-                <FormLabel className="text-sm font-medium">
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-email" className="text-sm font-medium">
                   {t("register-email-label")}
-                </FormLabel>
-                {/* Field */}
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="email"
-                    dir="ltr"
-                    autoComplete="email"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    placeholder={t("register-email-placeholder")}
-                    disabled={isPending}
-                    aria-required="true"
-                    className={INPUT_CLASS_NAME}
-                  />
-                </FormControl>
-                {/* Feedback */}
-                <FormMessage />
-              </FormItem>
+                </FieldLabel>
+                <Input {...field} id="register-email" type="email" dir="ltr" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder={t("register-email-placeholder")} disabled={isPending} aria-required="true" aria-invalid={fieldState.invalid} aria-describedby={fieldState.invalid ? "register-email-error" : undefined} className={INPUT_CLASS_NAME} />
+                {fieldState.invalid && <FieldError id="register-email-error" errors={[fieldState.error]} />}
+              </Field>
             )}
           />
 
           {/* Phone */}
-          <FormField
+          <Controller
             control={form.control}
             name="phone"
-            render={({ field }) => (
-              <FormItem>
-                {/* Label */}
-                <FormLabel className="text-sm font-medium">
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-phone" className="text-sm font-medium">
                   {t("register-phone-label")}{" "}
                   <span className="ms-1 font-normal text-ds-text-muted">
                     {t("register-optional")}
                   </span>
-                </FormLabel>
-                {/* Field */}
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="tel"
-                    dir="ltr"
-                    autoComplete="tel"
-                    placeholder={t("register-phone-placeholder")}
-                    disabled={isPending}
-                    className={INPUT_CLASS_NAME}
-                  />
-                </FormControl>
-                {/* Feedback */}
-                <FormMessage />
-              </FormItem>
+                </FieldLabel>
+                <Input {...field} id="register-phone" type="tel" dir="ltr" autoComplete="tel" placeholder={t("register-phone-placeholder")} disabled={isPending} aria-invalid={fieldState.invalid} aria-describedby={fieldState.invalid ? "register-phone-error" : undefined} className={INPUT_CLASS_NAME} />
+                {fieldState.invalid && <FieldError id="register-phone-error" errors={[fieldState.error]} />}
+              </Field>
             )}
           />
 
           {/* Password */}
-          <FormField
+          <Controller
             control={form.control}
             name="password"
-            render={({ field }) => (
-              <FormItem>
-                {/* Label */}
-                <FormLabel className="text-sm font-medium">
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-password" className="text-sm font-medium">
                   {t("register-password-label")}
-                </FormLabel>
-                {/* Field */}
+                </FieldLabel>
                 <div className="relative">
-                  <FormControl>
                     <Input
-                      {...field}
+               {...field}
+                      id="register-password"
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
                       autoCapitalize="none"
@@ -253,10 +202,11 @@ export function RegisterForm(): ReactNode {
                       placeholder={t("register-password-placeholder")}
                       disabled={isPending}
                       aria-required="true"
+                      aria-invalid={fieldState.invalid}
+                      aria-describedby={fieldState.invalid ? "register-password-hint register-password-error" : "register-password-hint"}
                       className={cn(INPUT_CLASS_NAME, "pe-14")}
                     />
-                  </FormControl>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isPending}
@@ -273,14 +223,13 @@ export function RegisterForm(): ReactNode {
                     ) : (
                       <Eye className="size-4" aria-hidden="true" />
                     )}
-                  </button>
+                  </Button>
                 </div>
-                {/* Feedback */}
-                <FormDescription className="text-xs leading-5 text-ds-text-muted">
+                <FieldDescription id="register-password-hint" className="text-xs leading-5 text-ds-text-muted">
                   {t("register-password-hint")}
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
+                </FieldDescription>
+                {fieldState.invalid && <FieldError id="register-password-error" errors={[fieldState.error]} />}
+              </Field>
             )}
           />
 

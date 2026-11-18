@@ -15,18 +15,13 @@ export function createRegisterSchema(
       .min(2, translate("register-name-min"))
       .max(100, translate("register-name-max")),
     email: z.string().trim().email(translate("register-email-invalid")),
-     password: z
-        .string()
-        .min(8, { message: translate("register-password-min") })
-        .refine(
-          (val) =>
-            /[A-Z]/.test(val) &&
-            /[0-9]/.test(val) &&
-            /[^A-Za-z0-9]/.test(val),
-          {
-            message:translate("register-password-min"),
-          }
-        ),
+    password: z
+      .string()
+      .min(8, translate("register-password-min"))
+      .regex(
+        /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
+        translate("register-password-pattern"),
+      ),
     phone: z
       .string()
       .trim()

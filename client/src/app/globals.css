@@ -49,10 +49,56 @@
     --swatch-forest: #3a5743;
     --swatch-charcoal: #2c282e;
     --swatch-lilac: #bfaec4;
+
+    /* Shadcn UI Standard Tokens */
+    --card: #ffffff;
+    --card-foreground: #1c1a1f;
+    --popover: #ffffff;
+    --popover-foreground: #1c1a1f;
+    --primary: #746078;
+    --primary-foreground: #ffffff;
+    --secondary: #f8f4ec;
+    --secondary-foreground: #1c1a1f;
+    --muted: #f1ebe0;
+    --muted-foreground: #6f6772;
+    --accent: #f8f4ec;
+    --accent-foreground: #1c1a1f;
+    --border: #ded6c9;
+    --input: #ded6c9;
+    --ring: #746078;
+    --radius: 0.75rem;
+
+    /* Chart Palette tailored to MIRÉ */
+    --chart-1: #746078;
+    --chart-2: #84abce;
+    --chart-3: #722236;
+    --chart-4: #c19a6b;
+    --chart-5: #3a5743;
   }
 }
 
 @theme static {
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --color-ds-plain: var(--bg-plain);
   --color-ds-subtle: var(--bg-subtle);
   --color-ds-muted: var(--bg-muted);
@@ -140,4 +186,32 @@ body {
     --bg-primary: #6d5275;
     --bg-primary-saturated: #5c4960;
   }
+}
+
+.dark {
+  --background: #161517;
+  --foreground: #f8f3eb;
+  --card: #1f1c22;
+  --card-foreground: #f8f3eb;
+  --popover: #1f1c22;
+  --popover-foreground: #f8f3eb;
+  --primary: #9b84a0;
+  --primary-foreground: #161517;
+  --secondary: #2a252e;
+  --secondary-foreground: #f8f3eb;
+  --muted: #2a252e;
+  --muted-foreground: #a99eae;
+  --accent: #2a252e;
+  --accent-foreground: #f8f3eb;
+  --destructive: #c24b5c;
+  --destructive-foreground: #ffffff;
+  --border: #3d3542;
+  --input: #3d3542;
+  --ring: #9b84a0;
+
+  --chart-1: #bfaec4;
+  --chart-2: #9ec1df;
+  --chart-3: #d16b84;
+  --chart-4: #e0be95;
+  --chart-5: #6f9c7a;
 }

@@ -1,3 +1,4 @@
+import "../globals.css";
 import type { Metadata } from "next";
 import { Tajawal, Playfair_Display, Geist, Amiri } from "next/font/google";
 import { hasLocale } from "next-intl";

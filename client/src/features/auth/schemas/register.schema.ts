@@ -1,13 +1,6 @@
 import { z } from "zod";
 
-export function createRegisterSchema(
-  translate: (key: string) => string,
-): z.ZodObject<{
-  name: z.ZodString;
-  email: z.ZodString;
-  password: z.ZodString;
-  phone: z.ZodOptional<z.ZodString>;
-}> {
+export function createRegisterSchema(translate: (key: string) => string) {
   return z.object({
     name: z
       .string()

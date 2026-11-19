@@ -1,10 +1,10 @@
+import "./globals.css";
 import React from "react";
 import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-[#fdfbf7] text-[#1c1a1f] flex flex-col items-center justify-center p-6 text-center font-sans">
+      <main className="min-h-screen bg-[#fdfbf7] text-[#1c1a1f] flex flex-col items-center justify-center p-6 text-center font-sans">
         <h1 className="text-6xl font-serif tracking-widest text-[#746078] mb-4">
           MIRÉ
         </h1>
@@ -18,8 +18,7 @@ export default function NotFound() {
         >
           Return to Home
         </Link>
-      </body>
-    </html>
+      </main>
   );
 }
 

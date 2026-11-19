@@ -1,4 +1,4 @@
-import type { RegistrationFields } from "@/features/auth/lib/schemes/auth.schema";
+import type { RegistrationFields } from "../schemas/register.schema";
 
 export type RegistrationErrorKey =
   | "register-error-validation"

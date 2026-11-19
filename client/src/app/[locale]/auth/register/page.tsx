@@ -4,8 +4,8 @@ import Image from "next/image";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { RegisterForm } from "@/src/components/features/auth/register-form";
-import { Link } from "@/src/i18n/navigation";
+import { RegisterForm } from "@/features/auth/components/register/register-form";
+import { Link } from "@/i18n/navigation";
 
 interface RegisterPageProps {
   params: Promise<{ locale: string }>;

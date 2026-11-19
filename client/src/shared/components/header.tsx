@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import NextLink from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/src/i18n/navigation";
 import { Menu, X, ShoppingBag, UserRound } from "lucide-react";
@@ -80,14 +81,15 @@ export function Header() {
                 {t("common.langToggle")}
               </button>
 
-              {/* Customer registration */}
-              <Link
-                href="/auth/register"
-                aria-label={t("register-title")}
+              {/* Sign in uses the unprefixed auth route. */}
+              <NextLink
+                href="/login"
+                aria-label={t("login-submit")}
+                onClick={() => setMobileMenuOpen(false)}
                 className="flex size-11 items-center justify-center rounded-full text-ds-text-primary transition-colors hover:bg-ds-secondary-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-primary"
               >
                 <UserRound className="size-4" aria-hidden="true" />
-              </Link>
+              </NextLink>
 
               {/* Shopping Bag Button with Icon & Badge */}
               <button

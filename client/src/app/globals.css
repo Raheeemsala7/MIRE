@@ -127,3 +127,17 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+@media (prefers-color-scheme: dark) {
+  .auth-surface {
+    --bg-plain: #1d1a20;
+    --bg-elevated: #2c2730;
+    --text-plain: #f8f3eb;
+    --text-muted: #c5bac7;
+    --text-soft: #a99eae;
+    --text-primary: #e3cae7;
+    --border-muted: #66566a;
+    --bg-primary: #6d5275;
+    --bg-primary-saturated: #5c4960;
+  }
+}

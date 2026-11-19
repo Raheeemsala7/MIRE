@@ -96,10 +96,22 @@
     "title": "Shop by category",
     "titleAr": "تسوقي حسب الفئة",
     "items": {
-      "abaya": { "name": "عباية", "nameEn": "Abaya" },
-      "khimar": { "name": "خمار", "nameEn": "Khimar" },
-      "isdal": { "name": "إسدال", "nameEn": "Isdal" },
-      "gilba": { "name": "جبة", "nameEn": "Gilba" }
+      "abaya": {
+        "name": "عباية",
+        "nameEn": "Abaya"
+      },
+      "khimar": {
+        "name": "خمار",
+        "nameEn": "Khimar"
+      },
+      "isdal": {
+        "name": "إسدال",
+        "nameEn": "Isdal"
+      },
+      "gilba": {
+        "name": "جبة",
+        "nameEn": "Gilba"
+      }
     }
   },
   "approach": {
@@ -184,6 +196,60 @@
     "contact": "تواصل معنا",
     "sizeGuide": "دليل المقاسات",
     "rights": "جميع الحقوق محفوظة."
-  }
+  },
+  "login-forgot-password": "نسيتِ كلمة المرور؟",
+  "forgot-meta-title": "نسيت كلمة المرور | ميري",
+  "forgot-back-to-login": "العودة لتسجيل الدخول",
+  "forgot-title": "نسيتِ كلمة المرور؟",
+  "forgot-description": "أدخلي بريدكِ الإلكتروني وسنرسل لكِ تعليمات إعادة تعيين كلمة المرور.",
+  "forgot-email-label": "البريد الإلكتروني",
+  "forgot-email-placeholder": "you@example.com",
+  "forgot-email-invalid": "أدخلي بريدًا إلكترونيًا صحيحًا.",
+  "forgot-submit": "إرسال رابط إعادة التعيين",
+  "forgot-submitting": "جارٍ إرسال الرابط…",
+  "forgot-success-title": "تحققي من بريدك الإلكتروني",
+  "forgot-success-description": "أرسلنا تعليمات إعادة تعيين كلمة المرور إلى بريدكِ الإلكتروني. يرجى مراجعة صندوق الوارد ومجلد الرسائل غير المرغوب فيها.",
+  "forgot-resend-prompt": "لم تصلكِ الرسالة؟",
+  "forgot-resend-button": "إعادة الإرسال",
+  "forgot-resend-cooldown": "إعادة الإرسال بعد {seconds} ثانية",
+  "forgot-error-rate-limit": "محاولات كثيرة جدًا. يرجى الانتظار بضع دقائق قبل المحاولة مرة أخرى.",
+  "forgot-error-unavailable": "خدمة استعادة كلمة المرور غير متاحة الآن. حاولي مرة أخرى بعد قليل.",
+  "forgot-story-title": "استعادة سهلة وآمنة.",
+  "forgot-story-description": "استعيدي وصولكِ إلى قطعكِ المحفوظة وإطلالاتكِ المفضلة بأمان تام.",
+  "forgot-remember-password": "تذكرتِ كلمة المرور؟",
+  "forgot-signin-link": "تسجيل الدخول",
+  "reset-meta-title": "تعيين كلمة المرور | ميري",
+  "reset-back-to-login": "العودة لتسجيل الدخول",
+  "reset-title": "إنشاء كلمة مرور جديدة",
+  "reset-description": "يجب أن تكون كلمة المرور الجديدة مختلفة عن كلمة المرور السابقة.",
+  "reset-password-label": "كلمة المرور الجديدة",
+  "reset-confirm-label": "تأكيد كلمة المرور الجديدة",
+  "reset-password-placeholder": "أدخلي كلمة المرور الجديدة",
+  "reset-confirm-placeholder": "أكّدي كلمة المرور الجديدة",
+  "reset-password-min": "استخدمي 8 أحرف على الأقل لكلمة المرور.",
+  "reset-password-pattern": "يجب أن تتضمن حرفًا كبيرًا، ورقمًا، ورمزًا.",
+  "reset-password-mismatch": "كلمتا المرور غير متطابقتين.",
+  "reset-password-required": "أدخلي كلمة المرور الجديدة.",
+  "reset-confirm-required": "أكّدي كلمة المرور الجديدة.",
+  "reset-submit": "تعيين كلمة المرور",
+  "reset-submitting": "جارٍ تعيين كلمة المرور…",
+  "reset-strength-label": "قوة كلمة المرور",
+  "reset-strength-weak": "ضعيفة",
+  "reset-strength-fair": "متوسطة",
+  "reset-strength-strong": "قوية",
+  "reset-req-length": "8 أحرف على الأقل",
+  "reset-req-uppercase": "حرف كبير واحد",
+  "reset-req-number": "رقم واحد",
+  "reset-req-symbol": "رمز خاص واحد",
+  "reset-success-title": "تم تعيين كلمة المرور بنجاح",
+  "reset-success-description": "تم تحديث كلمة المرور الخاصة بكِ بنجاح. يمكنكِ الآن تسجيل الدخول بكلمة المرور الجديدة.",
+  "reset-success-login-btn": "العودة لتسجيل الدخول",
+  "reset-expired-title": "انتهت صلاحية الرابط",
+  "reset-expired-description": "رابط إعادة تعيين كلمة المرور غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.",
+  "reset-request-new-link": "طلب رابط جديد",
+  "reset-error-invalid-token": "رابط إعادة تعيين كلمة المرور غير صالح أو انتهت صلاحيته.",
+  "reset-error-rate-limit": "محاولات كثيرة جدًا. يرجى الانتظار بضع دقائق قبل المحاولة مرة أخرى.",
+  "reset-error-unavailable": "تعذر تعيين كلمة المرور الآن. حاولي مرة أخرى بعد قليل.",
+  "reset-story-title": "أمان سلس وموثوق.",
+  "reset-story-description": "احمي حسابكِ ومجموعتكِ الخاصة بأعلى معايير الأمان الحديثة."
 }
-

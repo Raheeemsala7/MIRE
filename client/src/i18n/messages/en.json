@@ -96,10 +96,22 @@
     "title": "Shop by category",
     "titleAr": "تسوقي حسب الفئة",
     "items": {
-      "abaya": { "name": "Abaya", "nameEn": "Abaya" },
-      "khimar": { "name": "Khimar", "nameEn": "Khimar" },
-      "isdal": { "name": "Isdal", "nameEn": "Isdal" },
-      "gilba": { "name": "Gilba", "nameEn": "Gilba" }
+      "abaya": {
+        "name": "Abaya",
+        "nameEn": "Abaya"
+      },
+      "khimar": {
+        "name": "Khimar",
+        "nameEn": "Khimar"
+      },
+      "isdal": {
+        "name": "Isdal",
+        "nameEn": "Isdal"
+      },
+      "gilba": {
+        "name": "Gilba",
+        "nameEn": "Gilba"
+      }
     }
   },
   "approach": {
@@ -184,6 +196,60 @@
     "contact": "Contact",
     "sizeGuide": "Size guide",
     "rights": "All rights reserved."
-  }
+  },
+  "login-forgot-password": "Forgot password?",
+  "forgot-meta-title": "Forgot Password | MIRÉ",
+  "forgot-back-to-login": "Back to sign in",
+  "forgot-title": "Forgot your password?",
+  "forgot-description": "Enter your email address and we'll send you instructions to reset your password.",
+  "forgot-email-label": "Email address",
+  "forgot-email-placeholder": "you@example.com",
+  "forgot-email-invalid": "Enter a valid email address.",
+  "forgot-submit": "Send reset link",
+  "forgot-submitting": "Sending link…",
+  "forgot-success-title": "Check your email",
+  "forgot-success-description": "We've sent password reset instructions to your email address. Please check your inbox and spam folder.",
+  "forgot-resend-prompt": "Didn't receive the email?",
+  "forgot-resend-button": "Resend email",
+  "forgot-resend-cooldown": "Resend in {seconds}s",
+  "forgot-error-rate-limit": "Too many reset attempts. Please wait a few minutes before trying again.",
+  "forgot-error-unavailable": "Password reset is unavailable right now. Please try again shortly.",
+  "forgot-story-title": "Effortless recovery.",
+  "forgot-story-description": "Safely regain access to your saved pieces and personalized styling.",
+  "forgot-remember-password": "Remember your password?",
+  "forgot-signin-link": "Sign in",
+  "reset-meta-title": "Reset Password | MIRÉ",
+  "reset-back-to-login": "Back to sign in",
+  "reset-title": "Create a new password",
+  "reset-description": "Your new password must be different from your previous password.",
+  "reset-password-label": "New password",
+  "reset-confirm-label": "Confirm new password",
+  "reset-password-placeholder": "Create a new password",
+  "reset-confirm-placeholder": "Confirm your new password",
+  "reset-password-min": "Use at least 8 characters for your password.",
+  "reset-password-pattern": "Include an uppercase letter, a number, and a symbol.",
+  "reset-password-mismatch": "Passwords do not match.",
+  "reset-password-required": "Enter your new password.",
+  "reset-confirm-required": "Confirm your new password.",
+  "reset-submit": "Reset password",
+  "reset-submitting": "Resetting password…",
+  "reset-strength-label": "Password strength",
+  "reset-strength-weak": "Weak",
+  "reset-strength-fair": "Fair",
+  "reset-strength-strong": "Strong",
+  "reset-req-length": "At least 8 characters",
+  "reset-req-uppercase": "One uppercase letter",
+  "reset-req-number": "One number",
+  "reset-req-symbol": "One special symbol",
+  "reset-success-title": "Password reset successful",
+  "reset-success-description": "Your password has been updated successfully. You can now sign in with your new password.",
+  "reset-success-login-btn": "Back to login",
+  "reset-expired-title": "Reset link expired",
+  "reset-expired-description": "This password reset link is invalid or has expired. Please request a new one.",
+  "reset-request-new-link": "Request a new link",
+  "reset-error-invalid-token": "This password reset link is invalid or has expired.",
+  "reset-error-rate-limit": "Too many attempts. Please wait a few minutes before trying again.",
+  "reset-error-unavailable": "Password reset is unavailable right now. Please try again shortly.",
+  "reset-story-title": "Security made seamless.",
+  "reset-story-description": "Protect your personal collection and account settings with modern standards."
 }
-

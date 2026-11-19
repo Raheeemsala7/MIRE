@@ -1,0 +1,83 @@
+import type { Metadata } from "next";
+import { requireRole } from "@/lib/auth/session";
+import { User, Mail, Shield, Phone } from "lucide-react";
+import { LogoutButton } from "@/features/auth/components/login/logout-button";
+
+interface AccountPageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({ params }: AccountPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+  return {
+    title: isAr ? "حسابي الشخصي | ميري" : "My Account | MIRÉ",
+  };
+}
+
+export const instant = false;
+
+export default async function AccountPage({ params }: AccountPageProps) {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+  const user = await requireRole(["CUSTOMER", "ADMIN", "SUPER_ADMIN"], locale);
+
+  return (
+    <main className="mx-auto min-h-[60vh] max-w-4xl px-6 py-16 sm:px-10">
+      <div className="flex items-center justify-between border-b border-ds-border-muted pb-6">
+        <div className="flex items-center gap-3">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-ds-subtle text-ds-primary shadow-sm ring-1 ring-ds-border-muted">
+            <User className="size-6" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-serif text-3xl tracking-tight text-ds-text-plain sm:text-4xl">
+              {isAr ? "الملف الشخصي" : "Personal Account"}
+            </h1>
+            <p className="mt-1 text-sm text-ds-text-muted">
+              {isAr ? "معلومات الحساب وإعدادات الأمان" : "Account details and security preferences"}
+            </p>
+          </div>
+        </div>
+        <LogoutButton />
+      </div>
+
+      <div className="mt-10 rounded-3xl border border-ds-border-muted bg-ds-elevated p-6 sm:p-8">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="flex items-start gap-3 rounded-2xl border border-ds-border-subtle bg-ds-plain p-4">
+            <User className="size-5 text-ds-primary mt-0.5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-xs text-ds-text-muted">{isAr ? "الاسم" : "Name"}</p>
+              <p className="text-base font-medium text-ds-text-plain">{user.name}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 rounded-2xl border border-ds-border-subtle bg-ds-plain p-4">
+            <Mail className="size-5 text-ds-primary mt-0.5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-xs text-ds-text-muted">{isAr ? "البريد الإلكتروني" : "Email"}</p>
+              <p className="text-base font-medium text-ds-text-plain" dir="ltr">{user.email}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 rounded-2xl border border-ds-border-subtle bg-ds-plain p-4">
+            <Shield className="size-5 text-ds-primary mt-0.5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-xs text-ds-text-muted">{isAr ? "نوع الحساب" : "Role"}</p>
+              <p className="text-base font-medium text-ds-text-plain">
+                {user.role.replaceAll("_", " ").toLowerCase()}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 rounded-2xl border border-ds-border-subtle bg-ds-plain p-4">
+            <Phone className="size-5 text-ds-primary mt-0.5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-xs text-ds-text-muted">{isAr ? "رقم الهاتف" : "Phone"}</p>
+              <p className="text-base font-medium text-ds-text-plain" dir="ltr">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

@@ -98,25 +98,33 @@ export function LoginForm() {
           </Field>
         )}
       />
-      <Controller
-        name="rememberMe"
-        control={control}
-        render={({ field }) => (
-          <label className="flex cursor-pointer items-center gap-3 text-sm text-ds-text-muted">
-            <input
-              type="checkbox"
-              disabled={isPending}
-              name={field.name}
-              checked={field.value}
-              onChange={(event) => field.onChange(event.target.checked)}
-              onBlur={field.onBlur}
-              ref={field.ref}
-              className="size-4 accent-ds-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-primary"
-            />
-            {t("login-remember")}
-          </label>
-        )}
-      />
+      <div className="flex items-center justify-between">
+        <Controller
+          name="rememberMe"
+          control={control}
+          render={({ field }) => (
+            <label className="flex cursor-pointer items-center gap-3 text-sm text-ds-text-muted">
+              <input
+                type="checkbox"
+                disabled={isPending}
+                name={field.name}
+                checked={field.value}
+                onChange={(event) => field.onChange(event.target.checked)}
+                onBlur={field.onBlur}
+                ref={field.ref}
+                className="size-4 accent-ds-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-primary"
+              />
+              {t("login-remember")}
+            </label>
+          )}
+        />
+        <Link
+          href="/auth/forgot-password"
+          className="text-sm font-medium text-ds-text-muted underline-offset-4 hover:text-ds-text-primary hover:underline"
+        >
+          {t("login-forgot-password")}
+        </Link>
+      </div>
       <Button
         type="submit"
         disabled={isPending}

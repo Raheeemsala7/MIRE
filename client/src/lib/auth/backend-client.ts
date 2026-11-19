@@ -15,15 +15,27 @@ const refreshPayload = z.object({
   data: z.object({ accessToken: z.string().min(1), refreshToken: z.string().min(1) }),
 });
 const registrationPayload = z.object({ success: z.literal(true), statusCode: z.literal(201) });
+const forgotPasswordPayload = z.object({ success: z.literal(true) });
+const resetPasswordPayload = z.object({ success: z.literal(true) });
 
 export class BackendAuthError extends Error {
   constructor(public readonly status: number) { super("Backend authentication failed"); }
 }
 
-function apiUrl() {
-  const value = process.env.BACKEND_API_URL || process.env.API_URL || "http://localhost:5000/api/v1";
+function apiUrl(): string {
+  const value = process.env.BACKEND_API_URL || process.env.API_URL;
+  if (!value) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("Missing BACKEND_API_URL or API_URL environment variable in production.");
+    }
+    return "http://localhost:5000/api/v1";
+  }
   const base = value.replace(/\/+$/, "");
-  return new URL(base).pathname === "/" ? `${base}/api/v1` : base;
+  try {
+    return new URL(base).pathname === "/" ? `${base}/api/v1` : base;
+  } catch {
+    return base;
+  }
 }
 
 async function post(path: string, body: object, accessToken?: string) {
@@ -64,6 +76,16 @@ export async function backendRefresh(refreshToken: string) {
 
 export async function backendLogout(accessToken: string) {
   try { await post("/auth/logout", {}, accessToken); } catch { /* local revocation still proceeds */ }
+}
+
+export async function backendForgotPassword(email: string): Promise<void> {
+  const parsed = forgotPasswordPayload.safeParse(await post("/auth/forgot-password", { email }));
+  if (!parsed.success) throw new BackendAuthError(502);
+}
+
+export async function backendResetPassword(token: string, password: string): Promise<void> {
+  const parsed = resetPasswordPayload.safeParse(await post("/auth/reset-password", { token, password }));
+  if (!parsed.success) throw new BackendAuthError(502);
 }
 
 export async function backendGet<T>(path: `/${string}`, accessToken: string): Promise<T> {

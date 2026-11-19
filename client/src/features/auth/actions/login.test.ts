@@ -12,12 +12,15 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: mocks.getCookie, set: mocks.setCookie }) }));
 vi.mock("@/auth", () => ({ signIn: mocks.signIn }));
 vi.mock("@/lib/auth/session-store", () => ({ getSession: mocks.getSession, deleteSession: mocks.deleteSession }));
-vi.mock("@/lib/auth/session", () => ({ SESSION_COOKIE: "mire_session", destination: (role: string) => role === "ADMIN" ? "/admin/dashboard" : "/store" }));
+vi.mock("@/lib/auth/session", () => ({ SESSION_COOKIE: "mire_session", destination: (role: string, locale: string = "ar") => role === "ADMIN" ? `/${locale}/admin/dashboard` : `/${locale}` }));
 vi.mock("@/lib/auth/sign-in-proof", () => ({ issueSignInProof: () => "signed-proof" }));
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.getCookie.mockReturnValue({ value: "new-session" });
+  mocks.getCookie.mockImplementation((name?: string) => {
+    if (name === "NEXT_LOCALE") return { value: "ar" };
+    return { value: "new-session" };
+  });
   mocks.getSession.mockResolvedValue({ user: { role: "CUSTOMER" } });
 });
 
@@ -25,7 +28,7 @@ describe("server login action", () => {
   it("creates a browser-session cookie when Remember Me is unchecked", async () => {
     const { loginAction } = await import("./login");
     const result = await loginAction({ email: "nour@example.com", password: "password", rememberMe: false });
-    expect(result).toEqual({ success: true, destination: "/store" });
+    expect(result).toEqual({ success: true, destination: "/ar" });
     expect(mocks.signIn).toHaveBeenCalledWith("credentials", expect.objectContaining({ rememberMe: "false", proof: "signed-proof" }));
     expect(mocks.setCookie.mock.calls[0][2]).not.toHaveProperty("maxAge");
     expect(mocks.setCookie.mock.calls[0][2]).toMatchObject({ httpOnly: true, sameSite: "lax", path: "/" });
@@ -35,7 +38,7 @@ describe("server login action", () => {
     mocks.getSession.mockResolvedValue({ user: { role: "ADMIN" } });
     const { loginAction } = await import("./login");
     const result = await loginAction({ email: "admin@mirefashion.com", password: "password", rememberMe: true });
-    expect(result).toEqual({ success: true, destination: "/admin/dashboard" });
+    expect(result).toEqual({ success: true, destination: "/ar/admin/dashboard" });
     expect(mocks.setCookie.mock.calls[0][2].maxAge).toBe(2_592_000);
   });
 

@@ -20,10 +20,10 @@ export async function currentUser(): Promise<SafeUser | null> {
   return (await currentSession())?.user ?? null;
 }
 
-export async function requireRole(roles: AppRole[]) {
+export async function requireRole(roles: AppRole[], locale: string = "ar") {
   const session = await currentSession();
-  if (!session) redirect("/api/auth/clear-session");
-  if (!roles.includes(session.user.role)) redirect("/403");
+  if (!session) redirect(`/api/auth/clear-session?callbackUrl=/${locale}/auth/login`);
+  if (!roles.includes(session.user.role)) redirect(`/${locale}/403`);
   return session.user;
 }
 

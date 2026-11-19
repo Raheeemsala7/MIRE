@@ -29,7 +29,8 @@ export async function loginAction(input: LoginFields): Promise<LoginResult> {
     if (!session) return { success: false, error: "unavailable" };
     if (oldId && oldId !== id) await deleteSession(oldId);
     jar.set(SESSION_COOKIE, id, sessionCookieOptions(parsed.data.rememberMe, process.env.NODE_ENV === "production"));
-    return { success: true, destination: destination(session.user.role) };
+    const locale = jar.get("NEXT_LOCALE")?.value || "ar";
+    return { success: true, destination: destination(session.user.role, locale) };
   } catch (error) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {

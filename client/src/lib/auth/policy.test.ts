@@ -18,9 +18,10 @@ describe("login and session policy", () => {
   });
 
   it("maps backend roles to the appropriate route", () => {
-    expect(destination("ADMIN")).toBe("/admin/dashboard");
-    expect(destination("SUPER_ADMIN")).toBe("/admin/dashboard");
-    expect(destination("CUSTOMER")).toBe("/store");
-    expect(destination("ORDER_MANAGER")).toBe("/403");
+    expect(destination("ADMIN", "ar")).toBe("/ar/admin/dashboard");
+    expect(destination("SUPER_ADMIN", "en")).toBe("/en/admin/dashboard");
+    expect(destination("CUSTOMER", "ar")).toBe("/ar");
+    expect(destination("CUSTOMER", "en")).toBe("/en");
+    expect(destination("ORDER_MANAGER", "ar")).toBe("/ar/403");
   });
 });

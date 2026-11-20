@@ -15,27 +15,21 @@ export function Providers({ children, locale, messages }: ProvidersProps) {
   const isRTL = locale === "ar";
 
   return (
-    <NextIntlClientProvider
-      locale={locale}
-      messages={messages}
-      timeZone="Africa/Cairo"
-    >
-
-        <ReactQueryProvider>
-          <Toaster
-            richColors
-            position={isRTL ? "bottom-left" : "bottom-right"}
-            toastOptions={{
-              style: {
-                fontFamily: isRTL ? "var(--font-arabic)" : "var(--font-sans)",
-                borderRadius: "9999px",
-                padding: "12px 20px",
-              },
-            }}
-          />
-          {children}
-        </ReactQueryProvider>
-
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Cairo">
+      <ReactQueryProvider>
+        <Toaster
+          richColors
+          position={isRTL ? "bottom-left" : "bottom-right"}
+          toastOptions={{
+            style: {
+              fontFamily: isRTL ? "var(--font-arabic)" : "var(--font-sans)",
+              borderRadius: "9999px",
+              padding: "12px 20px",
+            },
+          }}
+        />
+        {children}
+      </ReactQueryProvider>
     </NextIntlClientProvider>
   );
 }

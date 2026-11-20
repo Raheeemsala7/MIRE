@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/src/i18n/routing";
 import { HeroSection } from "@/src/features/home/components/hero-section";
@@ -18,7 +18,7 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export default async function HomePage({ params }: HomePageProps) {
+async function HomeContent({ params }: HomePageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
 
@@ -31,5 +31,13 @@ export default async function HomePage({ params }: HomePageProps) {
       <NewArrivals />
       <ValuePillars />
     </div>
+  );
+}
+
+export default function HomePage({ params }: HomePageProps) {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent params={params} />
+    </Suspense>
   );
 }

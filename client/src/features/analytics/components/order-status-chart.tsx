@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { Cell, Pie, PieChart } from "recharts";
 import {
   Card,
   CardContent,
@@ -107,28 +107,26 @@ export function OrderStatusChart({ data = [], isLoading }: OrderStatusChartProps
         ) : (
           <div className="w-full space-y-4">
             <ChartContainer config={chartConfig} className="mx-auto h-52 w-full max-w-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent hideLabel indicator="line" />}
-                  />
-                  <Pie
-                    data={chartData}
-                    dataKey="count"
-                    nameKey="name"
-                    innerRadius={60}
-                    outerRadius={85}
-                    paddingAngle={3}
-                    strokeWidth={2}
-                    stroke="var(--card)"
-                  >
-                    {chartData.map((entry) => (
-                      <Cell key={entry.status} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel indicator="line" />}
+                />
+                <Pie
+                  data={chartData}
+                  dataKey="count"
+                  nameKey="name"
+                  innerRadius={60}
+                  outerRadius={85}
+                  paddingAngle={3}
+                  strokeWidth={2}
+                  stroke="var(--card)"
+                >
+                  {chartData.map((entry) => (
+                    <Cell key={entry.status} fill={entry.color} />
+                  ))}
+                </Pie>
+              </PieChart>
             </ChartContainer>
 
             {/* Status Legend Pills */}

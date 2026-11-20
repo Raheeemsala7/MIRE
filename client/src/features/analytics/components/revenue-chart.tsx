@@ -1,14 +1,7 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -48,12 +41,14 @@ export function RevenueChart({ data = [], isLoading }: RevenueChartProps) {
   } satisfies ChartConfig;
 
   // Format date labels nicely (e.g., Nov 12 / ١٢ نوفمبر)
-  const hasRealActivity = data.some((item) => (item.revenue || 0) > 0 || (item.orders || 0) > 0);
+  const hasRealActivity = data.some(
+    (item) => (item.revenue || 0) > 0 || (item.orders || 0) > 0,
+  );
 
   const formattedData = data.map((item) => {
     try {
       const date = new Date(item._id);
-      const displayDate = date.toLocaleDateString(isAr ? "ar-EG" : "en-US", {
+      const displayDate = date.toLocaleDateString(isAr ? "ar-EG-u-nu-latn" : "en-US", {
         month: "short",
         day: "numeric",
       });
@@ -97,58 +92,106 @@ export function RevenueChart({ data = [], isLoading }: RevenueChartProps) {
             </p>
           </div>
         ) : (
-          <ChartContainer config={chartConfig} className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={formattedData}
-                margin={{ top: 10, right: isAr ? 20 : 10, left: isAr ? 10 : 20, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.4} />
-                <XAxis
-                  dataKey="displayDate"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={(val) => `${val.toLocaleString()} ${currency}`}
-                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                  orientation={isAr ? "right" : "left"}
-                />
-                <ChartTooltip
-                  cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
-                  content={
-                    <ChartTooltipContent
-                      indicator="dot"
-                      formatter={(val, name) => {
-                        if (name === "revenue") {
-                          return `${Number(val).toLocaleString()} ${currency}`;
-                        }
-                        return `${val} ${t("analytics-orders-count")}`;
-                      }}
-                    />
-                  }
-                />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="var(--chart-1)"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#fillRevenue)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <ChartContainer
+            config={chartConfig}
+            className="h-72 w-full min-w-0"
+            dir="ltr"
+          >
+            <AreaChart
+              accessibilityLayer
+              data={formattedData}
+              margin={{
+                top: 10,
+                right: isAr ? 5 : 15,
+                left: isAr ? 15 : 5,
+                bottom: 5,
+              }}
+            >
+              <defs>
+                <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--chart-1)"
+                    stopOpacity={0.4}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--chart-1)"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="var(--border)"
+                opacity={0.4}
+              />
+
+              <XAxis
+                dataKey="displayDate"
+                reversed={isAr}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+                minTickGap={25}
+                tick={{
+                  fontSize: 11,
+                  fill: "var(--muted-foreground)",
+                }}
+              />
+
+              <YAxis
+                orientation={isAr ? "right" : "left"}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+                width={55}
+                tickFormatter={(value: number) =>
+                  new Intl.NumberFormat(isAr ? "ar-EG" : "en-US", {
+                    notation: "compact",
+                    maximumFractionDigits: 1,
+                  }).format(value)
+                }
+                tick={{
+                  fontSize: 11,
+                  fill: "var(--muted-foreground)",
+                }}
+              />
+
+              <ChartTooltip
+                cursor={{
+                  stroke: "var(--border)",
+                  strokeWidth: 1,
+                }}
+                content={
+                  <ChartTooltipContent
+                    indicator="dot"
+                    formatter={(value, name) => {
+                      if (name === "revenue") {
+                        const formatted = new Intl.NumberFormat(
+                          isAr ? "ar-EG" : "en-US",
+                        ).format(Number(value));
+
+                        return `${formatted} ${currency}`;
+                      }
+
+                      return `${value} ${t("analytics-orders-count")}`;
+                    }}
+                  />
+                }
+              />
+
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="var(--chart-1)"
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill="url(#fillRevenue)"
+              />
+            </AreaChart>
           </ChartContainer>
         )}
       </CardContent>

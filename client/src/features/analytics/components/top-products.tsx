@@ -92,7 +92,7 @@ export function TopProducts({ data = [], isLoading }: TopProductsProps) {
 
                 <div className="text-end">
                   <p className="font-semibold text-foreground">
-                    {item.totalRevenue.toLocaleString()} {currency}
+                    {item.totalRevenue.toLocaleString("en-US")} {currency}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
                     {item.totalSold} {t("analytics-units-sold")}

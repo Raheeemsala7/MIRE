@@ -127,7 +127,7 @@ export function PaymentMethodsChart({ data = [], isLoading }: PaymentMethodsChar
 
                     <div className="text-end">
                       <p className="font-semibold text-foreground">
-                        {item.revenue.toLocaleString()} {currency}
+                        {item.revenue.toLocaleString("en-US")} {currency}
                       </p>
                       <p className="text-[10px] text-muted-foreground font-mono">
                         {revenuePct}%

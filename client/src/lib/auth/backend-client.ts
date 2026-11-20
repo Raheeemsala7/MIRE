@@ -4,7 +4,11 @@ import type { RegistrationFields } from "@/features/auth/schemas/register.schema
 
 const role = z.enum(["SUPER_ADMIN", "ADMIN", "ORDER_MANAGER", "CUSTOMER_SUPPORT", "INVENTORY_MANAGER", "ACCOUNTANT", "CUSTOMER"]);
 const user = z.object({
-  _id: z.string(), name: z.string(), email: z.email(), role,
+  _id: z.string(),
+  name: z.string(),
+  email: z.email(),
+  role,
+  permissions: z.array(z.string()).optional(),
 });
 const loginPayload = z.object({
   success: z.literal(true),
@@ -20,6 +24,28 @@ const resetPasswordPayload = z.object({ success: z.literal(true) });
 
 export class BackendAuthError extends Error {
   constructor(public readonly status: number) { super("Backend authentication failed"); }
+}
+
+export class BackendApiError extends Error {
+  public readonly messageText?: string;
+  public readonly errors?: Array<{ field?: string; message?: string }>;
+
+  constructor(public readonly status: number, public readonly data?: unknown) {
+    const msg =
+      typeof data === "object" && data !== null && "message" in data
+        ? String((data as { message: unknown }).message)
+        : `Backend request failed with status ${status}`;
+    super(msg);
+    this.messageText = msg;
+    if (
+      typeof data === "object" &&
+      data !== null &&
+      "errors" in data &&
+      Array.isArray((data as { errors: unknown }).errors)
+    ) {
+      this.errors = (data as { errors: Array<{ field?: string; message?: string }> }).errors;
+    }
+  }
 }
 
 function apiUrl(): string {
@@ -93,6 +119,48 @@ export async function backendGet<T>(path: `/${string}`, accessToken: string): Pr
     headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });
-  if (!response.ok) throw new BackendAuthError(response.status);
+  if (!response.ok) {
+    let errorData: unknown;
+    try { errorData = await response.json(); } catch { /* ignore */ }
+    throw new BackendApiError(response.status, errorData);
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function backendPost<T>(path: `/${string}`, body: unknown, accessToken: string): Promise<T> {
+  const response = await fetch(`${apiUrl()}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) {
+    let errorData: unknown;
+    try { errorData = await response.json(); } catch { /* ignore */ }
+    throw new BackendApiError(response.status, errorData);
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function backendPatch<T>(path: `/${string}`, body: unknown, accessToken: string): Promise<T> {
+  const response = await fetch(`${apiUrl()}${path}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) {
+    let errorData: unknown;
+    try { errorData = await response.json(); } catch { /* ignore */ }
+    throw new BackendApiError(response.status, errorData);
+  }
   return response.json() as Promise<T>;
 }

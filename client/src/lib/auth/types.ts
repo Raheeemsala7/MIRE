@@ -7,6 +7,7 @@ export type SafeUser = {
   name: string;
   email: string;
   role: AppRole;
+  permissions?: string[];
 };
 
 export type SessionRecord = {

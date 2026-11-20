@@ -28,11 +28,11 @@ export function KpiGrid({ overview, isLoading }: KpiGridProps) {
   const currency = isAr ? "ج.م" : "EGP";
 
   const formatCurrency = (val: number) => {
-    return `${val.toLocaleString(isAr ? "ar-EG" : "en-US")} ${currency}`;
+    return `${val.toLocaleString("en-US")} ${currency}`;
   };
 
   const formatNumber = (val: number) => {
-    return val.toLocaleString(isAr ? "ar-EG" : "en-US");
+    return val.toLocaleString("en-US");
   };
 
   return (

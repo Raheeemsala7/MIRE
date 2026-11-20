@@ -29,6 +29,7 @@ export async function authorizeCredentials(credentials: Partial<Record<string, u
       name: result.user.name,
       email: result.user.email,
       role: result.user.role,
+      ...(result.user.permissions ? { permissions: result.user.permissions } : {}),
     };
     const id = await createSession(user, result.accessToken, result.refreshToken, rememberMe);
     return { id, name: user.name, email: user.email };

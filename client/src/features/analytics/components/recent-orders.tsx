@@ -106,7 +106,7 @@ export function RecentOrders({ orders = [], isLoading }: RecentOrdersProps) {
               <TableBody className="divide-y divide-border/40">
                 {orders.map((order) => {
                   const dateStr = new Date(order.createdAt).toLocaleDateString(
-                    isAr ? "ar-EG" : "en-US",
+                    isAr ? "ar-EG-u-nu-latn" : "en-US",
                     { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }
                   );
 
@@ -127,7 +127,7 @@ export function RecentOrders({ orders = [], isLoading }: RecentOrdersProps) {
                         {dateStr}
                       </TableCell>
                       <TableCell className="text-xs font-semibold text-foreground whitespace-nowrap">
-                        {order.pricing.totalAmount.toLocaleString()} {currency}
+                        {order.pricing.totalAmount.toLocaleString("en-US")} {currency}
                       </TableCell>
                       <TableCell className="text-xs">
                         {getPaymentBadge(order.paymentInfo.status)}

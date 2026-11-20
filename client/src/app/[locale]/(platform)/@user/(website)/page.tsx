@@ -14,6 +14,8 @@ interface HomePageProps {
   }>;
 }
 
+export const instant = false;
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }

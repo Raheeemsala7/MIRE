@@ -15,7 +15,7 @@ export function Providers({ children, locale, messages }: ProvidersProps) {
   const isRTL = locale === "ar";
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Cairo">
       <ReactQueryProvider>
         <Toaster
           richColors

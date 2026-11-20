@@ -11,8 +11,6 @@ import {
   type EmployeesPaginatedResponse,
 } from "@/features/employees";
 
-export const instant = false;
-
 interface AdminEmployeesPageProps {
   params: Promise<{ locale: string }>;
 }
@@ -51,7 +49,7 @@ async function getInitialEmployeesData(
   return undefined;
 }
 
-export default async function AdminEmployeesPage({
+async function AdminEmployeesPageContent({
   params,
 }: AdminEmployeesPageProps) {
   const { locale } = await params;
@@ -69,4 +67,8 @@ export default async function AdminEmployeesPage({
       </Suspense>
     </main>
   );
+}
+
+export default function AdminEmployeesPage(props: Parameters<typeof AdminEmployeesPageContent>[0]) {
+  return <Suspense fallback={<EmployeesSkeleton />}><AdminEmployeesPageContent {...props} /></Suspense>;
 }

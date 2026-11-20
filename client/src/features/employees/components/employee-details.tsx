@@ -22,7 +22,6 @@ import { Badge } from "@/shared/components/ui/badge";
 import { can } from "@/lib/permissions/can";
 import {
   PERMISSIONS,
-  type SupportedEmployeeRole,
   BACKEND_PERMISSIONS_CATALOG,
 } from "@/config/rbac.config";
 import { getRoleBadgeVariant, formatEmployeeDate } from "../utils/employee.util";
@@ -93,7 +92,7 @@ export function EmployeeDetails({
                   {employee.name}
                 </h2>
                 <Badge
-                  variant={getRoleBadgeVariant(employee.role as SupportedEmployeeRole)}
+                  variant={getRoleBadgeVariant(employee.role)}
                   className="text-xs"
                 >
                   {t(`employees-role-${employee.role}`) || employee.role.replace("_", " ")}

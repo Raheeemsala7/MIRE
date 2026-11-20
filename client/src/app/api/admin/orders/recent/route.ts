@@ -1,6 +1,8 @@
+import { hasPermission, isAdminRole } from "@/lib/auth/roles";
+import { serverApiGet } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth/session";
-import { backendGet, BackendAuthError } from "@/lib/auth/backend-client";
+import { auth } from "@/auth";
+import { BackendApiError } from "@/lib/auth/backend-client";
 import type { RecentOrderItem } from "@/features/analytics/types/analytics.types";
 
 interface RawOrderResponse {
@@ -18,18 +20,17 @@ interface RawOrderResponse {
 }
 
 export async function GET(request: NextRequest) {
-  const session = await currentSession();
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  const session = await auth();
+  if (!session?.user || !isAdminRole(session.user.role) || !hasPermission(session.user, "orders:read")) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: session?.user ? 403 : 401 });
   }
 
   const { searchParams } = new URL(request.url);
   const limit = searchParams.get("limit") || "6";
 
   try {
-    const response = await backendGet<RawOrderResponse>(
-      `/orders?limit=${limit}&sort=-createdAt` as `/${string}`,
-      session.accessToken
+    const response = await serverApiGet<RawOrderResponse>(
+      `/orders?limit=${limit}&sort=-createdAt` as `/${string}`
     );
 
     const orders: RecentOrderItem[] = (response.data || []).map((o) => ({
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: orders });
   } catch (error) {
-    if (error instanceof BackendAuthError) {
+    if (error instanceof BackendApiError) {
       return NextResponse.json(
         { success: false, error: "Backend service error" },
         { status: error.status }

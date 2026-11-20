@@ -83,7 +83,7 @@ export function Header() {
 
               {/* Sign in uses the unprefixed auth route. */}
               <NextLink
-                href="/login"
+                href="/auth/login"
                 aria-label={t("login-submit")}
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex size-11 items-center justify-center rounded-full text-ds-text-primary transition-colors hover:bg-ds-secondary-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-primary"

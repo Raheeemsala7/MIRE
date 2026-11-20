@@ -1,14 +1,25 @@
-export default function PlatformLayout({
-  admin,
-  user,
-}: {
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { isAdminRole, isCustomerRole } from "@/lib/auth/roles";
+import { normalizeLocale } from "@/lib/auth/permissions";
+import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
+
+type PlatformProps = {
   admin: React.ReactNode;
   user: React.ReactNode;
-}) {
-  return (
-    <>
-      {user}
-      {admin}
-    </>
-  );
+  params: Promise<{ locale: string }>;
+};
+
+async function AuthorizedPlatform({ admin, user, params }: PlatformProps) {
+  const locale = normalizeLocale((await params).locale);
+  const session = await auth();
+  if (!session?.user) redirect(`/${locale}/auth/login`);
+  if (isAdminRole(session.user.role)) return admin;
+  if (isCustomerRole(session.user.role)) return user;
+  redirect(`/${locale}/403`);
+}
+
+export default function PlatformLayout(props: PlatformProps) {
+  return <Suspense fallback={<AuthSkeleton />}><AuthorizedPlatform {...props} /></Suspense>;
 }

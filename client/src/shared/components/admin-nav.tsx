@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import {
   LayoutDashboard,
   UsersRound,
+  Users,
   Menu,
   X,
   Globe,
@@ -15,8 +16,9 @@ import { LogoutButton } from "@/features/auth/components/login/logout-button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { can } from "@/lib/permissions/can";
-import { PERMISSIONS, type SupportedEmployeeRole } from "@/config/rbac.config";
+import { PERMISSIONS } from "@/config/rbac.config";
 import { getRoleBadgeVariant } from "@/features/employees/utils/employee.util";
+import { hasPermission } from "@/lib/auth/roles";
 import type { SafeUser } from "@/lib/auth/types";
 
 interface AdminNavProps {
@@ -45,18 +47,31 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
     currentUser?.permissions
   );
 
+  const canViewCustomers = can(
+    currentUser?.role,
+    PERMISSIONS.CUSTOMERS_VIEW,
+    currentUser?.permissions
+  );
+
   const navLinks = [
     {
       href: "/admin/dashboard",
       label: t("admin-nav-dashboard") || "Analytics Dashboard",
       icon: LayoutDashboard,
       active: pathname.startsWith("/admin/dashboard"),
-      visible: true,
+      visible: hasPermission(currentUser, "dashboard:read"),
+    },
+    {
+      href: "/admin/customers",
+      label: t("admin-nav-customers") || "Customers",
+      icon: UsersRound,
+      active: pathname.startsWith("/admin/customers"),
+      visible: canViewCustomers,
     },
     {
       href: "/admin/employees",
       label: t("admin-nav-employees") || "Employees Management",
-      icon: UsersRound,
+      icon: Users,
       active: pathname.startsWith("/admin/employees"),
       visible: canViewEmployees,
     },
@@ -114,7 +129,7 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
                   {currentUser.name}
                 </span>
                 <Badge
-                  variant={getRoleBadgeVariant(currentUser.role as SupportedEmployeeRole)}
+                  variant={getRoleBadgeVariant(currentUser.role)}
                   className="text-[10px]"
                 >
                   {currentUser.role}
@@ -203,7 +218,7 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
                   <span>{t("admin-role-badge") || "Role"}</span>
                 </span>
                 <Badge
-                  variant={getRoleBadgeVariant(currentUser.role as SupportedEmployeeRole)}
+                  variant={getRoleBadgeVariant(currentUser.role)}
                   className="text-[10px] py-0 px-1.5 font-normal"
                 >
                   {currentUser.role}

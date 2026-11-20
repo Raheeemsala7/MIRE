@@ -32,7 +32,7 @@ describe("Auth.js credentials provider", () => {
   });
 
   it("passes tokens only to the session store and returns a safe Auth.js user", async () => {
-    expect(await authorizeCredentials(input)).toEqual({ id: "opaque-id", name: "Hala", email: input.email });
+    expect(await authorizeCredentials(input)).toEqual({ id: "user-id", sessionId: "opaque-id", name: "Hala", email: input.email, role: "CUSTOMER" });
     expect(mocks.createSession).toHaveBeenCalledWith(
       { id: "user-id", name: "Hala", email: input.email, role: "CUSTOMER" }, "access", "refresh", false,
     );

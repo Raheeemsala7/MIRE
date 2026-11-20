@@ -41,7 +41,7 @@ export function RegisterForm(): ReactNode {
           </p>
         </div>
         <NextLink
-          href="/login"
+          href="/auth/login"
           className="inline-flex min-h-12 items-center gap-3 rounded-full bg-ds-primary px-7 py-3 text-sm font-medium text-ds-text-inverse transition-colors hover:bg-ds-primary-saturated focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ds-primary"
         >
           {t("login-submit")}
@@ -183,7 +183,7 @@ export function RegisterForm(): ReactNode {
       <p className="mt-7 text-center text-sm leading-6 text-ds-text-muted">
         {t("register-login-prompt")}{" "}
         <NextLink
-          href="/login"
+          href="/auth/login"
           className="rounded-sm font-medium text-ds-text-primary underline underline-offset-4 hover:text-ds-text-plain focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ds-primary"
         >
           {t("login-submit")}

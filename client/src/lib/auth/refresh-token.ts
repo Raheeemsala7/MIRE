@@ -3,9 +3,12 @@ import { backendRefresh, BackendAuthError } from "./backend-client";
 import { claimRefresh, deleteSession, getSession, releaseRefresh, saveRotatedTokens } from "./session-store";
 import type { SessionRecord } from "./types";
 
-export async function freshSession(id: string, force = false): Promise<SessionRecord | null> {
+export async function freshSession(id: string, force = false, failedVersion?: number): Promise<SessionRecord | null> {
   let session = await getSession(id);
   if (!session) return null;
+  // A concurrent request may already have replaced the access token that failed.
+  if (force && failedVersion !== undefined && session.version > failedVersion &&
+    session.accessTokenExpiresAt.getTime() > Date.now() + 60_000) return session;
   if (!force && session.accessTokenExpiresAt.getTime() > Date.now() + 60_000) return session;
   if (session.refreshTokenExpiresAt.getTime() <= Date.now()) {
     await deleteSession(id);

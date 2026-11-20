@@ -1,6 +1,7 @@
+import { serverApiGet, serverApiPatch } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth/session";
-import { backendGet, backendPatch, BackendApiError } from "@/lib/auth/backend-client";
+import { auth } from "@/auth";
+import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission, validateEmployeeMutation } from "@/lib/permissions/server-authorization";
 import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/config/rbac.config";
@@ -13,17 +14,16 @@ interface RouteContext {
 
 export async function GET(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-  const session = await currentSession();
-  const auth = assertSessionPermission(session, PERMISSIONS.EMPLOYEES_VIEW);
+  const session = await auth();
+  const authorization = assertSessionPermission(session, PERMISSIONS.EMPLOYEES_VIEW);
 
-  if (!auth.authorized) {
-    return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
+  if (!authorization.authorized) {
+    return NextResponse.json({ success: false, error: authorization.error }, { status: authorization.status });
   }
 
   try {
-    const response = await backendGet<SingleEmployeeResponse>(
-      `/employees/${encodeURIComponent(id)}` as `/${string}`,
-      session!.accessToken
+    const response = await serverApiGet<SingleEmployeeResponse>(
+      `/employees/${encodeURIComponent(id)}` as `/${string}`
     );
     return NextResponse.json(response);
   } catch (error) {
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-  const session = await currentSession();
+  const session = await auth();
 
   if (!session) {
     return NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 });
@@ -112,9 +112,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   // Retrieve current target employee state to validate authorization restrictions
   let targetEmployee: SingleEmployeeResponse["data"];
   try {
-    const targetRes = await backendGet<SingleEmployeeResponse>(
-      `/employees/${encodeURIComponent(id)}` as `/${string}`,
-      session!.accessToken
+    const targetRes = await serverApiGet<SingleEmployeeResponse>(
+      `/employees/${encodeURIComponent(id)}` as `/${string}`
     );
     targetEmployee = targetRes.data;
   } catch (error) {
@@ -142,10 +141,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const response = await backendPatch<SingleEmployeeResponse>(
+    const response = await serverApiPatch<SingleEmployeeResponse>(
       `/employees/${encodeURIComponent(id)}` as `/${string}`,
-      validatedData,
-      session!.accessToken
+      validatedData
     );
     return NextResponse.json(response);
   } catch (error) {

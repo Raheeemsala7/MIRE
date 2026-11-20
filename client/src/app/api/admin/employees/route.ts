@@ -1,17 +1,18 @@
+import { serverApiGet, serverApiPost } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth/session";
-import { backendGet, backendPost, BackendApiError } from "@/lib/auth/backend-client";
+import { auth } from "@/auth";
+import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission, validateEmployeeMutation } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import { createEmployeeSchema } from "@/features/employees/schemas/employee.schema";
 import type { EmployeesPaginatedResponse, SingleEmployeeResponse } from "@/features/employees/types/employee.types";
 
 export async function GET(request: NextRequest) {
-  const session = await currentSession();
-  const auth = assertSessionPermission(session, PERMISSIONS.EMPLOYEES_VIEW);
+  const session = await auth();
+  const authorization = assertSessionPermission(session, PERMISSIONS.EMPLOYEES_VIEW);
 
-  if (!auth.authorized) {
-    return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
+  if (!authorization.authorized) {
+    return NextResponse.json({ success: false, error: authorization.error }, { status: authorization.status });
   }
 
   const { searchParams } = new URL(request.url);
@@ -32,9 +33,8 @@ export async function GET(request: NextRequest) {
   if (sort) query.set("sort", sort);
 
   try {
-    const response = await backendGet<EmployeesPaginatedResponse>(
-      `/employees${query.toString() ? `?${query.toString()}` : ""}` as `/${string}`,
-      session!.accessToken
+    const response = await serverApiGet<EmployeesPaginatedResponse>(
+      `/employees${query.toString() ? `?${query.toString()}` : ""}` as `/${string}`
     );
     return NextResponse.json(response);
   } catch (error) {
@@ -52,11 +52,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await currentSession();
-  const auth = assertSessionPermission(session, PERMISSIONS.EMPLOYEES_CREATE);
+  const session = await auth();
+  const authorization = assertSessionPermission(session, PERMISSIONS.EMPLOYEES_CREATE);
 
-  if (!auth.authorized) {
-    return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
+  if (!authorization.authorized) {
+    return NextResponse.json({ success: false, error: authorization.error }, { status: authorization.status });
   }
 
   let body: unknown;
@@ -91,10 +91,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const response = await backendPost<SingleEmployeeResponse>(
+    const response = await serverApiPost<SingleEmployeeResponse>(
       "/employees",
-      validatedData,
-      session!.accessToken
+      validatedData
     );
     return NextResponse.json(response, { status: 201 });
   } catch (error) {

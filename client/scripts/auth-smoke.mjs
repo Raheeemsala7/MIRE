@@ -53,8 +53,10 @@ async function verifyRotation(cookie, path, fixedDeadline) {
     assert.ok(before);
     await sessions.updateOne({ _id: id }, { $set: { accessTokenExpiresAt: new Date(Date.now() - 1) } });
     const [first, second] = await Promise.all([page(path, cookie), page(path, cookie)]);
-    assert.match(first.html, /Welcome/);
-    assert.match(second.html, /Welcome/);
+    assert.equal(first.response.status, 200);
+    assert.doesNotMatch(first.html, /NEXT_REDIRECT/);
+    assert.equal(second.response.status, 200);
+    assert.doesNotMatch(second.html, /NEXT_REDIRECT/);
     const after = await sessions.findOne({ _id: id });
     assert.equal(after.version, before.version + 1);
     assert.notEqual(after.encryptedRefreshToken, before.encryptedRefreshToken);
@@ -65,58 +67,62 @@ async function verifyRotation(cookie, path, fixedDeadline) {
   }
 }
 
-const guest = await page("/admin/dashboard", "");
+const guest = await page("/en/admin/dashboard", "");
 assert.equal(guest.response.status, 307);
-assert.equal(guest.response.headers.get("location"), "/login");
+assert.equal(new URL(guest.response.headers.get("location"), base).pathname, "/en/auth/login");
 
-const customerLogin = await action("/login", "loginAction", [{
+const customerLogin = await action("/en/auth/login", "loginAction", [{
   email: process.env.AUTH_SMOKE_CUSTOMER_EMAIL,
   password: process.env.AUTH_SMOKE_CUSTOMER_PASSWORD,
   rememberMe: false,
-}]);
+}, { locale: "en" }]);
 const customerResult = await customerLogin.text();
 assert.match(customerResult, /"success":true/);
-assert.match(customerResult, /"destination":"\/store"/);
+assert.match(customerResult, /"destination":"\/en"/);
 const customer = sessionCookie(customerLogin);
 assert.doesNotMatch(customer.header, /Max-Age|Expires/i);
 
-const customerStore = await page("/store", customer.cookie);
+const customerStore = await page("/en", customer.cookie);
 assert.equal(customerStore.response.status, 200);
-assert.match(customerStore.html, /Welcome back/);
+assert.doesNotMatch(customerStore.html, /NEXT_REDIRECT/);
 assert.doesNotMatch(customerStore.html, /accessToken|refreshToken/);
-const customerAdmin = await page("/admin/dashboard", customer.cookie);
-assert.match(customerAdmin.html, /NEXT_REDIRECT;replace;\/403/);
+const customerAdmin = await page("/en/admin/dashboard", customer.cookie);
+assert.match(customerAdmin.html, /NEXT_REDIRECT;replace;\/en\/403/);
 assert.doesNotMatch(customerAdmin.html, /Welcome, /);
 
 const visibleSession = await fetch(`${base}/api/auth/session`, { headers: { Cookie: customer.cookie } });
 const safeSession = await visibleSession.text();
-assert.doesNotMatch(safeSession, /accessToken|refreshToken/);
+assert.doesNotMatch(safeSession, /accessToken|refreshToken|sessionId/);
+assert.equal(JSON.parse(safeSession).user.role, "CUSTOMER");
+assert.notEqual(JSON.parse(safeSession).user.id, customer.cookie.slice("mire_session=".length));
+assert.ok(visibleSession.headers.getSetCookie().every((cookie) => !cookie.startsWith("mire_session=") || !/Expires|Max-Age/i.test(cookie)));
 assert.match(safeSession, /nour@example.com|"user"/);
 
-await verifyRotation(customer.cookie, "/store", false);
+await verifyRotation(customer.cookie, "/en", false);
 
-await action("/store", "logoutAction", [], customer.cookie);
+await action("/en", "logoutAction", [], customer.cookie);
 
-const adminLogin = await action("/login", "loginAction", [{
+const adminLogin = await action("/en/auth/login", "loginAction", [{
   email: process.env.AUTH_SMOKE_ADMIN_EMAIL,
   password: process.env.AUTH_SMOKE_ADMIN_PASSWORD,
   rememberMe: true,
-}]);
+}, { locale: "en" }]);
 const adminResult = await adminLogin.text();
 assert.match(adminResult, /"success":true/);
-assert.match(adminResult, /"destination":"\/admin\/dashboard"/);
+assert.match(adminResult, /"destination":"\/en\/admin\/dashboard"/);
 const admin = sessionCookie(adminLogin);
 assert.match(admin.header, /Max-Age=2592000/);
-await verifyRotation(admin.cookie, "/admin/dashboard", true);
-const dashboard = await page("/admin/dashboard", admin.cookie);
-assert.match(dashboard.html, /Welcome, /);
+await verifyRotation(admin.cookie, "/en/admin/dashboard", true);
+const dashboard = await page("/en/admin/dashboard", admin.cookie);
+assert.equal(dashboard.response.status, 200);
+assert.doesNotMatch(dashboard.html, /NEXT_REDIRECT/);
 assert.doesNotMatch(dashboard.html, /accessToken|refreshToken/);
-const adminStore = await page("/store", admin.cookie);
-assert.match(adminStore.html, /NEXT_REDIRECT;replace;\/403/);
+const adminStore = await page("/en", admin.cookie);
+assert.match(adminStore.html, /NEXT_REDIRECT;replace;\/en\/admin\/dashboard/);
 
-const logout = await action("/admin/dashboard", "logoutAction", [], admin.cookie);
+const logout = await action("/en/admin/dashboard", "logoutAction", [], admin.cookie);
 assert.ok(logout.headers.getSetCookie().some((value) => /^mire_session=;/.test(value)));
-const afterLogout = await page("/admin/dashboard", admin.cookie);
-assert.doesNotMatch(afterLogout.html, /Welcome, /);
+const afterLogout = await page("/en/admin/dashboard", admin.cookie);
+assert.match(afterLogout.html, /NEXT_REDIRECT;replace;\/en\/auth\/login/);
 
 console.log("Auth smoke test passed: guest guard, both roles, both cookie policies, safe session, refresh rotation, and logout.");

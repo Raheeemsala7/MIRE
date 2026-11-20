@@ -10,9 +10,9 @@ import { Button } from "@/shared/components/ui/button";
 import { useLogin } from "../../hooks/use-login";
 import { PasswordInput } from "../password-input";
 
-export function LoginForm() {
+export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   const t = useTranslations();
-  const { form, onSubmit, serverError, isPending } = useLogin();
+  const { form, onSubmit, serverError, isPending } = useLogin(callbackUrl);
   const { control } = form;
 
   return (

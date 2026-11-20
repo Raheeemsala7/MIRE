@@ -7,6 +7,10 @@ import { setRequestLocale, getMessages } from "next-intl/server";
 import { routing } from "@/src/i18n/routing";
 import { Providers } from "@/src/shared/context/providers";
 
+// The document's language and direction must resolve before <html> renders.
+// Only this layout may block; descendant pages retain instant-navigation checks.
+export const instant = false;
+
 const tajawal = Tajawal({
   variable: "--font-tajawal",
   subsets: ["arabic"],
@@ -75,7 +79,7 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
 
-  const messages = await getMessages();
+  const messages = await getMessages({ locale });
   const isRTL = locale === "ar";
 
   return (

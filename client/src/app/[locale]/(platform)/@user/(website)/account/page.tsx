@@ -1,3 +1,5 @@
+import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { User, Mail, Shield, Phone } from "lucide-react";
@@ -15,9 +17,7 @@ export async function generateMetadata({ params }: AccountPageProps): Promise<Me
   };
 }
 
-export const instant = false;
-
-export default async function AccountPage({ params }: AccountPageProps) {
+async function AccountPageContent({ params }: AccountPageProps) {
   const { locale } = await params;
   const isAr = locale === "ar";
   const user = await requireRole(["CUSTOMER", "ADMIN", "SUPER_ADMIN"], locale);
@@ -80,4 +80,8 @@ export default async function AccountPage({ params }: AccountPageProps) {
       </div>
     </main>
   );
+}
+
+export default function AccountPage(props: Parameters<typeof AccountPageContent>[0]) {
+  return <Suspense fallback={<AuthSkeleton />}><AccountPageContent {...props} /></Suspense>;
 }

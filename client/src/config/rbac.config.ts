@@ -10,6 +10,7 @@
  */
 
 import type { AppRole } from "@/lib/auth/types";
+import { ADMIN_ROLES } from "@/lib/auth/roles";
 
 export const PERMISSIONS = {
   EMPLOYEES_VIEW: "employees.view",
@@ -17,6 +18,8 @@ export const PERMISSIONS = {
   EMPLOYEES_UPDATE: "employees.update",
   EMPLOYEES_MANAGE_ROLES: "employees.manage_roles",
   EMPLOYEES_TOGGLE_STATUS: "employees.toggle_status",
+  CUSTOMERS_VIEW: "customers.view",
+  CUSTOMERS_UPDATE: "customers.update",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -32,6 +35,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
 
   ADMIN: [
     PERMISSIONS.EMPLOYEES_VIEW,
+    PERMISSIONS.CUSTOMERS_VIEW,
+    PERMISSIONS.CUSTOMERS_UPDATE,
     // Delegated actions (uncomment to grant to Admin without changing any UI code):
     // PERMISSIONS.EMPLOYEES_CREATE,
     // PERMISSIONS.EMPLOYEES_UPDATE,
@@ -39,8 +44,12 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
     // PERMISSIONS.EMPLOYEES_TOGGLE_STATUS,
   ],
 
-  ORDER_MANAGER: [],
-  CUSTOMER_SUPPORT: [],
+  ORDER_MANAGER: [
+    PERMISSIONS.CUSTOMERS_VIEW,
+  ],
+  CUSTOMER_SUPPORT: [
+    PERMISSIONS.CUSTOMERS_VIEW,
+  ],
   INVENTORY_MANAGER: [],
   ACCOUNTANT: [],
   CUSTOMER: [],
@@ -55,19 +64,14 @@ export const PERMISSION_BACKEND_MAP: Record<Permission, string> = {
   [PERMISSIONS.EMPLOYEES_UPDATE]: "employees:write",
   [PERMISSIONS.EMPLOYEES_MANAGE_ROLES]: "employees:write",
   [PERMISSIONS.EMPLOYEES_TOGGLE_STATUS]: "employees:write",
+  [PERMISSIONS.CUSTOMERS_VIEW]: "customers:read",
+  [PERMISSIONS.CUSTOMERS_UPDATE]: "customers:write",
 };
 
 /**
  * Supported employee roles recognized by backend model UserRoles.
  */
-export const SUPPORTED_EMPLOYEE_ROLES = [
-  "SUPER_ADMIN",
-  "ADMIN",
-  "ORDER_MANAGER",
-  "CUSTOMER_SUPPORT",
-  "INVENTORY_MANAGER",
-  "ACCOUNTANT",
-] as const;
+export const SUPPORTED_EMPLOYEE_ROLES = ADMIN_ROLES;
 
 export type SupportedEmployeeRole = (typeof SUPPORTED_EMPLOYEE_ROLES)[number];
 

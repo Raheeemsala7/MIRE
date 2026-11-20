@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/src/i18n/navigation";
 import { ChevronRight } from "lucide-react";
@@ -58,7 +58,7 @@ const productData: ProductDetail = {
   sizes: ["S", "M", "L", "XL"],
 };
 
-export default async function ProductDetailPage({ params }: ProductPageProps) {
+async function ProductDetailContent({ params }: ProductPageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const isRTL = locale === "ar";
@@ -89,5 +89,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       {/* ─── Related Products ─── */}
       <RelatedProducts />
     </div>
+  );
+}
+
+export default function ProductDetailPage({ params }: ProductPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <ProductDetailContent params={params} />
+    </Suspense>
   );
 }

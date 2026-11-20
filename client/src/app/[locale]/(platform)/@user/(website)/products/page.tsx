@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/src/i18n/routing";
 import { Link } from "@/src/i18n/navigation";
@@ -15,7 +15,7 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export default async function ProductsPage({ params }: ProductsPageProps) {
+async function ProductsContent({ params }: ProductsPageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const isRTL = locale === "ar";
@@ -38,22 +38,26 @@ export default async function ProductsPage({ params }: ProductsPageProps) {
 
       {/* ─── Page Title Header ─── */}
       <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-        <span className="text-xs uppercase tracking-[0.25em] text-ds-primary font-semibold">
-          {isRTL ? "أزياء نسائية معاصرة محتشمة" : "CONTEMPORARY MODEST WOMENSWEAR"}
-        </span>
-        <h1 className="text-3xl sm:text-5xl font-brand-serif text-ds-text-plain">
-          {isRTL ? "جميع تشكيلات ميري" : "All MIRÉ Collections"}
+        <h1 className="text-3xl md:text-5xl font-serif font-medium tracking-tight text-ds-text-plain">
+          {isRTL ? "تشكيلة ميري الاستثنائية" : "The MIRÉ Collection"}
         </h1>
-        <p className="text-xs sm:text-sm text-ds-text-muted leading-relaxed">
+        <p className="text-sm md:text-base text-ds-text-soft font-light leading-relaxed">
           {isRTL
-            ? "استكشفي تشكيلتنا المتكاملة من الجيبات البليسيه المنسدلة، والأطقم المتناسقة، والعبايات المصممة بأقمشة طبيعية وقصات مفعمة بالثقة والهدوء."
-            : "Explore our full range of fluid pleated skirts, curated Pantone modest sets, and elegant abayas crafted with quiet confidence."}
+            ? "تصاميم منتقاة بعناية تجسد الأناقة الهادئة والأنوثة الراقية، مصنوعة من أقمشة طبيعية فاخرة."
+            : "Thoughtfully curated modest essentials tailored in luxurious natural fibers for the discerning woman."}
         </p>
       </div>
 
-      {/* ─── Interactive Products Catalog Grid ─── */}
+      {/* ─── Interactive Products Catalog ─── */}
       <ProductsCatalog />
     </div>
   );
 }
 
+export default function ProductsPage({ params }: ProductsPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <ProductsContent params={params} />
+    </Suspense>
+  );
+}

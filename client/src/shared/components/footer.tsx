@@ -141,6 +141,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/account/returns" className="hover:text-white transition-colors">
+                  {isRTL ? "المرتجعات والاستبدال" : "Returns & Exchanges"}
+                </Link>
+              </li>
+              <li>
                 <Link href="/#help" className="hover:text-white transition-colors">
                   {t("footer.contact")}
                 </Link>

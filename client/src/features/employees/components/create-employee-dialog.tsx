@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -104,32 +103,38 @@ export function CreateEmployeeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl !h-fit max-h-[90vh] overflow-y-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-white text-foreground dark:bg-card !flex !flex-col !gap-4">
-        <DialogHeader>
-          <div className="flex items-center gap-2 ">
-            <div className="rounded-full bg-primary/10 p-2 text-primary">
-              <UserPlus className="size-5" />
+      <DialogContent className="max-w-2xl max-h-[88vh] flex flex-col p-0 overflow-hidden bg-white text-foreground dark:bg-card border border-border shadow-2xl">
+        <div className="p-6 pb-4 border-b border-border/50 shrink-0">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5">
+              <div className="rounded-full bg-primary/10 p-2 text-primary shrink-0">
+                <UserPlus className="size-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-serif">
+                  {t("employees-dialog-create-title") || "Add New Employee"}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                  {t("employees-dialog-create-desc") ||
+                    "Create an employee account and configure operational permissions."}
+                </DialogDescription>
+              </div>
             </div>
-            <div>
-              <DialogTitle className="text-xl font-serif">
-                {t("employees-dialog-create-title") || "Add New Employee"}
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                {t("employees-dialog-create-desc") ||
-                  "Create an employee account and configure operational permissions."}
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
+          </DialogHeader>
+        </div>
 
         {serverError && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
+          <div className="mx-6 mt-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2 shrink-0">
             <ShieldAlert className="size-4 shrink-0" />
             <span>{serverError}</span>
           </div>
         )}
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 ">
+        <form
+          id="create-employee-form"
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex-1 overflow-y-auto p-6 pt-4 space-y-4 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Name */}
             <div className="space-y-1.5">
@@ -150,7 +155,7 @@ export function CreateEmployeeDialog({
             </div>
 
             {/* Email */}
-            <div className="space-y-1.5 ">
+            <div className="space-y-1.5">
               <Label htmlFor="create-email" className="text-xs font-medium">
                 {t("employees-field-email") || "Email Address"} *
               </Label>
@@ -309,22 +314,22 @@ export function CreateEmployeeDialog({
               </div>
             )}
           </div>
-
-          <DialogFooter className="pt-4 border-t border-border/60 flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
-              {t("employees-action-cancel") || "Cancel"}
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="size-4 animate-spin mr-2 rtl:ml-2 rtl:mr-0" />}
-              {t("employees-action-create-submit") || "Create Employee"}
-            </Button>
-          </DialogFooter>
         </form>
+
+        <div className="p-4 px-6 border-t border-border/60 bg-muted/10 flex items-center justify-end gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
+            {t("employees-action-cancel") || "Cancel"}
+          </Button>
+          <Button type="submit" form="create-employee-form" disabled={isPending}>
+            {isPending && <Loader2 className="size-4 animate-spin mr-2 rtl:ml-2 rtl:mr-0" />}
+            {t("employees-action-create-submit") || "Create Employee"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

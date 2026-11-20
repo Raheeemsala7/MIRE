@@ -4,6 +4,7 @@ import {
   type Permission,
 } from "@/config/rbac.config";
 import type { AppRole } from "@/lib/auth/types";
+import { isAppRole } from "@/lib/auth/roles";
 
 /**
  * Check if a role and optional user permissions allow a specific application permission.
@@ -17,10 +18,8 @@ export function can(
   permission: Permission,
   userPermissions?: readonly string[] | null
 ): boolean {
-  if (!role) return false;
-
-  const validRole = role as AppRole;
-  const configured = ROLE_PERMISSIONS[validRole];
+  if (!isAppRole(role)) return false;
+  const configured = ROLE_PERMISSIONS[role];
   if (!configured) return false;
 
   // Super Admin wildcard grants all permissions
@@ -40,7 +39,7 @@ export function can(
     if (requiredBackendPerm && !userPermissions.includes(requiredBackendPerm)) {
       return false;
     }
-  }
+  } else return false;
 
   return true;
 }

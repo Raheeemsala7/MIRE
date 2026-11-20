@@ -127,6 +127,14 @@ export async function backendGet<T>(path: `/${string}`, accessToken: string): Pr
   return response.json() as Promise<T>;
 }
 
+export async function backendMe(accessToken: string) {
+  const payload = await backendGet<unknown>("/auth/me", accessToken);
+  const parsed = z.object({ success: z.literal(true), data: z.object({ user }) }).safeParse(payload);
+  if (!parsed.success) throw new BackendAuthError(502);
+  const { _id, name, email, role, permissions } = parsed.data.data.user;
+  return { id: _id, name, email, role, ...(permissions ? { permissions } : {}) };
+}
+
 export async function backendPost<T>(path: `/${string}`, body: unknown, accessToken: string): Promise<T> {
   const response = await fetch(`${apiUrl()}${path}`, {
     method: "POST",

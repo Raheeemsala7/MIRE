@@ -1,27 +1,26 @@
+import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
+import { Suspense } from "react";
+import { auth } from "@/auth";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { getAuthLocale } from "@/features/auth/lib/locale";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { LoginForm } from "@/features/auth/components/login/login-form";
-import { currentUser, destination, SESSION_COOKIE } from "@/lib/auth/session";
+import { destination } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
   return { title: t("login-meta-title") };
 }
-export const instant = false;
-
-export default async function LoginPage() {
+async function LoginPageContent({ searchParams }: { searchParams: Promise<{ callbackUrl?: string }> }) {
+  const { callbackUrl } = await searchParams;
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
-  const user = await currentUser();
-  if (user) redirect(destination(user.role));
-  if ((await cookies()).has(SESSION_COOKIE))
-    redirect("/api/auth/clear-session");
-  return (
+  const user = (await auth())?.user;
+  if (user) redirect(destination(user.role, locale, user.permissions));
+return (
     <main className="auth-surface grid min-h-screen bg-ds-plain lg:grid-cols-[minmax(0,1fr)_minmax(440px,48%)]">
       <section className="relative hidden overflow-hidden bg-ds-primary-saturated text-white lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
         <div
@@ -72,10 +71,14 @@ export default async function LoginPage() {
           <p className="mt-4 text-base leading-7 text-ds-text-muted">
             {t("login-description")}
           </p>
-          <LoginForm />
+          <LoginForm callbackUrl={callbackUrl} />
         </div>
         <p className="text-center text-xs text-ds-text-soft">MIRÉ</p>
       </section>
     </main>
   );
+}
+
+export default function LoginPage(props: Parameters<typeof LoginPageContent>[0]) {
+  return <Suspense fallback={<AuthSkeleton />}><LoginPageContent {...props} /></Suspense>;
 }

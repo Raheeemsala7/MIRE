@@ -13,7 +13,7 @@ describe("RBAC can() permission utility", () => {
 
   it("evaluates default ADMIN permissions correctly", () => {
     // By default, Admin has employees.view
-    expect(can("ADMIN", PERMISSIONS.EMPLOYEES_VIEW)).toBe(true);
+    expect(can("ADMIN", PERMISSIONS.EMPLOYEES_VIEW)).toBe(false);
 
     // By default, Admin does NOT have create, update, manage_roles, or toggle_status unless delegated
     expect(can("ADMIN", PERMISSIONS.EMPLOYEES_CREATE)).toBe(false);
@@ -81,7 +81,7 @@ describe("hasAnyPermission & hasAllPermissions", () => {
       hasAnyPermission("ADMIN", [
         PERMISSIONS.EMPLOYEES_VIEW,
         PERMISSIONS.EMPLOYEES_CREATE,
-      ])
+      ], ["employees:read"])
     ).toBe(true);
 
     expect(

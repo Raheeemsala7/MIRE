@@ -19,9 +19,11 @@ import { InventoryOverview } from "./inventory-overview";
 interface AnalyticsDashboardProps {
   initialData?: DashboardCompositeData;
   locale: string;
+  canViewOrders: boolean;
+  canViewInventory: boolean;
 }
 
-export function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
+export function AnalyticsDashboard({ initialData, canViewOrders, canViewInventory }: AnalyticsDashboardProps) {
   const t = useTranslations();
   const [filter, setFilter] = useState<AnalyticsFilter>({ range: "30d" });
 
@@ -37,18 +39,18 @@ export function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
     data: recentOrders,
     isLoading: isOrdersLoading,
     refetch: refetchOrders,
-  } = useRecentOrders(initialData?.recentOrders);
+  } = useRecentOrders(initialData?.recentOrders, canViewOrders);
 
   const {
     data: lowStockItems,
     isLoading: isInventoryLoading,
     refetch: refetchInventory,
-  } = useLowStockAlerts(initialData?.lowStockItems);
+  } = useLowStockAlerts(initialData?.lowStockItems, canViewInventory);
 
   const handleRefreshAll = () => {
     void refetchAnalytics();
-    void refetchOrders();
-    void refetchInventory();
+    if (canViewOrders) void refetchOrders();
+    if (canViewInventory) void refetchInventory();
   };
 
   return (
@@ -132,20 +134,20 @@ export function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
       {/* Tables & Operational Insights: Recent Orders (7 cols) + Top Products & Stock (5 cols) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="lg:col-span-7">
-          <RecentOrders
+          {canViewOrders && <RecentOrders
             orders={recentOrders}
             isLoading={isOrdersLoading && !recentOrders}
-          />
+          />}
         </div>
         <div className="space-y-6 lg:col-span-5">
           <TopProducts
             data={analyticsData?.charts?.bestSellers}
             isLoading={isAnalyticsLoading && !analyticsData}
           />
-          <InventoryOverview
+          {canViewInventory && <InventoryOverview
             items={lowStockItems}
             isLoading={isInventoryLoading && !lowStockItems}
-          />
+          />}
         </div>
       </div>
     </div>

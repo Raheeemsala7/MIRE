@@ -1,16 +1,17 @@
+import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
+import { Suspense } from "react";
+import { auth } from "@/auth";
 import Link from "next/link";
 import { Link as LocalizedLink } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { getAuthLocale } from "@/features/auth/lib/locale";
-import { currentUser, destination } from "@/lib/auth/session";
+import { destination } from "@/lib/auth/session";
 
-export const instant = false;
-
-export default async function ForbiddenPage() {
+async function ForbiddenPageContent() {
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
-  const user = await currentUser();
-  const target = user ? destination(user.role, locale) : `/${locale}/auth/login`;
+  const user = (await auth())?.user;
+  const target = user ? destination(user.role, locale, user.permissions) : `/${locale}/auth/login`;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
@@ -24,4 +25,8 @@ export default async function ForbiddenPage() {
       )}
     </main>
   );
+}
+
+export default function ForbiddenPage() {
+  return <Suspense fallback={<AuthSkeleton />}><ForbiddenPageContent /></Suspense>;
 }

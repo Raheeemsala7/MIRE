@@ -4,9 +4,11 @@ import {
   validateEmployeeMutation,
 } from "./server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
-import type { SafeUser, SessionRecord } from "@/lib/auth/types";
+import type { Session } from "next-auth";
+import type { SafeUser } from "@/lib/auth/types";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/auth", () => ({ auth: vi.fn() }));
 
 describe("assertSessionPermission", () => {
   it("rejects with 401 when session is null", () => {
@@ -16,7 +18,8 @@ describe("assertSessionPermission", () => {
   });
 
   it("rejects with 403 when session user lacks required permission", () => {
-    const session: Partial<SessionRecord> = {
+    const session: Session = {
+      expires: "2026-12-01T00:00:00Z",
       user: {
         id: "emp-1",
         name: "Order Staff",
@@ -25,7 +28,7 @@ describe("assertSessionPermission", () => {
       },
     };
     const result = assertSessionPermission(
-      session as SessionRecord,
+      session,
       PERMISSIONS.EMPLOYEES_VIEW
     );
     expect(result.authorized).toBe(false);
@@ -33,16 +36,18 @@ describe("assertSessionPermission", () => {
   });
 
   it("authorizes when user has required permission", () => {
-    const session: Partial<SessionRecord> = {
+    const session: Session = {
+      expires: "2026-12-01T00:00:00Z",
       user: {
         id: "admin-1",
         name: "Admin User",
         email: "admin@mire.com",
         role: "ADMIN",
+        permissions: ["employees:read"],
       },
     };
     const result = assertSessionPermission(
-      session as SessionRecord,
+      session,
       PERMISSIONS.EMPLOYEES_VIEW
     );
     expect(result.authorized).toBe(true);

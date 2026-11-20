@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -143,57 +142,63 @@ function EditEmployeeDialogContent({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl !h-fit max-h-[90vh] overflow-y-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-white text-foreground dark:bg-card !flex !flex-col !gap-4">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="rounded-full bg-primary/10 p-2 text-primary">
-              <UserCheck className="size-5" />
+      <DialogContent className="max-w-2xl max-h-[88vh] flex flex-col p-0 overflow-hidden bg-white text-foreground dark:bg-card border border-border shadow-2xl">
+        <div className="p-6 pb-0 border-b border-border/50 shrink-0 space-y-3">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5">
+              <div className="rounded-full bg-primary/10 p-2 text-primary shrink-0">
+                <UserCheck className="size-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-serif">
+                  {t("employees-dialog-edit-title") || "Edit Employee"}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                  {employee.name} ({employee.email})
+                </DialogDescription>
+              </div>
             </div>
-            <div>
-              <DialogTitle className="text-xl font-serif">
-                {t("employees-dialog-edit-title") || "Edit Employee"}
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                {employee.name} ({employee.email})
-              </DialogDescription>
-            </div>
+          </DialogHeader>
+
+          {/* Tab switch */}
+          <div className="flex">
+            <button
+              type="button"
+              onClick={() => setActiveTab("general")}
+              className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${
+                activeTab === "general"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("employees-tab-general") || "General Info & Role"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("permissions")}
+              className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${
+                activeTab === "permissions"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("employees-tab-permissions") || "Permissions Matrix"}
+            </button>
           </div>
-        </DialogHeader>
+        </div>
 
         {serverError && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
+          <div className="mx-6 mt-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2 shrink-0">
             <ShieldAlert className="size-4 shrink-0" />
             <span>{serverError}</span>
           </div>
         )}
 
-        {/* Tab switch */}
-        <div className="flex border-b border-border/60">
-          <button
-            type="button"
-            onClick={() => setActiveTab("general")}
-            className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
-              activeTab === "general"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t("employees-tab-general") || "General Info & Role"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("permissions")}
-            className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
-              activeTab === "permissions"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t("employees-tab-permissions") || "Permissions Matrix"}
-          </button>
-        </div>
-
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
+        <form
+          id="edit-employee-form"
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex-1 overflow-y-auto p-6 pt-4 space-y-4 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        >
           {activeTab === "general" ? (
             <div className="space-y-4">
               {!canEdit && (
@@ -313,22 +318,26 @@ function EditEmployeeDialogContent({
               />
             </div>
           )}
-
-          <DialogFooter className="pt-4 border-t border-border/60 flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
-              {t("employees-action-cancel") || "Cancel"}
-            </Button>
-            <Button type="submit" disabled={isPending || (!canEdit && !canManageRoles)}>
-              {isPending && <Loader2 className="size-4 animate-spin mr-2 rtl:ml-2 rtl:mr-0" />}
-              {t("employees-action-save") || "Save Changes"}
-            </Button>
-          </DialogFooter>
         </form>
+
+        <div className="p-4 px-6 border-t border-border/60 bg-muted/10 flex items-center justify-end gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
+            {t("employees-action-cancel") || "Cancel"}
+          </Button>
+          <Button
+            type="submit"
+            form="edit-employee-form"
+            disabled={isPending || (!canEdit && !canManageRoles)}
+          >
+            {isPending && <Loader2 className="size-4 animate-spin mr-2 rtl:ml-2 rtl:mr-0" />}
+            {t("employees-action-save") || "Save Changes"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

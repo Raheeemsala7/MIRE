@@ -1,12 +1,15 @@
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
+import { SESSION_COOKIE } from "./lib/auth/policy";
 
 const intlMiddleware = createMiddleware(routing);
 
 function getLocale(request: NextRequest): string {
+  const pathLocale = request.nextUrl.pathname.split("/")[1];
+  if (pathLocale === "ar" || pathLocale === "en") return pathLocale;
   const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;
-  return cookieLocale && routing.locales.includes(cookieLocale as "ar" | "en")
+  return cookieLocale === "ar" || cookieLocale === "en"
     ? cookieLocale
     : routing.defaultLocale;
 }
@@ -16,7 +19,10 @@ export default function proxy(request: NextRequest) {
   const locale = getLocale(request);
 
   if (path === "/login" || path === "/auth/login") {
-    return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
+    const target = new URL(`/${locale}/auth/login`, request.url);
+    const callback = request.nextUrl.searchParams.get("callbackUrl");
+    if (callback) target.searchParams.set("callbackUrl", callback);
+    return NextResponse.redirect(target);
   }
   if (path === "/auth/register" || path === "/register") {
     return NextResponse.redirect(new URL(`/${locale}/auth/register`, request.url));
@@ -38,10 +44,10 @@ export default function proxy(request: NextRequest) {
   }
 
   // Admin route protection at the edge (server-side requireRole also enforces this)
-  const isAdminRoute = routing.locales.some((loc) => path.startsWith(`/${loc}/admin`));
-  if (isAdminRoute && !request.cookies.has("mire_session")) {
+  const isAdminRoute = /^\/(ar|en)\/admin(?:\/|$)/.test(path);
+  if (isAdminRoute && !request.cookies.has(SESSION_COOKIE)) {
     const loginUrl = new URL(`/${locale}/auth/login`, request.url);
-    loginUrl.searchParams.set("callbackUrl", path);
+    loginUrl.searchParams.set("callbackUrl", path + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 

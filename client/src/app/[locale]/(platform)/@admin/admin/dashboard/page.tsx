@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+import { ADMIN_ROLES, hasPermission } from "@/lib/auth/roles";
+import type { SafeUser } from "@/lib/auth/types";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { requireRole, serverApiGet } from "@/lib/auth/session";
@@ -9,8 +12,6 @@ import {
   type RecentOrderItem,
   type LowStockItem,
 } from "@/features/analytics";
-
-export const instant = false;
 
 interface AdminDashboardPageProps {
   params: Promise<{ locale: string }>;
@@ -38,7 +39,7 @@ interface RawOrder {
   items?: unknown[];
 }
 
-async function getInitialDashboardData(): Promise<DashboardCompositeData> {
+async function getInitialDashboardData(user: SafeUser): Promise<DashboardCompositeData> {
   let analytics: AnalyticsDashboardData | undefined = undefined;
   let recentOrders: RecentOrderItem[] | undefined = undefined;
   let lowStockItems: LowStockItem[] | undefined = undefined;
@@ -47,8 +48,8 @@ async function getInitialDashboardData(): Promise<DashboardCompositeData> {
     // Parallel server-side fetch with isolated error resilience
     const results = await Promise.allSettled([
       serverApiGet<{ success: boolean; data: AnalyticsDashboardData }>("/analytics/dashboard?range=30d"),
-      serverApiGet<{ success: boolean; data: RawOrder[] }>("/orders?limit=6&sort=-createdAt"),
-      serverApiGet<{ success: boolean; data: LowStockItem[] }>("/inventory/low-stock"),
+      hasPermission(user, "orders:read") ? serverApiGet<{ success: boolean; data: RawOrder[] }>("/orders?limit=6&sort=-createdAt") : Promise.resolve(undefined),
+      hasPermission(user, "inventory:read") ? serverApiGet<{ success: boolean; data: LowStockItem[] }>("/inventory/low-stock") : Promise.resolve(undefined),
     ]);
 
     if (results[0].status === "fulfilled" && results[0].value?.data) {
@@ -90,17 +91,22 @@ async function getInitialDashboardData(): Promise<DashboardCompositeData> {
   return { analytics, recentOrders, lowStockItems };
 }
 
-export default async function AdminDashboardPage({ params }: AdminDashboardPageProps) {
+async function AdminDashboardPageContent({ params }: AdminDashboardPageProps) {
   const { locale } = await params;
-  await requireRole(["ADMIN", "SUPER_ADMIN"], locale);
+  const user = await requireRole(ADMIN_ROLES, locale);
+  if (!hasPermission(user, "dashboard:read")) redirect(`/${locale}/403`);
 
-  const initialData = await getInitialDashboardData();
+  const initialData = await getInitialDashboardData(user);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <Suspense fallback={<DashboardSkeleton />}>
-        <AnalyticsDashboard initialData={initialData} locale={locale} />
+        <AnalyticsDashboard initialData={initialData} locale={locale} canViewOrders={hasPermission(user, "orders:read")} canViewInventory={hasPermission(user, "inventory:read")} />
       </Suspense>
     </main>
   );
+}
+
+export default function AdminDashboardPage(props: Parameters<typeof AdminDashboardPageContent>[0]) {
+  return <Suspense fallback={<DashboardSkeleton />}><AdminDashboardPageContent {...props} /></Suspense>;
 }

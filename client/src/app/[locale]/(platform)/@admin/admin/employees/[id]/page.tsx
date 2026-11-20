@@ -12,8 +12,6 @@ import {
   type Employee,
 } from "@/features/employees";
 
-export const instant = false;
-
 interface EmployeeDetailsPageProps {
   params: Promise<{ locale: string; id: string }>;
 }
@@ -24,6 +22,7 @@ export async function generateMetadata({
   const { locale, id } = await params;
   const isAr = locale === "ar";
   try {
+    await requirePermission(PERMISSIONS.EMPLOYEES_VIEW, locale);
     const res = await serverApiGet<SingleEmployeeResponse>(
       `/employees/${encodeURIComponent(id)}` as `/${string}`
     );
@@ -66,7 +65,7 @@ async function getEmployee(id: string, locale: string): Promise<Employee> {
   }
 }
 
-export default async function EmployeeDetailsPage({
+async function EmployeeDetailsPageContent({
   params,
 }: EmployeeDetailsPageProps) {
   const { locale, id } = await params;
@@ -85,4 +84,8 @@ export default async function EmployeeDetailsPage({
       </Suspense>
     </main>
   );
+}
+
+export default function EmployeeDetailsPage(props: Parameters<typeof EmployeeDetailsPageContent>[0]) {
+  return <Suspense fallback={<EmployeeDetailsSkeleton />}><EmployeeDetailsPageContent {...props} /></Suspense>;
 }

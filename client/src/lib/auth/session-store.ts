@@ -1,4 +1,5 @@
 import "server-only";
+import { connection as requestConnection } from "next/server";
 import { MongoClient, type Collection } from "mongodb";
 import { decrypt, encrypt, hashSessionId, jwtExpiry, newSessionId } from "./crypto";
 import type { SafeUser, SessionRecord } from "./types";
@@ -50,6 +51,9 @@ export async function createSession(user: SafeUser, accessToken: string, refresh
 
 export async function getSession(id: string): Promise<SessionRecord | null> {
   if (!/^[\w-]{40,64}$/.test(id)) return null;
+  // Partial prefetches can already know the cookie. MongoDB's internal clocks
+  // and session expiry checks must still wait for an actual request.
+  await requestConnection();
   const sessions = await collection();
   const document = await sessions.findOne({ _id: hashSessionId(id) });
   if (!document) return null;

@@ -1,10 +1,13 @@
+import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
+import { Suspense } from "react";
+import { auth } from "@/auth";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { getAuthLocale } from "@/features/auth/lib/locale";
 import { redirect } from "next/navigation";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
-import { currentUser, destination } from "@/lib/auth/session";
+import { destination } from "@/lib/auth/session";
 
 interface ResetPasswordPageProps {
   searchParams: Promise<{ token?: string }>;
@@ -16,13 +19,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("reset-meta-title") };
 }
 
-export const instant = false;
-
-export default async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
+async function ResetPasswordPageContent({ searchParams }: ResetPasswordPageProps) {
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
-  const user = await currentUser();
-  if (user) redirect(destination(user.role));
+  const user = (await auth())?.user;
+  if (user) redirect(destination(user.role, locale, user.permissions));
 
   const resolvedParams = await searchParams;
   const token = resolvedParams.token ?? "";
@@ -68,7 +69,7 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
             MIRÉ
           </Link>
           <Link
-            href="/login"
+            href="/auth/login"
             locale={locale}
             className="ms-auto text-sm text-ds-text-muted underline-offset-4 hover:text-ds-text-primary hover:underline"
           >
@@ -88,4 +89,8 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
       </section>
     </main>
   );
+}
+
+export default function ResetPasswordPage(props: Parameters<typeof ResetPasswordPageContent>[0]) {
+  return <Suspense fallback={<AuthSkeleton />}><ResetPasswordPageContent {...props} /></Suspense>;
 }

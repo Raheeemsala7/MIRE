@@ -94,7 +94,7 @@ export function ResetPasswordForm({ token = "" }: ResetPasswordFormProps) {
             variant="ghost"
             className="h-12 w-full rounded-xl text-sm font-medium text-ds-text-muted hover:bg-ds-subtle hover:text-ds-text-primary"
           >
-            <Link href="/login">
+            <Link href="/auth/login">
               <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
               {t("reset-back-to-login")}
             </Link>
@@ -126,7 +126,7 @@ export function ResetPasswordForm({ token = "" }: ResetPasswordFormProps) {
             asChild
             className="h-12 w-full rounded-xl bg-ds-primary text-sm font-semibold text-white shadow-[0_12px_24px_-16px_rgba(92,73,96,.8)] transition-all hover:-translate-y-0.5 hover:bg-ds-primary-saturated focus-visible:ring-ds-primary"
           >
-            <Link href="/login">
+            <Link href="/auth/login">
               <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
               {t("reset-success-login-btn")}
             </Link>
@@ -254,7 +254,7 @@ export function ResetPasswordForm({ token = "" }: ResetPasswordFormProps) {
       {/* Back to login link */}
       <p className="pt-2 text-center text-sm text-ds-text-muted">
         <Link
-          href="/login"
+          href="/auth/login"
           className="font-semibold text-ds-text-primary underline-offset-4 hover:underline"
         >
           {t("reset-back-to-login")}

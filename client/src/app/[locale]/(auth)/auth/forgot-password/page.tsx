@@ -1,10 +1,13 @@
+import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
+import { Suspense } from "react";
+import { auth } from "@/auth";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { getAuthLocale } from "@/features/auth/lib/locale";
 import { redirect } from "next/navigation";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
-import { currentUser, destination } from "@/lib/auth/session";
+import { destination } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getAuthLocale();
@@ -12,13 +15,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("forgot-meta-title") };
 }
 
-export const instant = false;
-
-export default async function ForgotPasswordPage() {
+async function ForgotPasswordPageContent() {
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
-  const user = await currentUser();
-  if (user) redirect(destination(user.role));
+  const user = (await auth())?.user;
+  if (user) redirect(destination(user.role, locale, user.permissions));
 
   return (
     <main className="auth-surface grid min-h-screen bg-ds-plain lg:grid-cols-[minmax(0,1fr)_minmax(440px,48%)]">
@@ -61,7 +62,7 @@ export default async function ForgotPasswordPage() {
             MIRÉ
           </Link>
           <Link
-            href="/login"
+            href="/auth/login"
             locale={locale}
             className="ms-auto text-sm text-ds-text-muted underline-offset-4 hover:text-ds-text-primary hover:underline"
           >
@@ -81,4 +82,8 @@ export default async function ForgotPasswordPage() {
       </section>
     </main>
   );
+}
+
+export default function ForgotPasswordPage() {
+  return <Suspense fallback={<AuthSkeleton />}><ForgotPasswordPageContent /></Suspense>;
 }

@@ -10,6 +10,7 @@
  */
 
 import type { AppRole } from "@/lib/auth/types";
+import { ADMIN_ROLES } from "@/lib/auth/roles";
 
 export const PERMISSIONS = {
   EMPLOYEES_VIEW: "employees.view",
@@ -17,6 +18,13 @@ export const PERMISSIONS = {
   EMPLOYEES_UPDATE: "employees.update",
   EMPLOYEES_MANAGE_ROLES: "employees.manage_roles",
   EMPLOYEES_TOGGLE_STATUS: "employees.toggle_status",
+  CUSTOMERS_VIEW: "customers.view",
+  CUSTOMERS_UPDATE: "customers.update",
+  RETURNS_VIEW: "returns.view",
+  RETURNS_UPDATE_STATUS: "returns.update_status",
+  RETURNS_INSPECT: "returns.inspect",
+  RETURNS_ASSIGN: "returns.assign",
+  RETURNS_LOG_CALL: "returns.log_call",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -32,6 +40,13 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
 
   ADMIN: [
     PERMISSIONS.EMPLOYEES_VIEW,
+    PERMISSIONS.CUSTOMERS_VIEW,
+    PERMISSIONS.CUSTOMERS_UPDATE,
+    PERMISSIONS.RETURNS_VIEW,
+    PERMISSIONS.RETURNS_UPDATE_STATUS,
+    PERMISSIONS.RETURNS_INSPECT,
+    PERMISSIONS.RETURNS_ASSIGN,
+    PERMISSIONS.RETURNS_LOG_CALL,
     // Delegated actions (uncomment to grant to Admin without changing any UI code):
     // PERMISSIONS.EMPLOYEES_CREATE,
     // PERMISSIONS.EMPLOYEES_UPDATE,
@@ -39,8 +54,20 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
     // PERMISSIONS.EMPLOYEES_TOGGLE_STATUS,
   ],
 
-  ORDER_MANAGER: [],
-  CUSTOMER_SUPPORT: [],
+  ORDER_MANAGER: [
+    PERMISSIONS.CUSTOMERS_VIEW,
+    PERMISSIONS.RETURNS_VIEW,
+    PERMISSIONS.RETURNS_UPDATE_STATUS,
+    PERMISSIONS.RETURNS_INSPECT,
+    PERMISSIONS.RETURNS_ASSIGN,
+    PERMISSIONS.RETURNS_LOG_CALL,
+  ],
+  CUSTOMER_SUPPORT: [
+    PERMISSIONS.CUSTOMERS_VIEW,
+    PERMISSIONS.RETURNS_VIEW,
+    PERMISSIONS.RETURNS_UPDATE_STATUS,
+    PERMISSIONS.RETURNS_LOG_CALL,
+  ],
   INVENTORY_MANAGER: [],
   ACCOUNTANT: [],
   CUSTOMER: [],
@@ -55,19 +82,19 @@ export const PERMISSION_BACKEND_MAP: Record<Permission, string> = {
   [PERMISSIONS.EMPLOYEES_UPDATE]: "employees:write",
   [PERMISSIONS.EMPLOYEES_MANAGE_ROLES]: "employees:write",
   [PERMISSIONS.EMPLOYEES_TOGGLE_STATUS]: "employees:write",
+  [PERMISSIONS.CUSTOMERS_VIEW]: "customers:read",
+  [PERMISSIONS.CUSTOMERS_UPDATE]: "customers:write",
+  [PERMISSIONS.RETURNS_VIEW]: "returns:read",
+  [PERMISSIONS.RETURNS_UPDATE_STATUS]: "returns:write",
+  [PERMISSIONS.RETURNS_INSPECT]: "returns:write",
+  [PERMISSIONS.RETURNS_ASSIGN]: "returns:write",
+  [PERMISSIONS.RETURNS_LOG_CALL]: "returns:write",
 };
 
 /**
  * Supported employee roles recognized by backend model UserRoles.
  */
-export const SUPPORTED_EMPLOYEE_ROLES = [
-  "SUPER_ADMIN",
-  "ADMIN",
-  "ORDER_MANAGER",
-  "CUSTOMER_SUPPORT",
-  "INVENTORY_MANAGER",
-  "ACCOUNTANT",
-] as const;
+export const SUPPORTED_EMPLOYEE_ROLES = ADMIN_ROLES;
 
 export type SupportedEmployeeRole = (typeof SUPPORTED_EMPLOYEE_ROLES)[number];
 

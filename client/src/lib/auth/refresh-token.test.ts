@@ -35,6 +35,15 @@ beforeEach(() => {
 });
 
 describe("server token rotation", () => {
+  it("reuses a concurrent rotation when retrying an older rejected access token", async () => {
+    store.getSession.mockResolvedValue(record({ version: 2,
+      accessToken: "already-rotated", accessTokenExpiresAt: new Date(Date.now() + 3_600_000) }));
+    const { freshSession } = await import("./refresh-token");
+    expect((await freshSession("opaque-id", true, 1))?.accessToken).toBe("already-rotated");
+    expect(backend.refresh).not.toHaveBeenCalled();
+    expect(store.claimRefresh).not.toHaveBeenCalled();
+  });
+
   it("rotates both tokens and keeps the existing session deadline", async () => {
     const old = record();
     const updated = record({ accessToken: "new-access", refreshToken: "new-refresh", version: 1,

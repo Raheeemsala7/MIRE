@@ -48,7 +48,6 @@ import { can } from "@/lib/permissions/can";
 import {
   PERMISSIONS,
   SUPPORTED_EMPLOYEE_ROLES,
-  type SupportedEmployeeRole,
 } from "@/config/rbac.config";
 import { getRoleBadgeVariant, formatEmployeeDate } from "../utils/employee.util";
 import type { Employee, EmployeeFilters, PaginationMeta } from "../types/employee.types";
@@ -352,7 +351,7 @@ export function EmployeesTable({
                     {/* Role */}
                     <TableCell>
                       <Badge
-                        variant={getRoleBadgeVariant(emp.role as SupportedEmployeeRole)}
+                        variant={getRoleBadgeVariant(emp.role)}
                         className="text-[11px] font-normal"
                       >
                         {t(`employees-role-${emp.role}`) || emp.role.replace("_", " ")}

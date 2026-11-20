@@ -1,3 +1,5 @@
+import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { requireRole } from "@/lib/auth/session";
@@ -15,9 +17,7 @@ export async function generateMetadata({ params }: OrdersPageProps): Promise<Met
   };
 }
 
-export const instant = false;
-
-export default async function OrdersPage({ params }: OrdersPageProps) {
+async function OrdersPageContent({ params }: OrdersPageProps) {
   const { locale } = await params;
   const isAr = locale === "ar";
   const user = await requireRole(["CUSTOMER", "ADMIN", "SUPER_ADMIN"], locale);
@@ -60,4 +60,8 @@ export default async function OrdersPage({ params }: OrdersPageProps) {
       </div>
     </main>
   );
+}
+
+export default function OrdersPage(props: Parameters<typeof OrdersPageContent>[0]) {
+  return <Suspense fallback={<AuthSkeleton />}><OrdersPageContent {...props} /></Suspense>;
 }

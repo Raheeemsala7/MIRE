@@ -1,6 +1,9 @@
+import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/auth/session";
-import { User, Mail, Shield, Phone } from "lucide-react";
+import { User, Mail, Shield, Phone, RotateCcw, ArrowRight } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { LogoutButton } from "@/features/auth/components/login/logout-button";
 
 interface AccountPageProps {
@@ -15,9 +18,7 @@ export async function generateMetadata({ params }: AccountPageProps): Promise<Me
   };
 }
 
-export const instant = false;
-
-export default async function AccountPage({ params }: AccountPageProps) {
+async function AccountPageContent({ params }: AccountPageProps) {
   const { locale } = await params;
   const isAr = locale === "ar";
   const user = await requireRole(["CUSTOMER", "ADMIN", "SUPER_ADMIN"], locale);
@@ -76,8 +77,37 @@ export default async function AccountPage({ params }: AccountPageProps) {
               <p className="text-base font-medium text-ds-text-plain" dir="ltr">—</p>
             </div>
           </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-ds-border-subtle bg-ds-plain p-5 sm:col-span-2">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5">
+                <RotateCcw className="size-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-base font-medium text-ds-text-plain">
+                  {isAr ? "المرتجعات والاستبدال" : "Returns & Exchanges"}
+                </p>
+                <p className="text-xs text-ds-text-muted mt-0.5">
+                  {isAr
+                    ? "تقديم ومتابعة طلبات إرجاع واستبدال المنتجات المستلمة وفق سياسة المتجر"
+                    : "Request return or exchange for eligible delivered orders within 14 days"}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/account/returns"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-2xs hover:bg-primary/90 transition-colors shrink-0"
+            >
+              <span>{isAr ? "قسم المرتجعات" : "Returns Hub"}</span>
+              <ArrowRight className="size-3.5 rtl:rotate-180" />
+            </Link>
+          </div>
         </div>
       </div>
     </main>
   );
+}
+
+export default function AccountPage(props: Parameters<typeof AccountPageContent>[0]) {
+  return <Suspense fallback={<AuthSkeleton />}><AccountPageContent {...props} /></Suspense>;
 }

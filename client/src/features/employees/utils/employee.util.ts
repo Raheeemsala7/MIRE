@@ -1,5 +1,5 @@
 import type { Employee, EmployeeMetricsData } from "../types/employee.types";
-import type { SupportedEmployeeRole } from "@/config/rbac.config";
+import type { AppRole } from "@/lib/auth/types";
 
 export function calculateEmployeeMetrics(
   employees: Employee[],
@@ -34,7 +34,7 @@ export function calculateEmployeeMetrics(
   return metrics;
 }
 
-export function getRoleBadgeVariant(role: SupportedEmployeeRole): "default" | "secondary" | "outline" | "destructive" {
+export function getRoleBadgeVariant(role: AppRole): "default" | "secondary" | "outline" | "destructive" {
   switch (role) {
     case "SUPER_ADMIN":
       return "default";

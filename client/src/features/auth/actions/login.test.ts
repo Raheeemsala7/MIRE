@@ -5,18 +5,19 @@ vi.mock("server-only", () => ({}));
 vi.mock("next-auth", () => ({ AuthError: class AuthError extends Error { type = "CredentialsSignin"; } }));
 
 const mocks = vi.hoisted(() => ({
-  signIn: vi.fn(), getSession: vi.fn(), deleteSession: vi.fn(),
-  getCookie: vi.fn(), setCookie: vi.fn(),
+  getIdentity: vi.fn(), signIn: vi.fn(), getSession: vi.fn(), deleteSession: vi.fn(),
+  getCookie: vi.fn(), setCookie: vi.fn(), deleteCookie: vi.fn(),
 }));
 
-vi.mock("next/headers", () => ({ cookies: async () => ({ get: mocks.getCookie, set: mocks.setCookie }) }));
-vi.mock("@/auth", () => ({ signIn: mocks.signIn }));
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: mocks.getCookie, set: mocks.setCookie, delete: mocks.deleteCookie }) }));
+vi.mock("@/auth", () => ({ signIn: mocks.signIn, handlers: { GET: mocks.getIdentity } }));
 vi.mock("@/lib/auth/session-store", () => ({ getSession: mocks.getSession, deleteSession: mocks.deleteSession }));
 vi.mock("@/lib/auth/session", () => ({ SESSION_COOKIE: "mire_session", destination: (role: string, locale: string = "ar") => role === "ADMIN" ? `/${locale}/admin/dashboard` : `/${locale}` }));
 vi.mock("@/lib/auth/sign-in-proof", () => ({ issueSignInProof: () => "signed-proof" }));
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.getIdentity.mockResolvedValue(Response.json({ user: { id: "user-id", name: "Nour", email: "nour@example.com", role: "CUSTOMER" } }));
   mocks.getCookie.mockImplementation((name?: string) => {
     if (name === "NEXT_LOCALE") return { value: "ar" };
     return { value: "new-session" };
@@ -36,6 +37,7 @@ describe("server login action", () => {
 
   it("creates a persistent 30-day cookie for an admin who opts in", async () => {
     mocks.getSession.mockResolvedValue({ user: { role: "ADMIN" } });
+    mocks.getIdentity.mockResolvedValue(Response.json({ user: { id: "admin-id", role: "ADMIN", permissions: ["dashboard:read"] } }));
     const { loginAction } = await import("./login");
     const result = await loginAction({ email: "admin@mirefashion.com", password: "password", rememberMe: true });
     expect(result).toEqual({ success: true, destination: "/ar/admin/dashboard" });

@@ -1,6 +1,8 @@
+import { hasPermission, isAdminRole } from "@/lib/auth/roles";
+import { serverApiGet } from "@/lib/auth/session";
 import { NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth/session";
-import { backendGet, BackendAuthError } from "@/lib/auth/backend-client";
+import { auth } from "@/auth";
+import { BackendApiError } from "@/lib/auth/backend-client";
 import type { LowStockItem } from "@/features/analytics/types/analytics.types";
 
 interface RawLowStockResponse {
@@ -9,19 +11,18 @@ interface RawLowStockResponse {
 }
 
 export async function GET() {
-  const session = await currentSession();
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  const session = await auth();
+  if (!session?.user || !isAdminRole(session.user.role) || !hasPermission(session.user, "inventory:read")) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: session?.user ? 403 : 401 });
   }
 
   try {
-    const response = await backendGet<RawLowStockResponse>(
-      "/inventory/low-stock",
-      session.accessToken
+    const response = await serverApiGet<RawLowStockResponse>(
+      "/inventory/low-stock"
     );
     return NextResponse.json({ success: true, data: response.data || [] });
   } catch (error) {
-    if (error instanceof BackendAuthError) {
+    if (error instanceof BackendApiError) {
       return NextResponse.json(
         { success: false, error: "Backend service error" },
         { status: error.status }

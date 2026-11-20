@@ -18,7 +18,7 @@ describe("login and session policy", () => {
   });
 
   it("maps backend roles to the appropriate route", () => {
-    expect(destination("ADMIN", "ar")).toBe("/ar/admin/dashboard");
+    expect(destination("ADMIN", "ar", ["dashboard:read"])).toBe("/ar/admin/dashboard");
     expect(destination("SUPER_ADMIN", "en")).toBe("/en/admin/dashboard");
     expect(destination("CUSTOMER", "ar")).toBe("/ar");
     expect(destination("CUSTOMER", "en")).toBe("/en");

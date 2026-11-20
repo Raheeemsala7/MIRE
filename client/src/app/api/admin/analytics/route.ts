@@ -1,6 +1,8 @@
+import { hasPermission, isAdminRole } from "@/lib/auth/roles";
+import { serverApiGet } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth/session";
-import { backendGet, BackendAuthError } from "@/lib/auth/backend-client";
+import { auth } from "@/auth";
+import { BackendApiError } from "@/lib/auth/backend-client";
 import type { AnalyticsDashboardData } from "@/features/analytics/types/analytics.types";
 
 interface BackendResponse<T> {
@@ -10,9 +12,9 @@ interface BackendResponse<T> {
 }
 
 export async function GET(request: NextRequest) {
-  const session = await currentSession();
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  const session = await auth();
+  if (!session?.user || !isAdminRole(session.user.role) || !hasPermission(session.user, "dashboard:read")) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: session?.user ? 403 : 401 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -26,13 +28,12 @@ export async function GET(request: NextRequest) {
   if (endDate) queryParams.set("endDate", endDate);
 
   try {
-    const response = await backendGet<BackendResponse<AnalyticsDashboardData>>(
-      `/analytics/dashboard?${queryParams.toString()}` as `/${string}`,
-      session.accessToken
+    const response = await serverApiGet<BackendResponse<AnalyticsDashboardData>>(
+      `/analytics/dashboard?${queryParams.toString()}` as `/${string}`
     );
     return NextResponse.json(response);
   } catch (error) {
-    if (error instanceof BackendAuthError) {
+    if (error instanceof BackendApiError) {
       return NextResponse.json(
         { success: false, error: "Backend service error" },
         { status: error.status }

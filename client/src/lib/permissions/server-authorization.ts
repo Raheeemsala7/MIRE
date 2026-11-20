@@ -1,8 +1,10 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
-import { currentSession } from "@/lib/auth/session";
-import type { SafeUser, SessionRecord } from "@/lib/auth/types";
+import { auth } from "@/auth";
+import type { SafeUser } from "@/lib/auth/types";
+import type { Session } from "next-auth";
+import { normalizeLocale } from "@/lib/auth/permissions";
 import { can } from "./can";
 import { PERMISSIONS, type Permission } from "@/config/rbac.config";
 
@@ -36,10 +38,11 @@ export async function requirePermission(
   permission: Permission,
   locale: string = "ar"
 ): Promise<SafeUser> {
-  const session = await currentSession();
+  const session = await auth();
+  locale = normalizeLocale(locale);
 
   if (!session) {
-    redirect(`/api/auth/clear-session?callbackUrl=/${locale}/auth/login`);
+    redirect(`/${locale}/auth/login`);
   }
 
   const user = session.user;
@@ -57,7 +60,7 @@ export async function requirePermission(
  * Returns structured result instead of redirecting.
  */
 export function assertSessionPermission(
-  session: SessionRecord | null,
+  session: Session | null,
   permission: Permission
 ): AuthorizationResult {
   if (!session) {

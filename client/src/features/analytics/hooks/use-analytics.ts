@@ -40,18 +40,20 @@ export function useAnalytics(
   });
 }
 
-export function useRecentOrders(initialOrders?: RecentOrderItem[]) {
+export function useRecentOrders(initialOrders?: RecentOrderItem[], enabled = true) {
   return useQuery({
     queryKey: analyticsQueryKeys.recentOrders,
+    enabled,
     queryFn: fetchRecentOrders,
     initialData: initialOrders,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
-export function useLowStockAlerts(initialLowStock?: LowStockItem[]) {
+export function useLowStockAlerts(initialLowStock?: LowStockItem[], enabled = true) {
   return useQuery({
     queryKey: analyticsQueryKeys.lowStock,
+    enabled,
     queryFn: fetchLowStockAlerts,
     initialData: initialLowStock,
     staleTime: 1000 * 60 * 5, // 5 minutes

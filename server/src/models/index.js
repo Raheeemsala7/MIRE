@@ -15,6 +15,7 @@ const { Conversation, ConversationStatuses } = require('./Conversation');
 const Message = require('./Message');
 const Notification = require('./Notification');
 const Review = require('./Review');
+const Wishlist = require('./Wishlist');
 
 module.exports = {
   User,
@@ -42,5 +43,6 @@ module.exports = {
   ConversationStatuses,
   Message,
   Notification,
-  Review
+  Review,
+  Wishlist
 };

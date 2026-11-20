@@ -74,32 +74,56 @@ class CartService {
     return this.recalculateCart(cart);
   }
 
-  async addItem({ userId, guestId, productId, variantSku, quantity }) {
+  async addItem({ userId, guestId, productId, variantSku, sku, color, size, quantity = 1 }) {
+    const qty = Math.max(1, parseInt(quantity, 10) || 1);
+
     const product = await Product.findById(productId);
     if (!product || product.status !== 'ACTIVE') {
       throw ApiError.notFound('Product is unavailable or archived');
     }
 
-    const variant = product.variants.find((v) => v.sku === variantSku);
-    if (!variant) {
-      throw ApiError.notFound(`Variant ${variantSku} does not exist`);
+    // Resolve variantSku flexibly
+    let targetSku = variantSku || sku;
+    let variant = null;
+
+    if (targetSku) {
+      variant = product.variants.find((v) => v.sku === targetSku);
+    } else if (size && color) {
+      variant = product.variants.find(
+        (v) =>
+          v.size.toLowerCase() === size.trim().toLowerCase() &&
+          v.color.toLowerCase() === color.trim().toLowerCase()
+      );
+      if (variant) targetSku = variant.sku;
+    } else if (product.variants && product.variants.length > 0) {
+      // Pick first in-stock variant
+      variant = product.variants.find((v) => v.stockQuantity > 0) || product.variants[0];
+      targetSku = variant.sku;
     }
 
-    if (variant.stockQuantity < quantity) {
+    if (!variant) {
+      throw ApiError.notFound(
+        targetSku
+          ? `Variant with SKU "${targetSku}" does not exist for this product`
+          : 'Please select a valid size and color variant'
+      );
+    }
+
+    if (variant.stockQuantity < qty) {
       throw ApiError.badRequest(
-        `Requested quantity (${quantity}) exceeds available stock (${variant.stockQuantity}) for ${variant.color} / ${variant.size}`
+        `Requested quantity (${qty}) exceeds available stock (${variant.stockQuantity}) for ${variant.color} / ${variant.size}`
       );
     }
 
     const cart = await this.getOrCreateCart({ userId, guestId });
 
-    const itemIndex = cart.items.findIndex((it) => it.variantSku === variantSku);
+    const itemIndex = cart.items.findIndex((it) => it.variantSku === targetSku);
     const unitPrice = product.price;
     const discountPrice = product.discountPrice;
     const effectivePrice = discountPrice || unitPrice;
 
     if (itemIndex > -1) {
-      const newQuantity = cart.items[itemIndex].quantity + quantity;
+      const newQuantity = cart.items[itemIndex].quantity + qty;
       if (variant.stockQuantity < newQuantity) {
         throw ApiError.badRequest(`Cannot add more. Maximum available stock is ${variant.stockQuantity}`);
       }
@@ -108,13 +132,13 @@ class CartService {
     } else {
       cart.items.push({
         product: product._id,
-        variantSku,
+        variantSku: targetSku,
         color: variant.color,
         size: variant.size,
-        quantity,
+        quantity: qty,
         unitPrice,
         discountPrice,
-        subtotal: effectivePrice * quantity
+        subtotal: effectivePrice * qty
       });
     }
 

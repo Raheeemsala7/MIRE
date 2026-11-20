@@ -1,9 +1,12 @@
 const Notification = require('../models/Notification');
 const ApiResponse = require('../utils/apiResponse');
+const { getPaginationOptions } = require('../utils/pagination');
 
 class NotificationController {
   async getNotifications(req, res, next) {
     try {
+      const { page, limit, skip } = getPaginationOptions(req.query);
+
       const filter = {
         $or: [
           { recipientRole: req.user.role },
@@ -12,15 +15,36 @@ class NotificationController {
         ]
       };
 
-      const notifications = await Notification.find(filter)
-        .sort({ createdAt: -1 })
-        .limit(50);
+      if (req.query.isRead !== undefined) {
+        filter.isRead = req.query.isRead === 'true';
+      }
+      if (req.query.type) {
+        filter.type = req.query.type;
+      }
 
-      const unreadCount = await Notification.countDocuments({ ...filter, isRead: false });
+      const [notifications, total, unreadCount] = await Promise.all([
+        Notification.find(filter)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit),
+        Notification.countDocuments(filter),
+        Notification.countDocuments({
+          $or: [
+            { recipientRole: req.user.role },
+            { recipientRole: null },
+            { recipientUser: req.user._id }
+          ],
+          isRead: false
+        })
+      ]);
 
-      return ApiResponse.success(res, {
-        message: 'Notifications fetched',
-        data: { notifications, unreadCount }
+      return ApiResponse.paginated(res, {
+        message: 'Notifications fetched successfully',
+        data: notifications,
+        page,
+        limit,
+        total,
+        meta: { unreadCount }
       });
     } catch (error) {
       next(error);

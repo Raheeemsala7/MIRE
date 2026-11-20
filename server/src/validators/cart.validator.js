@@ -2,8 +2,11 @@ const { z } = require('zod');
 
 const addToCartSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
-  variantSku: z.string().min(1, 'Variant SKU is required'),
-  quantity: z.number().int().min(1, 'Quantity must be at least 1')
+  variantSku: z.string().optional(),
+  sku: z.string().optional(),
+  color: z.string().optional(),
+  size: z.string().optional(),
+  quantity: z.number().int().min(1, 'Quantity must be at least 1').optional().default(1)
 });
 
 const updateCartItemSchema = z.object({

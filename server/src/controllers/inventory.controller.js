@@ -36,10 +36,19 @@ class InventoryController {
 
   async getLowStockAlerts(req, res, next) {
     try {
-      const lowStockItems = await inventoryService.getLowStockItems();
+      const result = await inventoryService.getLowStockItems(req.query);
+      if (result && result.isPaginated) {
+        return ApiResponse.paginated(res, {
+          message: 'Low stock items fetched successfully',
+          data: result.items,
+          page: result.page,
+          limit: result.limit,
+          total: result.total
+        });
+      }
       return ApiResponse.success(res, {
         message: 'Low stock items fetched successfully',
-        data: lowStockItems
+        data: Array.isArray(result) ? result : (result?.items || [])
       });
     } catch (error) {
       next(error);

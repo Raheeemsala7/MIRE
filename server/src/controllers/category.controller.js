@@ -4,11 +4,19 @@ const ApiResponse = require('../utils/apiResponse');
 class CategoryController {
   async getAll(req, res, next) {
     try {
-      const includeInactive = req.query.includeInactive === 'true';
-      const categories = await categoryService.getAllCategories(includeInactive);
+      const result = await categoryService.getAllCategories(req.query);
+      if (result && result.isPaginated) {
+        return ApiResponse.paginated(res, {
+          message: 'Categories fetched successfully',
+          data: result.categories,
+          page: result.page,
+          limit: result.limit,
+          total: result.total
+        });
+      }
       return ApiResponse.success(res, {
         message: 'Categories fetched successfully',
-        data: categories
+        data: Array.isArray(result) ? result : (result?.categories || [])
       });
     } catch (error) {
       next(error);

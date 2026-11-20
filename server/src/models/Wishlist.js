@@ -1,0 +1,43 @@
+const mongoose = require('mongoose');
+
+const wishlistItemSchema = new mongoose.Schema(
+  {
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true
+    },
+    variantSku: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
+  },
+  { _id: true }
+);
+
+const wishlistSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
+      index: true
+    },
+    items: [wishlistItemSchema]
+  },
+  {
+    timestamps: true
+  }
+);
+
+wishlistSchema.index({ 'items.product': 1 });
+
+const Wishlist = mongoose.model('Wishlist', wishlistSchema);
+
+module.exports = Wishlist;

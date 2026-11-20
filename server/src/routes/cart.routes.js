@@ -32,6 +32,35 @@ router.get('/', cartController.getCart.bind(cartController));
 
 /**
  * @swagger
+ * /cart:
+ *   post:
+ *     summary: Add item to cart (root alias)
+ *     tags: [Cart]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [productId]
+ *             properties:
+ *               productId: { type: string }
+ *               variantSku: { type: string }
+ *               sku: { type: string }
+ *               color: { type: string }
+ *               size: { type: string }
+ *               quantity: { type: integer, default: 1 }
+ *     responses:
+ *       200:
+ *         description: Updated cart
+ */
+router.post('/', validate({ body: addToCartSchema }), cartController.addItem.bind(cartController));
+
+// Alias: /cart/add
+router.post('/add', validate({ body: addToCartSchema }), cartController.addItem.bind(cartController));
+
+/**
+ * @swagger
  * /cart/items:
  *   post:
  *     summary: Add item to cart with variant validation
@@ -42,10 +71,13 @@ router.get('/', cartController.getCart.bind(cartController));
  *         application/json:
  *           schema:
  *             type: object
- *             required: [productId, variantSku, quantity]
+ *             required: [productId]
  *             properties:
  *               productId: { type: string }
  *               variantSku: { type: string }
+ *               sku: { type: string }
+ *               color: { type: string }
+ *               size: { type: string }
  *               quantity: { type: integer, example: 1 }
  *     responses:
  *       200:

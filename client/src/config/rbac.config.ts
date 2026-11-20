@@ -20,6 +20,11 @@ export const PERMISSIONS = {
   EMPLOYEES_TOGGLE_STATUS: "employees.toggle_status",
   CUSTOMERS_VIEW: "customers.view",
   CUSTOMERS_UPDATE: "customers.update",
+  RETURNS_VIEW: "returns.view",
+  RETURNS_UPDATE_STATUS: "returns.update_status",
+  RETURNS_INSPECT: "returns.inspect",
+  RETURNS_ASSIGN: "returns.assign",
+  RETURNS_LOG_CALL: "returns.log_call",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -37,6 +42,11 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
     PERMISSIONS.EMPLOYEES_VIEW,
     PERMISSIONS.CUSTOMERS_VIEW,
     PERMISSIONS.CUSTOMERS_UPDATE,
+    PERMISSIONS.RETURNS_VIEW,
+    PERMISSIONS.RETURNS_UPDATE_STATUS,
+    PERMISSIONS.RETURNS_INSPECT,
+    PERMISSIONS.RETURNS_ASSIGN,
+    PERMISSIONS.RETURNS_LOG_CALL,
     // Delegated actions (uncomment to grant to Admin without changing any UI code):
     // PERMISSIONS.EMPLOYEES_CREATE,
     // PERMISSIONS.EMPLOYEES_UPDATE,
@@ -46,9 +56,17 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
 
   ORDER_MANAGER: [
     PERMISSIONS.CUSTOMERS_VIEW,
+    PERMISSIONS.RETURNS_VIEW,
+    PERMISSIONS.RETURNS_UPDATE_STATUS,
+    PERMISSIONS.RETURNS_INSPECT,
+    PERMISSIONS.RETURNS_ASSIGN,
+    PERMISSIONS.RETURNS_LOG_CALL,
   ],
   CUSTOMER_SUPPORT: [
     PERMISSIONS.CUSTOMERS_VIEW,
+    PERMISSIONS.RETURNS_VIEW,
+    PERMISSIONS.RETURNS_UPDATE_STATUS,
+    PERMISSIONS.RETURNS_LOG_CALL,
   ],
   INVENTORY_MANAGER: [],
   ACCOUNTANT: [],
@@ -66,6 +84,11 @@ export const PERMISSION_BACKEND_MAP: Record<Permission, string> = {
   [PERMISSIONS.EMPLOYEES_TOGGLE_STATUS]: "employees:write",
   [PERMISSIONS.CUSTOMERS_VIEW]: "customers:read",
   [PERMISSIONS.CUSTOMERS_UPDATE]: "customers:write",
+  [PERMISSIONS.RETURNS_VIEW]: "returns:read",
+  [PERMISSIONS.RETURNS_UPDATE_STATUS]: "returns:write",
+  [PERMISSIONS.RETURNS_INSPECT]: "returns:write",
+  [PERMISSIONS.RETURNS_ASSIGN]: "returns:write",
+  [PERMISSIONS.RETURNS_LOG_CALL]: "returns:write",
 };
 
 /**

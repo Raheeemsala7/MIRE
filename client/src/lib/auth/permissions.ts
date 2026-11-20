@@ -12,6 +12,7 @@ export function destination(role: AppRole, locale: string = "ar", permissions?: 
   if (isCustomerRole(role)) return `/${language}`;
   const user = { id: "", name: "", email: "", role, permissions };
   if (isAdminRole(role) && hasPermission(user, "dashboard:read")) return `/${language}/admin/dashboard`;
+  if (isAdminRole(role) && can(role, PERMISSIONS.RETURNS_VIEW, permissions)) return `/${language}/admin/returns`;
   if (isAdminRole(role) && can(role, PERMISSIONS.EMPLOYEES_VIEW, permissions)) return `/${language}/admin/employees`;
   return `/${language}/403`;
 }
@@ -27,6 +28,8 @@ export function loginDestination(user: SafeUser, locale: string, callbackUrl?: s
   if (isCustomerRole(user.role) && (/^\/$|^\/(account|orders|cart|checkout|products)(\/|$)/.test(path))) return url.pathname + url.search;
   if (isAdminRole(user.role)) {
     if (path === "/admin/dashboard" && hasPermission(user, "dashboard:read")) return url.pathname + url.search;
+    if (/^\/admin\/returns(?:\/[a-zA-Z0-9_-]+)?$/.test(path) && can(user.role, PERMISSIONS.RETURNS_VIEW, user.permissions)) return url.pathname + url.search;
+    if (/^\/admin\/customers(?:\/[a-zA-Z0-9_-]+)?$/.test(path) && can(user.role, PERMISSIONS.CUSTOMERS_VIEW, user.permissions)) return url.pathname + url.search;
     if (/^\/admin\/employees(?:\/[a-zA-Z0-9_-]+)?$/.test(path) && can(user.role, PERMISSIONS.EMPLOYEES_VIEW, user.permissions)) return url.pathname + url.search;
   }
   return fallback;

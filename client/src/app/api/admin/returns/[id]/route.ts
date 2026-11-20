@@ -1,0 +1,55 @@
+import { serverApiGet } from "@/lib/auth/session";
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { BackendApiError } from "@/lib/auth/backend-client";
+import { assertSessionPermission } from "@/lib/permissions/server-authorization";
+import { PERMISSIONS } from "@/config/rbac.config";
+import type { SingleReturnResponse } from "@/features/returns/types/return.types";
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  const authorization = assertSessionPermission(
+    session,
+    PERMISSIONS.RETURNS_VIEW
+  );
+
+  if (!authorization.authorized) {
+    return NextResponse.json(
+      { success: false, error: authorization.error },
+      { status: authorization.status }
+    );
+  }
+
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { success: false, error: "Return ID is required" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const response = await serverApiGet<SingleReturnResponse>(
+      `/returns/${encodeURIComponent(id)}` as `/${string}`
+    );
+    return NextResponse.json(response);
+  } catch (error) {
+    if (error instanceof BackendApiError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.messageText || "Backend error",
+          errors: error.errors,
+        },
+        { status: error.status }
+      );
+    }
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch return details" },
+      { status: 502 }
+    );
+  }
+}

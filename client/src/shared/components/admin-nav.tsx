@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   UsersRound,
   Users,
+  RotateCcw,
   Menu,
   X,
   Globe,
@@ -53,6 +54,12 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
     currentUser?.permissions
   );
 
+  const canViewReturns = can(
+    currentUser?.role,
+    PERMISSIONS.RETURNS_VIEW,
+    currentUser?.permissions
+  );
+
   const navLinks = [
     {
       href: "/admin/dashboard",
@@ -60,6 +67,13 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
       icon: LayoutDashboard,
       active: pathname.startsWith("/admin/dashboard"),
       visible: hasPermission(currentUser, "dashboard:read"),
+    },
+    {
+      href: "/admin/returns",
+      label: t("admin-nav-returns") || "Returns Management",
+      icon: RotateCcw,
+      active: pathname.startsWith("/admin/returns"),
+      visible: canViewReturns,
     },
     {
       href: "/admin/customers",

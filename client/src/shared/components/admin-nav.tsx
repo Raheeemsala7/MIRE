@@ -17,6 +17,7 @@ import {
   Bell,
   Activity,
   Package,
+  BadgePercent,
 } from "lucide-react";
 import { LogoutButton } from "@/features/auth/components/login/logout-button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -97,6 +98,12 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
     currentUser?.permissions
   );
 
+  const canViewBundles = can(
+    currentUser?.role,
+    PERMISSIONS.BUNDLES_VIEW,
+    currentUser?.permissions
+  );
+
   const navLinks = [
     {
       href: "/admin/dashboard",
@@ -111,6 +118,13 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
       icon: Package,
       active: pathname.startsWith("/admin/products"),
       visible: canViewProducts,
+    },
+    {
+      href: "/admin/bundles",
+      label: t("admin-nav-bundles") || (isAr ? "الباقات والعروض" : "Bundles & Offers"),
+      icon: BadgePercent,
+      active: pathname.startsWith("/admin/bundles"),
+      visible: canViewBundles,
     },
     {
       href: "/admin/returns",
@@ -149,7 +163,21 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
   const breadcrumbSegments: BreadcrumbSegment[] = React.useMemo(() => {
     const segments: BreadcrumbSegment[] = [];
 
-    if (pathname.startsWith("/admin/products")) {
+    if (pathname.startsWith("/admin/bundles")) {
+      const bundlesLabel = t("admin-nav-bundles") || (isAr ? "الباقات والعروض" : "Bundles & Offers");
+      if (pathname === "/admin/bundles" || pathname === "/admin/bundles/") {
+        segments.push({ label: bundlesLabel });
+      } else if (pathname === "/admin/bundles/new") {
+        segments.push({ label: bundlesLabel, href: "/admin/bundles" });
+        segments.push({ label: t("admin-nav-add-bundle") || (isAr ? "إنشاء باقة جديدة" : "Create Bundle") });
+      } else if (pathname.endsWith("/edit")) {
+        segments.push({ label: bundlesLabel, href: "/admin/bundles" });
+        segments.push({ label: t("admin-nav-edit-bundle") || (isAr ? "تعديل الباقة" : "Edit Bundle") });
+      } else {
+        segments.push({ label: bundlesLabel, href: "/admin/bundles" });
+        segments.push({ label: t("admin-nav-bundle-details") || (isAr ? "تفاصيل الباقة" : "Bundle Details") });
+      }
+    } else if (pathname.startsWith("/admin/products")) {
       const productsLabel = t("admin-nav-products") || (isAr ? "إدارة المنتجات" : "Products");
       if (pathname === "/admin/products" || pathname === "/admin/products/") {
         segments.push({ label: productsLabel });

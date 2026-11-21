@@ -29,6 +29,10 @@ export const PERMISSIONS = {
   PRODUCTS_CREATE: "products.create",
   PRODUCTS_UPDATE: "products.update",
   PRODUCTS_ARCHIVE: "products.archive",
+  BUNDLES_VIEW: "bundles.view",
+  BUNDLES_CREATE: "bundles.create",
+  BUNDLES_UPDATE: "bundles.update",
+  BUNDLES_DELETE: "bundles.delete",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -47,6 +51,10 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
     PERMISSIONS.PRODUCTS_CREATE,
     PERMISSIONS.PRODUCTS_UPDATE,
     PERMISSIONS.PRODUCTS_ARCHIVE,
+    PERMISSIONS.BUNDLES_VIEW,
+    PERMISSIONS.BUNDLES_CREATE,
+    PERMISSIONS.BUNDLES_UPDATE,
+    PERMISSIONS.BUNDLES_DELETE,
     PERMISSIONS.EMPLOYEES_VIEW,
     PERMISSIONS.CUSTOMERS_VIEW,
     PERMISSIONS.CUSTOMERS_UPDATE,
@@ -106,6 +114,10 @@ export const PERMISSION_BACKEND_MAP: Record<Permission, string> = {
   [PERMISSIONS.PRODUCTS_CREATE]: "products:write",
   [PERMISSIONS.PRODUCTS_UPDATE]: "products:write",
   [PERMISSIONS.PRODUCTS_ARCHIVE]: "products:write",
+  [PERMISSIONS.BUNDLES_VIEW]: "bundles:read",
+  [PERMISSIONS.BUNDLES_CREATE]: "bundles:write",
+  [PERMISSIONS.BUNDLES_UPDATE]: "bundles:write",
+  [PERMISSIONS.BUNDLES_DELETE]: "bundles:write",
 };
 
 /**

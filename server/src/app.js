@@ -28,6 +28,7 @@ const socialRoutes = require('./routes/social.routes');
 const customerRoutes = require('./routes/customer.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const wishlistRoutes = require('./routes/wishlist.routes');
 
 const app = express();
 
@@ -125,7 +126,8 @@ apiRouter.get('/', (req, res) => {
       analytics: `${env.API_PREFIX}/analytics/dashboard`,
       customers: `${env.API_PREFIX}/customers`,
       employees: `${env.API_PREFIX}/employees`,
-      notifications: `${env.API_PREFIX}/notifications`
+      notifications: `${env.API_PREFIX}/notifications`,
+      wishlist: `${env.API_PREFIX}/wishlist`
     }
   });
 });
@@ -145,6 +147,7 @@ apiRouter.use('/social', socialRoutes);
 apiRouter.use('/customers', customerRoutes);
 apiRouter.use('/analytics', analyticsRoutes);
 apiRouter.use('/notifications', notificationRoutes);
+apiRouter.use('/wishlist', wishlistRoutes);
 
 app.use(env.API_PREFIX, apiRouter);
 

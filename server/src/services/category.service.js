@@ -15,9 +15,44 @@ class CategoryService {
       .replace(/^-+|-+$/g, '');
   }
 
-  async getAllCategories(includeInactive = false) {
-    const filter = includeInactive ? {} : { isActive: true };
-    return Category.find(filter).populate('parentCategory', 'name slug').sort({ sortOrder: 1, name: 1 });
+  async getAllCategories(query = {}) {
+    // Backward compatibility if boolean passed directly
+    if (typeof query === 'boolean') {
+      const filter = query ? {} : { isActive: true };
+      return Category.find(filter).populate('parentCategory', 'name slug').sort({ sortOrder: 1, name: 1 });
+    }
+
+    const { includeInactive, page, limit, search } = query;
+    const isPaginated = page !== undefined || limit !== undefined || query.paginated === 'true';
+
+    const filter = includeInactive === 'true' || includeInactive === true ? {} : { isActive: true };
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    if (!isPaginated) {
+      const categories = await Category.find(filter)
+        .populate('parentCategory', 'name slug')
+        .sort({ sortOrder: 1, name: 1 });
+      return { categories, isPaginated: false };
+    }
+
+    const { getPaginationOptions } = require('../utils/pagination');
+    const { skip, limit: lim, page: p } = getPaginationOptions(query);
+
+    const [categories, total] = await Promise.all([
+      Category.find(filter)
+        .populate('parentCategory', 'name slug')
+        .sort({ sortOrder: 1, name: 1 })
+        .skip(skip)
+        .limit(lim),
+      Category.countDocuments(filter)
+    ]);
+
+    return { categories, total, page: p, limit: lim, isPaginated: true };
   }
 
   async getCategoryBySlug(slug) {

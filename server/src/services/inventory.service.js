@@ -191,7 +191,7 @@ class InventoryService {
   /**
    * Get all products/variants with stock <= lowStockThreshold
    */
-  async getLowStockItems() {
+  async getLowStockItems(query = {}) {
     const products = await Product.find({ status: 'ACTIVE' }).populate('category', 'name slug');
     const lowStockItems = [];
 
@@ -213,7 +213,21 @@ class InventoryService {
       }
     }
 
-    return lowStockItems;
+    const isPaginated = query.page !== undefined || query.limit !== undefined || query.paginated === 'true';
+    if (!isPaginated) {
+      return { items: lowStockItems, isPaginated: false };
+    }
+
+    const { page, limit, skip } = getPaginationOptions(query);
+    const paginated = lowStockItems.slice(skip, skip + limit);
+
+    return {
+      items: paginated,
+      total: lowStockItems.length,
+      page,
+      limit,
+      isPaginated: true
+    };
   }
 
   /**

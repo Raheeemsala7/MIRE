@@ -21,7 +21,7 @@ class ApiResponse {
     return this.success(res, { statusCode: 201, message, data, meta });
   }
 
-  static paginated(res, { message = 'Fetched successfully', data = [], page = 1, limit = 20, total = 0 } = {}) {
+  static paginated(res, { message = 'Fetched successfully', data = [], page = 1, limit = 20, total = 0, meta = null } = {}) {
     const totalPages = Math.ceil(total / limit) || 1;
     return this.success(res, {
       statusCode: 200,
@@ -33,7 +33,8 @@ class ApiResponse {
         total: Number(total),
         totalPages,
         hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
+        hasPrevPage: page > 1,
+        ...(meta && typeof meta === 'object' ? meta : {})
       }
     });
   }

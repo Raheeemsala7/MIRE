@@ -4,6 +4,8 @@ import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
 import { ChevronRight } from "lucide-react";
 import { ProductsCatalog } from "@/features/products/components/products-catalog";
+import { getPublicProducts } from "@/features/products/server/queries";
+import type { Product } from "@/features/products/types/product.types";
 
 interface ProductsPageProps {
   params: Promise<{
@@ -19,6 +21,16 @@ async function ProductsContent({ params }: ProductsPageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const isRTL = locale === "ar";
+
+  let products: Product[] = [];
+  try {
+    const res = await getPublicProducts({ limit: 50 });
+    if (res?.data && Array.isArray(res.data)) {
+      products = res.data;
+    }
+  } catch {
+    // Graceful fallback to static products
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-14">
@@ -49,7 +61,7 @@ async function ProductsContent({ params }: ProductsPageProps) {
       </div>
 
       {/* ─── Interactive Products Catalog ─── */}
-      <ProductsCatalog />
+      <ProductsCatalog initialProducts={products} />
     </div>
   );
 }

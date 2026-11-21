@@ -25,6 +25,10 @@ export const PERMISSIONS = {
   RETURNS_INSPECT: "returns.inspect",
   RETURNS_ASSIGN: "returns.assign",
   RETURNS_LOG_CALL: "returns.log_call",
+  PRODUCTS_VIEW: "products.view",
+  PRODUCTS_CREATE: "products.create",
+  PRODUCTS_UPDATE: "products.update",
+  PRODUCTS_ARCHIVE: "products.archive",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -39,6 +43,10 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
   SUPER_ADMIN: ["*"],
 
   ADMIN: [
+    PERMISSIONS.PRODUCTS_VIEW,
+    PERMISSIONS.PRODUCTS_CREATE,
+    PERMISSIONS.PRODUCTS_UPDATE,
+    PERMISSIONS.PRODUCTS_ARCHIVE,
     PERMISSIONS.EMPLOYEES_VIEW,
     PERMISSIONS.CUSTOMERS_VIEW,
     PERMISSIONS.CUSTOMERS_UPDATE,
@@ -68,7 +76,12 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
     PERMISSIONS.RETURNS_UPDATE_STATUS,
     PERMISSIONS.RETURNS_LOG_CALL,
   ],
-  INVENTORY_MANAGER: [],
+  INVENTORY_MANAGER: [
+    PERMISSIONS.PRODUCTS_VIEW,
+    PERMISSIONS.PRODUCTS_CREATE,
+    PERMISSIONS.PRODUCTS_UPDATE,
+    PERMISSIONS.PRODUCTS_ARCHIVE,
+  ],
   ACCOUNTANT: [],
   CUSTOMER: [],
 } as const;
@@ -89,6 +102,10 @@ export const PERMISSION_BACKEND_MAP: Record<Permission, string> = {
   [PERMISSIONS.RETURNS_INSPECT]: "returns:write",
   [PERMISSIONS.RETURNS_ASSIGN]: "returns:write",
   [PERMISSIONS.RETURNS_LOG_CALL]: "returns:write",
+  [PERMISSIONS.PRODUCTS_VIEW]: "products:read",
+  [PERMISSIONS.PRODUCTS_CREATE]: "products:write",
+  [PERMISSIONS.PRODUCTS_UPDATE]: "products:write",
+  [PERMISSIONS.PRODUCTS_ARCHIVE]: "products:write",
 };
 
 /**

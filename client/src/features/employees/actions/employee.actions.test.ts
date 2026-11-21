@@ -12,6 +12,14 @@ vi.mock("@/auth", () => ({
   auth: vi.fn(),
 }));
 
+vi.mock("@/lib/permissions/can", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/permissions/can")>("@/lib/permissions/can");
+  return {
+    ...actual,
+    can: vi.fn(actual.can),
+  };
+});
+
 vi.mock("@/lib/auth/session", () => ({
   serverApiGet: vi.fn(),
   serverApiPost: vi.fn(),
@@ -19,6 +27,7 @@ vi.mock("@/lib/auth/session", () => ({
 }));
 
 import { auth } from "@/auth";
+import { can } from "@/lib/permissions/can";
 import { serverApiGet, serverApiPost, serverApiPatch } from "@/lib/auth/session";
 
 function mockSession(user: { id: string; role: string; permissions?: readonly string[] }): Session {
@@ -115,6 +124,11 @@ describe("Employee Server Actions", () => {
         })
       );
 
+      vi.mocked(serverApiGet).mockResolvedValue({
+        success: true,
+        data: { _id: "emp-1", role: "EMPLOYEE", name: "Old Name" },
+      });
+
       const mockResponse = {
         success: true,
         data: { _id: "emp-1", name: "Updated Name" },
@@ -122,8 +136,49 @@ describe("Employee Server Actions", () => {
       vi.mocked(serverApiPatch).mockResolvedValue(mockResponse);
 
       const result = await updateEmployeeAction("emp-1", { name: "Updated Name" });
+      expect(serverApiGet).toHaveBeenCalledWith("/employees/emp-1");
       expect(serverApiPatch).toHaveBeenCalledWith("/employees/emp-1", { name: "Updated Name" });
       expect(result).toEqual(mockResponse);
+    });
+
+    it("prevents non-Super Admin from modifying a Super Admin account even for name update", async () => {
+      vi.mocked(auth).mockResolvedValue(
+        mockSession({
+          id: "admin-1",
+          role: "ADMIN",
+          permissions: ["employees:read", "employees:write"],
+        })
+      );
+
+      vi.mocked(can).mockReturnValueOnce(true);
+
+      vi.mocked(serverApiGet).mockResolvedValue({
+        success: true,
+        data: { _id: "super-9", role: "SUPER_ADMIN", name: "Root" },
+      });
+
+      await expect(
+        updateEmployeeAction("super-9", { name: "Hacked" })
+      ).rejects.toThrow("Only Super Admin can modify a Super Admin account.");
+    });
+
+    it("throws Employee not found when target employee does not exist", async () => {
+      vi.mocked(auth).mockResolvedValue(
+        mockSession({
+          id: "super-1",
+          role: "SUPER_ADMIN",
+          permissions: ["*"],
+        })
+      );
+
+      const { BackendApiError } = await import("@/lib/auth/backend-client");
+      vi.mocked(serverApiGet).mockRejectedValue(
+        new BackendApiError(404, { message: "Employee not found" })
+      );
+
+      await expect(
+        updateEmployeeAction("non-existent", { name: "Test" })
+      ).rejects.toThrow("Employee not found");
     });
 
     it("throws when unauthenticated", async () => {

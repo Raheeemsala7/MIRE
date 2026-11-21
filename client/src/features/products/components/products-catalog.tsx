@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/shared/stores/cart-store";
+import type { Product } from "../types/product.types";
 
 export interface CatalogProduct {
   id: string;
@@ -120,7 +121,11 @@ const ALL_PRODUCTS: CatalogProduct[] = [
   },
 ];
 
-export function ProductsCatalog() {
+interface ProductsCatalogProps {
+  initialProducts?: Product[];
+}
+
+export function ProductsCatalog({ initialProducts }: ProductsCatalogProps = {}) {
   const t = useTranslations("common");
   const locale = useLocale();
   const isRTL = locale === "ar";
@@ -135,10 +140,35 @@ export function ProductsCatalog() {
     { key: "abaya", label: isRTL ? "عبايات وشيلات" : "Abayas & Hijabs" },
   ];
 
+  const allItems: CatalogProduct[] = React.useMemo(() => {
+    if (initialProducts && initialProducts.length > 0) {
+      return initialProducts.map((p) => {
+        const catSlug = typeof p.category === "object" ? p.category.slug : "skirt";
+        let catType: "skirt" | "outfit" | "abaya" = "skirt";
+        if (catSlug.includes("abaya")) catType = "abaya";
+        else if (catSlug.includes("outfit") || catSlug.includes("set") || catSlug.includes("dress")) catType = "outfit";
+
+        return {
+          id: p._id,
+          slug: p.slug,
+          titleEn: p.name,
+          titleAr: p.name,
+          category: catType,
+          categoryLabelEn: typeof p.category === "object" ? p.category.name : "Collection",
+          categoryLabelAr: typeof p.category === "object" ? p.category.name : "تشكيلة",
+          price: p.discountPrice || p.price,
+          swatchHex: p.colors?.[0]?.code || "#9ec1df",
+          image: p.images?.[0]?.url || "/products/skirt/sky-blue.png",
+        };
+      });
+    }
+    return ALL_PRODUCTS;
+  }, [initialProducts]);
+
   const filteredProducts =
     selectedCategory === "all"
-      ? ALL_PRODUCTS
-      : ALL_PRODUCTS.filter((p) => p.category === selectedCategory);
+      ? allItems
+      : allItems.filter((p) => p.category === selectedCategory);
 
   const handleQuickAdd = (product: CatalogProduct) => {
     addItem({

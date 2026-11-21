@@ -16,6 +16,7 @@ import {
   ExternalLink,
   Bell,
   Activity,
+  Package,
 } from "lucide-react";
 import { LogoutButton } from "@/features/auth/components/login/logout-button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -90,6 +91,12 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
     currentUser?.permissions
   );
 
+  const canViewProducts = can(
+    currentUser?.role,
+    PERMISSIONS.PRODUCTS_VIEW,
+    currentUser?.permissions
+  );
+
   const navLinks = [
     {
       href: "/admin/dashboard",
@@ -97,6 +104,13 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
       icon: LayoutDashboard,
       active: pathname.startsWith("/admin/dashboard"),
       visible: hasPermission(currentUser, "dashboard:read"),
+    },
+    {
+      href: "/admin/products",
+      label: t("admin-nav-products") || (isAr ? "إدارة المنتجات" : "Products"),
+      icon: Package,
+      active: pathname.startsWith("/admin/products"),
+      visible: canViewProducts,
     },
     {
       href: "/admin/returns",
@@ -135,7 +149,21 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
   const breadcrumbSegments: BreadcrumbSegment[] = React.useMemo(() => {
     const segments: BreadcrumbSegment[] = [];
 
-    if (pathname.startsWith("/admin/returns")) {
+    if (pathname.startsWith("/admin/products")) {
+      const productsLabel = t("admin-nav-products") || (isAr ? "إدارة المنتجات" : "Products");
+      if (pathname === "/admin/products" || pathname === "/admin/products/") {
+        segments.push({ label: productsLabel });
+      } else if (pathname === "/admin/products/new") {
+        segments.push({ label: productsLabel, href: "/admin/products" });
+        segments.push({ label: t("admin-nav-add-product") || (isAr ? "إضافة منتج جديد" : "Add Product") });
+      } else if (pathname.endsWith("/edit")) {
+        segments.push({ label: productsLabel, href: "/admin/products" });
+        segments.push({ label: t("admin-nav-edit-product") || (isAr ? "تعديل المنتج" : "Edit Product") });
+      } else {
+        segments.push({ label: productsLabel, href: "/admin/products" });
+        segments.push({ label: t("admin-nav-product-details") || (isAr ? "تفاصيل المنتج" : "Product Details") });
+      }
+    } else if (pathname.startsWith("/admin/returns")) {
       const returnsLabel = t("admin-nav-returns") || (isAr ? "إدارة المرتجعات" : "Returns Management");
       if (pathname === "/admin/returns" || pathname === "/admin/returns/") {
         segments.push({ label: returnsLabel });
@@ -245,37 +273,6 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
                     </SidebarMenuItem>
                   );
                 })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          {/* Storefront Navigation: View Website Button */}
-          <SidebarGroup className="mt-auto pt-2 border-t border-border/40">
-            <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2">
-              {t("admin-nav-section-storefront") || (isAr ? "المتجر" : "Storefront")}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={{
-                      children: t("admin-nav-view-website") || (isAr ? "عرض الموقع" : "View Website"),
-                      side: isAr ? "left" : "right",
-                    }}
-                    className="text-muted-foreground hover:bg-accent hover:text-foreground transition-colors group/site"
-                  >
-                    <a
-                      href={`/${locale}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Globe className="size-4 shrink-0 text-primary" />
-                      <span>{t("admin-nav-view-website") || (isAr ? "عرض الموقع" : "View Website")}</span>
-                      <ExternalLink className="size-3.5 ms-auto shrink-0 opacity-60 group-data-[collapsible=icon]:hidden transition-transform group-hover/site:translate-x-0.5 rtl:group-hover/site:-translate-x-0.5" />
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

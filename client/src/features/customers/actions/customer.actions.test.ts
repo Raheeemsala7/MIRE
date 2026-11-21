@@ -73,6 +73,79 @@ describe("Customer Server Actions", () => {
     ).rejects.toThrow();
   });
 
+  it("updates customer with empty string fields when optional fields are cleared", async () => {
+    vi.mocked(auth).mockResolvedValue(
+      mockSession({
+        id: "admin-1",
+        role: "ADMIN",
+        permissions: ["customers:write"],
+      })
+    );
+
+    const clearingPayload = {
+      fullName: "Nour Updated",
+      email: "",
+      secondaryPhone: "",
+      notes: "",
+      socialProfiles: {
+        whatsapp: "",
+        instagram: "",
+        facebook: "",
+      },
+    };
+
+    const mockResponse = {
+      success: true,
+      data: { _id: "cust-1", ...clearingPayload },
+    };
+    vi.mocked(serverApiPatch).mockResolvedValue(mockResponse);
+
+    const result = await updateCustomerAction("cust-1", clearingPayload);
+    expect(serverApiPatch).toHaveBeenCalledWith("/customers/cust-1", clearingPayload);
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("throws when unauthenticated", async () => {
+    vi.mocked(auth).mockResolvedValue(null);
+
+    await expect(
+      updateCustomerAction("cust-1", { fullName: "Nour Updated" })
+    ).rejects.toThrow("Authentication required");
+  });
+
+  it("throws when customer ID is empty", async () => {
+    vi.mocked(auth).mockResolvedValue(
+      mockSession({
+        id: "admin-1",
+        role: "ADMIN",
+        permissions: ["customers:write"],
+      })
+    );
+
+    await expect(
+      updateCustomerAction("", { fullName: "Nour Updated" })
+    ).rejects.toThrow("Customer ID is required");
+  });
+
+  it("throws descriptive error when backend responds with BackendApiError", async () => {
+    vi.mocked(auth).mockResolvedValue(
+      mockSession({
+        id: "admin-1",
+        role: "ADMIN",
+        permissions: ["customers:write"],
+      })
+    );
+
+    const { BackendApiError } = await import("@/lib/auth/backend-client");
+    vi.mocked(serverApiPatch).mockRejectedValue(
+      new BackendApiError(404, { message: "Customer not found" })
+    );
+
+    await expect(
+      updateCustomerAction("cust-999", { fullName: "Nour Updated" })
+    ).rejects.toThrow("Customer not found");
+  });
+
   it("throws when payload fails schema validation", async () => {
     vi.mocked(auth).mockResolvedValue(
       mockSession({

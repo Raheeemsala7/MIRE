@@ -2,7 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { backendGet, backendPost, backendPatch, BackendApiError } from "./backend-client";
+import { backendGet, backendPost, backendPatch, backendDelete, BackendApiError } from "./backend-client";
 import { validatedBackendSession, isUnauthorized } from "./backend-session";
 import { freshSession } from "./refresh-token";
 import { deleteSession } from "./session-store";
@@ -56,4 +56,7 @@ export async function serverApiPost<T>(path: `/${string}`, body: unknown): Promi
 }
 export async function serverApiPatch<T>(path: `/${string}`, body: unknown): Promise<T> {
   return backendRequest((token) => backendPatch<T>(path, body, token));
+}
+export async function serverApiDelete<T>(path: `/${string}`): Promise<T> {
+  return backendRequest((token) => backendDelete<T>(path, token));
 }

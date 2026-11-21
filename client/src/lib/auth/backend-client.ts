@@ -48,7 +48,7 @@ export class BackendApiError extends Error {
   }
 }
 
-function apiUrl(): string {
+export function apiUrl(): string {
   const value = process.env.BACKEND_API_URL || process.env.API_URL;
   if (!value) {
     if (process.env.NODE_ENV === "production") {
@@ -162,6 +162,24 @@ export async function backendPatch<T>(path: `/${string}`, body: unknown, accessT
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(body),
+    cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) {
+    let errorData: unknown;
+    try { errorData = await response.json(); } catch { /* ignore */ }
+    throw new BackendApiError(response.status, errorData);
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function backendDelete<T>(path: `/${string}`, accessToken: string): Promise<T> {
+  const response = await fetch(`${apiUrl()}${path}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
     cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });

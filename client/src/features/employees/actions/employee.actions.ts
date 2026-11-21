@@ -146,33 +146,31 @@ export async function updateEmployeeAction(
     );
   }
 
-  // Security checks for role/status changes
-  if (hasRoleUpdates || hasStatusUpdates) {
-    let targetEmployee: SingleEmployeeResponse["data"];
-    try {
-      const targetRes = await serverApiGet<SingleEmployeeResponse>(
-        `/employees/${encodeURIComponent(id)}` as `/${string}`
-      );
-      targetEmployee = targetRes.data;
-    } catch (error) {
-      if (error instanceof BackendApiError && error.status === 404) {
-        throw new Error("Employee not found");
-      }
-      throw new Error("Failed to inspect target employee status");
+  // Pre-fetch target employee to enforce RBAC and modification constraints
+  let targetEmployee: SingleEmployeeResponse["data"];
+  try {
+    const targetRes = await serverApiGet<SingleEmployeeResponse>(
+      `/employees/${encodeURIComponent(id)}` as `/${string}`
+    );
+    targetEmployee = targetRes.data;
+  } catch (error) {
+    if (error instanceof BackendApiError && error.status === 404) {
+      throw new Error("Employee not found");
     }
+    throw new Error("Failed to inspect target employee status");
+  }
 
-    const validation = validateEmployeeMutation({
-      actingUser: session.user,
-      targetUserId: id,
-      targetUserRole: targetEmployee.role,
-      newRole: validatedData.role,
-      newPermissions: validatedData.permissions,
-      isStatusToggle: hasStatusUpdates,
-    });
+  const validation = validateEmployeeMutation({
+    actingUser: session.user,
+    targetUserId: id,
+    targetUserRole: targetEmployee.role,
+    newRole: validatedData.role,
+    newPermissions: validatedData.permissions,
+    isStatusToggle: hasStatusUpdates,
+  });
 
-    if (!validation.valid) {
-      throw new Error(validation.message);
-    }
+  if (!validation.valid) {
+    throw new Error(validation.message);
   }
 
   // Execution

@@ -132,6 +132,43 @@ describe("Return Server Actions", () => {
         })
       ).rejects.toThrow();
     });
+
+    it("throws when return ID is missing", async () => {
+      vi.mocked(auth).mockResolvedValue(
+        mockSession({
+          id: "admin-1",
+          role: "ADMIN",
+          permissions: ["returns:write"],
+        })
+      );
+
+      await expect(
+        updateReturnStatusAction("", {
+          status: RETURN_STATUSES.RETURN_APPROVED,
+        })
+      ).rejects.toThrow("Return ID is required");
+    });
+
+    it("throws descriptive error when backend responds with BackendApiError", async () => {
+      vi.mocked(auth).mockResolvedValue(
+        mockSession({
+          id: "admin-1",
+          role: "ADMIN",
+          permissions: ["returns:write"],
+        })
+      );
+
+      const { BackendApiError } = await import("@/lib/auth/backend-client");
+      vi.mocked(serverApiPatch).mockRejectedValue(
+        new BackendApiError(400, { message: "Cannot update completed return" })
+      );
+
+      await expect(
+        updateReturnStatusAction("ret-1", {
+          status: RETURN_STATUSES.RETURN_APPROVED,
+        })
+      ).rejects.toThrow("Cannot update completed return");
+    });
   });
 
   describe("inspectReturnAction", () => {

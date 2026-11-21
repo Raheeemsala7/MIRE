@@ -9,6 +9,8 @@ const addressSchema = new mongoose.Schema({
   postalCode: { type: String },
   country: { type: String, default: 'Egypt' },
   landmark: { type: String },
+  latitude: { type: Number },
+  longitude: { type: Number },
   isDefault: { type: Boolean, default: false }
 });
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/src/i18n/navigation";
+import { WishlistToggle } from "@/src/features/wishlist";
 
 export async function NewArrivals() {
   const t = await getTranslations();
@@ -81,6 +82,19 @@ export async function NewArrivals() {
                   alt={item.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
+                <div className="absolute top-2.5 end-2.5 z-10">
+                  <WishlistToggle
+                    product={{
+                      id: item.id,
+                      slug: item.slug,
+                      titleEn: item.title,
+                      titleAr: item.title,
+                      price: item.price,
+                      image: item.image,
+                      color: item.swatchName,
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Product Meta */}

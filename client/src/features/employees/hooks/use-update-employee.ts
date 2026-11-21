@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import type { UpdateEmployeePayload } from "../types/employee.types";
-import { updateEmployee } from "../services/employees.service";
+import { updateEmployeeAction } from "../actions/employee.actions";
 import { employeeQueryKeys } from "./use-employees";
 
 interface UpdateParams {
@@ -17,7 +17,7 @@ export function useUpdateEmployee(onSuccessCallback?: () => void) {
   const t = useTranslations();
 
   return useMutation({
-    mutationFn: ({ id, payload }: UpdateParams) => updateEmployee(id, payload),
+    mutationFn: ({ id, payload }: UpdateParams) => updateEmployeeAction(id, payload),
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: employeeQueryKeys.all });
       queryClient.invalidateQueries({

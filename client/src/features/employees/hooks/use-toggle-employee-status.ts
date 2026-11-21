@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { toggleEmployeeStatus } from "../services/employees.service";
+import { toggleEmployeeStatusAction } from "../actions/employee.actions";
 import { employeeQueryKeys } from "./use-employees";
 
 export function useToggleEmployeeStatus(onSuccessCallback?: () => void) {
@@ -11,7 +11,7 @@ export function useToggleEmployeeStatus(onSuccessCallback?: () => void) {
   const t = useTranslations();
 
   return useMutation({
-    mutationFn: (id: string) => toggleEmployeeStatus(id),
+    mutationFn: (id: string) => toggleEmployeeStatusAction(id),
     onSuccess: (response, id) => {
       queryClient.invalidateQueries({ queryKey: employeeQueryKeys.all });
       queryClient.invalidateQueries({

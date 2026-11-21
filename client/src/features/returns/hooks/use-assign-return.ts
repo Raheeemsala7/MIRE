@@ -7,7 +7,7 @@ import type {
   AssignReturnPayload,
   SingleReturnResponse,
 } from "../types/return.types";
-import { assignReturn } from "../services/returns.service";
+import { assignReturnAction } from "../actions/return.actions";
 import { returnQueryKeys } from "./use-returns";
 
 interface AssignReturnVariables {
@@ -20,7 +20,7 @@ export function useAssignReturn(onSuccessCallback?: () => void) {
   const t = useTranslations();
 
   return useMutation<SingleReturnResponse, Error, AssignReturnVariables>({
-    mutationFn: ({ id, payload }) => assignReturn(id, payload),
+    mutationFn: ({ id, payload }) => assignReturnAction(id, payload),
     onSuccess: (response, variables) => {
       queryClient.setQueryData<SingleReturnResponse>(
         returnQueryKeys.detail(variables.id),

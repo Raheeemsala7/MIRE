@@ -1,26 +1,11 @@
-"use client";
-
-import React, { useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/src/i18n/navigation";
-import { toast } from "sonner";
+import React from "react";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { BotanicalIcon } from "./botanical-icon";
+import { FooterNewsletterForm } from "./footer-newsletter-form";
 
-export function Footer() {
-  const t = useTranslations();
-  const locale = useLocale();
-  const [email, setEmail] = useState("");
-  const isRTL = locale === "ar";
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !email.includes("@")) {
-      toast.error(isRTL ? "يرجى إدخال بريد إلكتروني صحيح" : "Please enter a valid email address");
-      return;
-    }
-    toast.success(t("newsletter.successToast"));
-    setEmail("");
-  };
+export async function Footer() {
+  const t = await getTranslations();
 
   return (
     <footer className="w-full mt-auto">
@@ -42,25 +27,7 @@ export function Footer() {
             {t("newsletter.title")}
           </p>
 
-          <form
-            onSubmit={handleSubscribe}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3 max-w-md mx-auto"
-          >
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("newsletter.placeholder")}
-              className="w-full sm:flex-1 px-5 py-3 rounded-full bg-white text-sm text-ds-text-plain placeholder-zinc-400 border border-ds-border-muted/50 focus:outline-none focus:ring-2 focus:ring-ds-primary/40 shadow-xs"
-              required
-            />
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-7 py-3 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-widest uppercase transition-all shadow-xs cursor-pointer"
-            >
-              {t("newsletter.subscribe")}
-            </button>
-          </form>
+          <FooterNewsletterForm />
 
           {/* Quick links beneath newsletter */}
           <div className="flex flex-wrap items-center justify-center gap-6 pt-6 text-xs text-ds-text-muted">
@@ -142,7 +109,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/account/returns" className="hover:text-white transition-colors">
-                  {isRTL ? "المرتجعات والاستبدال" : "Returns & Exchanges"}
+                  {t("footer.returns")}
                 </Link>
               </li>
               <li>
@@ -162,4 +129,3 @@ export function Footer() {
     </footer>
   );
 }
-

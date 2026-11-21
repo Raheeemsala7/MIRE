@@ -31,6 +31,27 @@ describe("analytics validation schemas", () => {
     expect(parsed.returnRate).toBe("0%");
   });
 
+  it("handles valid zero-value metrics without falling back to missing data", () => {
+    const parsed = dashboardOverviewSchema.parse({
+      totalRevenue: 0,
+      todayRevenue: 0,
+      totalOrders: 0,
+      newOrders: 0,
+      pendingOrders: 0,
+      deliveredOrders: 0,
+      cancelledOrders: 0,
+      returnedOrders: 0,
+      totalCustomers: 0,
+      averageOrderValue: 0,
+      returnRate: "0%",
+      deliverySuccessRate: "0%",
+    });
+    expect(parsed.totalRevenue).toBe(0);
+    expect(parsed.totalOrders).toBe(0);
+    expect(parsed.totalCustomers).toBe(0);
+    expect(parsed.averageOrderValue).toBe(0);
+  });
+
   it("validates full backend analytics response structure", () => {
     const mockBackendData = {
       success: true,

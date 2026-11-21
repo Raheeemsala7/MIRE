@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
-import { Header } from "@/src/shared/components/header";
-import { Footer } from "@/src/shared/components/footer";
+import { Header } from "@/shared/components/header";
+import { Footer } from "@/shared/components/footer";
 
 function HeaderFallback() {
   return (

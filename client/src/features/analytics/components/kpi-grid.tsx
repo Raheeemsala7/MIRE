@@ -37,25 +37,25 @@ export function KpiGrid({ overview, isLoading }: KpiGridProps) {
 
   return (
     <div className="space-y-4">
-      {/* Primary KPI Row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      {/* Primary KPI Row - Official shadcn dashboard-01 4-column layout */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Revenue */}
         <KpiCard
           title={t("analytics-revenue-title")}
           value={
-            overview && overview.totalOrders > 0
+            overview !== undefined
               ? formatCurrency(overview.totalRevenue)
               : t("analytics-no-data")
           }
           subtitle={t("analytics-revenue-desc")}
           badge={
             overview && overview.todayRevenue > 0 ? (
-              <Badge variant="outline" className="text-[10px] text-emerald-600 dark:text-emerald-400">
+              <Badge variant="outline" className="text-[10px] text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5">
                 +{formatCurrency(overview.todayRevenue)}
               </Badge>
             ) : undefined
           }
-          icon={<Banknote className="size-5" aria-hidden="true" />}
+          icon={<Banknote className="size-4" aria-hidden="true" />}
           isLoading={isLoading}
         />
 
@@ -63,7 +63,7 @@ export function KpiGrid({ overview, isLoading }: KpiGridProps) {
         <KpiCard
           title={t("analytics-orders-title")}
           value={
-            overview && overview.totalOrders > 0
+            overview !== undefined
               ? formatNumber(overview.totalOrders)
               : t("analytics-no-data")
           }
@@ -75,20 +75,7 @@ export function KpiGrid({ overview, isLoading }: KpiGridProps) {
               </Badge>
             ) : undefined
           }
-          icon={<ShoppingBag className="size-5" aria-hidden="true" />}
-          isLoading={isLoading}
-        />
-
-        {/* Average Order Value (AOV) */}
-        <KpiCard
-          title={t("analytics-aov-title")}
-          value={
-            overview && overview.averageOrderValue > 0
-              ? formatCurrency(overview.averageOrderValue)
-              : t("analytics-no-data")
-          }
-          subtitle={t("analytics-aov-desc")}
-          icon={<TrendingUp className="size-5" aria-hidden="true" />}
+          icon={<ShoppingBag className="size-4" aria-hidden="true" />}
           isLoading={isLoading}
         />
 
@@ -96,67 +83,74 @@ export function KpiGrid({ overview, isLoading }: KpiGridProps) {
         <KpiCard
           title={t("analytics-customers-title")}
           value={
-            overview && overview.totalCustomers > 0
+            overview !== undefined
               ? formatNumber(overview.totalCustomers)
               : t("analytics-no-data")
           }
           subtitle={t("analytics-customers-desc")}
-          icon={<Users className="size-5" aria-hidden="true" />}
+          icon={<Users className="size-4" aria-hidden="true" />}
           isLoading={isLoading}
         />
 
-        {/* Delivery Success Rate */}
+        {/* Average Order Value (AOV) */}
         <KpiCard
-          title={t("analytics-delivery-rate")}
+          title={t("analytics-aov-title")}
           value={
-            overview && overview.totalOrders > 0
-              ? overview.deliverySuccessRate
+            overview !== undefined
+              ? formatCurrency(overview.averageOrderValue)
               : t("analytics-no-data")
           }
-          subtitle={t("analytics-delivery-desc")}
-          icon={<ShieldCheck className="size-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />}
+          subtitle={t("analytics-aov-desc")}
+          icon={<TrendingUp className="size-4" aria-hidden="true" />}
           isLoading={isLoading}
         />
       </div>
 
-      {/* Operational Breakdown Bar */}
-      {overview && overview.totalOrders > 0 ? (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2 text-xs">
-            <span className="flex size-2 rounded-full bg-blue-500" />
-            <span className="text-muted-foreground">{t("analytics-new-orders")}:</span>
-            <span className="font-semibold text-foreground">{overview.newOrders}</span>
+      {/* Operational Performance & Fulfillment Status Bar */}
+      {overview && !isLoading && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-3 shadow-xs">
+          {/* Delivery & Return Rate summary */}
+          <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-1.5 font-medium text-foreground">
+              <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+              <span>{t("analytics-delivery-rate")}:</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">{overview.deliverySuccessRate}</span>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5 text-muted-foreground border-l border-border/60 pl-4 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-4">
+              <span>{t("analytics-return-rate")}:</span>
+              <span className="font-semibold text-foreground">{overview.returnRate}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2 text-xs">
-            <Clock className="size-3.5 text-amber-500" />
-            <span className="text-muted-foreground">{t("analytics-pending-orders")}:</span>
-            <span className="font-semibold text-foreground">{overview.pendingOrders}</span>
-          </div>
-
-          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2 text-xs">
-            <CheckCircle2 className="size-3.5 text-emerald-600" />
-            <span className="text-muted-foreground">{t("analytics-delivered-orders")}:</span>
-            <span className="font-semibold text-foreground">{overview.deliveredOrders}</span>
-          </div>
-
-          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2 text-xs">
-            <XCircle className="size-3.5 text-rose-500" />
-            <span className="text-muted-foreground">{t("analytics-cancelled-orders")}:</span>
-            <span className="font-semibold text-foreground">{overview.cancelledOrders}</span>
-          </div>
-
-          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2 text-xs">
-            <RotateCcw className="size-3.5 text-purple-500" />
-            <span className="text-muted-foreground">{t("analytics-return-rate")}:</span>
-            <span className="font-semibold text-foreground">{overview.returnRate}</span>
+          {/* Fulfillment Status Badges */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-600 dark:text-blue-400">
+              <Clock className="size-3" />
+              {overview.newOrders} {t("analytics-new-orders")}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+              <Clock className="size-3" />
+              {overview.pendingOrders} {t("analytics-pending-orders")}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="size-3" />
+              {overview.deliveredOrders} {t("analytics-delivered-orders")}
+            </span>
+            {overview.cancelledOrders > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-2 py-0.5 text-[11px] font-medium text-rose-600 dark:text-rose-400">
+                <XCircle className="size-3" />
+                {overview.cancelledOrders} {t("analytics-cancelled-orders")}
+              </span>
+            )}
+            {overview.returnedOrders > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-600 dark:text-purple-400">
+                <RotateCcw className="size-3" />
+                {overview.returnedOrders} {t("analytics-status-returned")}
+              </span>
+            )}
           </div>
         </div>
-      ) : overview && overview.totalOrders === 0 ? (
-        <div className="flex items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-2.5 text-center text-xs text-muted-foreground">
-          {t("analytics-empty-desc")}
-        </div>
-      ) : null}
+      )}
     </div>
   );
 }

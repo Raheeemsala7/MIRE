@@ -2,11 +2,6 @@ import type {
   ReturnsFilterParams,
   ReturnsPaginatedResponse,
   SingleReturnResponse,
-  UpdateReturnStatusPayload,
-  InspectReturnPayload,
-  LogCallAttemptPayload,
-  AssignReturnPayload,
-  RequestReturnPayload,
   ReturnsOverviewStats,
 } from "../types/return.types";
 
@@ -50,7 +45,6 @@ export async function fetchReturns(
   const res = await fetch(url, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -69,7 +63,6 @@ export async function fetchReturnById(id: string): Promise<SingleReturnResponse>
   const res = await fetch(`/api/admin/returns/${encodeURIComponent(id)}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -84,115 +77,6 @@ export async function fetchReturnById(id: string): Promise<SingleReturnResponse>
   return res.json() as Promise<SingleReturnResponse>;
 }
 
-export async function updateReturnStatus(
-  id: string,
-  payload: UpdateReturnStatusPayload
-): Promise<SingleReturnResponse> {
-  const res = await fetch(`/api/admin/returns/${encodeURIComponent(id)}/status`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => null);
-    throw new Error(
-      errorBody?.message ||
-        errorBody?.error ||
-        `Failed to update return status (${res.status})`
-    );
-  }
-
-  return res.json() as Promise<SingleReturnResponse>;
-}
-
-export async function inspectReturn(
-  id: string,
-  payload: InspectReturnPayload
-): Promise<SingleReturnResponse> {
-  const res = await fetch(`/api/admin/returns/${encodeURIComponent(id)}/inspect`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => null);
-    throw new Error(
-      errorBody?.message ||
-        errorBody?.error ||
-        `Failed to inspect return (${res.status})`
-    );
-  }
-
-  return res.json() as Promise<SingleReturnResponse>;
-}
-
-export async function logReturnCallAttempt(
-  id: string,
-  payload: LogCallAttemptPayload
-): Promise<SingleReturnResponse> {
-  const res = await fetch(`/api/admin/returns/${encodeURIComponent(id)}/call-attempt`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => null);
-    throw new Error(
-      errorBody?.message ||
-        errorBody?.error ||
-        `Failed to log call attempt (${res.status})`
-    );
-  }
-
-  return res.json() as Promise<SingleReturnResponse>;
-}
-
-export async function assignReturn(
-  id: string,
-  payload: AssignReturnPayload
-): Promise<SingleReturnResponse> {
-  const res = await fetch(`/api/admin/returns/${encodeURIComponent(id)}/assign`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => null);
-    throw new Error(
-      errorBody?.message ||
-        errorBody?.error ||
-        `Failed to assign return (${res.status})`
-    );
-  }
-
-  return res.json() as Promise<SingleReturnResponse>;
-}
-
-export async function submitReturnRequest(
-  payload: RequestReturnPayload
-): Promise<SingleReturnResponse> {
-  const res = await fetch("/api/returns/request", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => null);
-    throw new Error(
-      errorBody?.message ||
-        errorBody?.error ||
-        `Failed to submit return request (${res.status})`
-    );
-  }
-
-  return res.json() as Promise<SingleReturnResponse>;
-}
-
 export async function fetchCustomerDeliveredOrders(): Promise<{
   success: boolean;
   data: DeliveredOrderSummary[];
@@ -200,7 +84,6 @@ export async function fetchCustomerDeliveredOrders(): Promise<{
   const res = await fetch("/api/customer/orders/delivered", {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -225,7 +108,6 @@ export async function fetchReturnsStats(): Promise<{
   const res = await fetch("/api/admin/returns/stats", {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    cache: "no-store",
   });
 
   if (!res.ok) {

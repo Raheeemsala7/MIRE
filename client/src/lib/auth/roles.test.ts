@@ -23,6 +23,11 @@ describe("centralized identity and destinations", () => {
   it("retains authorized intended paths in the current locale", () => {
     expect(loginDestination(customer, "en", "/en/checkout")).toBe("/en/checkout");
     expect(loginDestination(admin, "ar", "/ar/admin/employees?page=2")).toBe("/ar/admin/employees?page=2");
+    expect(loginDestination(admin, "en", "/en/admin")).toBe("/en/admin/dashboard");
+  });
+  it("routes staff with customers permission to customers directory", () => {
+    expect(destination("ADMIN", "en", ["customers:read"])).toBe("/en/admin/customers");
+    expect(destination("ADMIN", "ar", ["returns:read"])).toBe("/ar/admin/returns");
   });
   it.each(["https://evil.invalid", "//evil.invalid", "/\\evil.invalid", "/en/../ar/admin/dashboard", "/en/admin/dashboard", "/en/auth/login", "/enother/path"])("rejects unsafe or unauthorized customer callback %s", (callback) => {
     expect(loginDestination(customer, "en", callback)).toBe("/en");

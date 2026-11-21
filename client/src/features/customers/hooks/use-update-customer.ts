@@ -8,7 +8,7 @@ import type {
   SingleCustomerResponse,
   CustomerDetailsResponse,
 } from "../types/customer.types";
-import { updateCustomer } from "../services/customers.service";
+import { updateCustomerAction } from "../actions/customer.actions";
 import { customerQueryKeys } from "./use-customers";
 
 interface UpdateCustomerVariables {
@@ -22,7 +22,7 @@ export function useUpdateCustomer() {
 
   return useMutation<SingleCustomerResponse, Error, UpdateCustomerVariables>({
     mutationFn: ({ id, payload }: UpdateCustomerVariables) =>
-      updateCustomer(id, payload),
+      updateCustomerAction(id, payload),
     onSuccess: (response, variables) => {
       queryClient.setQueryData<CustomerDetailsResponse>(
         customerQueryKeys.detail(variables.id),

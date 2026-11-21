@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { TrendingUp } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -40,35 +42,40 @@ export function RevenueChart({ data = [], isLoading }: RevenueChartProps) {
     },
   } satisfies ChartConfig;
 
-  // Format date labels nicely (e.g., Nov 12 / ١٢ نوفمبر)
-  const hasRealActivity = data.some(
-    (item) => (item.revenue || 0) > 0 || (item.orders || 0) > 0,
-  );
+  const { hasRealActivity, formattedData } = useMemo(() => {
+    const active = data.some(
+      (item) => (item.revenue || 0) > 0 || (item.orders || 0) > 0,
+    );
 
-  const formattedData = data.map((item) => {
-    try {
-      const date = new Date(item._id);
-      const displayDate = date.toLocaleDateString(isAr ? "ar-EG-u-nu-latn" : "en-US", {
-        month: "short",
-        day: "numeric",
-      });
-      return {
-        ...item,
-        displayDate,
-      };
-    } catch {
-      return {
-        ...item,
-        displayDate: item._id,
-      };
-    }
-  });
+    const dateLocale = isAr ? "ar-EG-u-nu-latn" : "en-US";
+    const formatted = data.map((item) => {
+      try {
+        const date = new Date(item._id);
+        const displayDate = date.toLocaleDateString(dateLocale, {
+          month: "short",
+          day: "numeric",
+        });
+        return {
+          ...item,
+          displayDate,
+        };
+      } catch {
+        return {
+          ...item,
+          displayDate: item._id,
+        };
+      }
+    });
+
+    return { hasRealActivity: active, formattedData: formatted };
+  }, [data, isAr]);
 
   return (
-    <Card className="rounded-2xl border-border/60 bg-card shadow-xs">
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
+    <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
+      <CardHeader className="flex flex-row items-center justify-between pb-4 pt-5 px-6">
         <div className="space-y-1">
-          <CardTitle className="font-serif text-lg font-semibold text-foreground sm:text-xl">
+          <CardTitle className="text-base font-semibold text-foreground sm:text-lg flex items-center gap-2">
+            <TrendingUp className="size-4 text-primary" />
             {t("analytics-chart-revenue-title")}
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
@@ -77,13 +84,13 @@ export function RevenueChart({ data = [], isLoading }: RevenueChartProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="pt-2">
+      <CardContent className="px-6 pb-6 pt-2">
         {isLoading ? (
           <div className="space-y-3">
-            <Skeleton className="h-64 w-full rounded-xl" />
+            <Skeleton className="h-72 w-full rounded-xl" />
           </div>
         ) : formattedData.length === 0 || !hasRealActivity ? (
-          <div className="flex h-64 flex-col items-center justify-center text-center">
+          <div className="flex h-72 flex-col items-center justify-center text-center">
             <p className="text-sm font-medium text-muted-foreground">
               {t("analytics-no-data")}
             </p>
@@ -94,7 +101,7 @@ export function RevenueChart({ data = [], isLoading }: RevenueChartProps) {
         ) : (
           <ChartContainer
             config={chartConfig}
-            className="h-72 w-full min-w-0"
+            className="h-80 w-full min-w-0"
             dir="ltr"
           >
             <AreaChart
@@ -102,8 +109,8 @@ export function RevenueChart({ data = [], isLoading }: RevenueChartProps) {
               data={formattedData}
               margin={{
                 top: 10,
-                right: isAr ? 5 : 15,
-                left: isAr ? 15 : 5,
+                right: isAr ? 20 : 10,
+                left: isAr ? 10 : 20,
                 bottom: 5,
               }}
             >
@@ -149,7 +156,7 @@ export function RevenueChart({ data = [], isLoading }: RevenueChartProps) {
                 tickMargin={10}
                 width={55}
                 tickFormatter={(value: number) =>
-                  new Intl.NumberFormat(isAr ? "ar-EG" : "en-US", {
+                  new Intl.NumberFormat(isAr ? "ar-EG-u-nu-latn" : "en-US", {
                     notation: "compact",
                     maximumFractionDigits: 1,
                   }).format(value)
@@ -171,7 +178,7 @@ export function RevenueChart({ data = [], isLoading }: RevenueChartProps) {
                     formatter={(value, name) => {
                       if (name === "revenue") {
                         const formatted = new Intl.NumberFormat(
-                          isAr ? "ar-EG" : "en-US",
+                          isAr ? "ar-EG-u-nu-latn" : "en-US",
                         ).format(Number(value));
 
                         return `${formatted} ${currency}`;

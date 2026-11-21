@@ -162,7 +162,7 @@ export function CustomersTable({
   }, [filters.search]);
 
   return (
-    <Card className="border border-ds-border-subtle overflow-hidden bg-card/60">
+    <Card className="border border-border/60 overflow-hidden bg-card/60">
       {/* Search & Sort Controls */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 border-b border-border/60">
         {/* Search Field */}

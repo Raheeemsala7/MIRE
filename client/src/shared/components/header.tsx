@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import NextLink from "next/link";
 import { useTranslations, useLocale } from "next-intl";
-import { Link, usePathname, useRouter } from "@/src/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { Menu, X, ShoppingBag, UserRound } from "lucide-react";
-import { useCartStore } from "../stores/cart-store";
+import { useCartStore } from "@/shared/stores/cart-store";
 import { CartDrawer } from "./cart-drawer";
 
 export function Header() {
@@ -14,9 +14,11 @@ export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { getTotalCount, setIsOpen: setCartOpen } = useCartStore();
+  const totalCount = useCartStore((state) =>
+    state.items.reduce((total, item) => total + item.quantity, 0)
+  );
+  const setCartOpen = useCartStore((state) => state.setIsOpen);
 
-  const totalCount = getTotalCount();
   const otherLocale = locale === "ar" ? "en" : "ar";
   const isRTL = locale === "ar";
 

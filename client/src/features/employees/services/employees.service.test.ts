@@ -2,9 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchEmployees,
   fetchEmployeeById,
-  createEmployee,
-  updateEmployee,
-  toggleEmployeeStatus,
 } from "./employees.service";
 
 describe("Employees client service", () => {
@@ -128,96 +125,13 @@ describe("Employees client service", () => {
     expect(result).toEqual(mockEmployee);
   });
 
-  it("createEmployee sends POST request with payload", async () => {
-    const mockResponse = {
-      success: true,
-      statusCode: 201,
-      data: { _id: "new-1", name: "New Staff" },
-    };
-
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => mockResponse,
-    });
-
-    const payload = {
-      name: "New Staff",
-      email: "new@mire.com",
-      password: "Secret123!",
-      role: "ADMIN" as const,
-    };
-
-    const result = await createEmployee(payload);
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/admin/employees",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify(payload),
-      })
-    );
-    expect(result).toEqual(mockResponse);
-  });
-
-  it("updateEmployee sends PATCH request with payload", async () => {
-    const mockResponse = {
-      success: true,
-      statusCode: 200,
-      data: { _id: "emp-1", name: "Updated Staff" },
-    };
-
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => mockResponse,
-    });
-
-    const payload = { name: "Updated Staff" };
-    const result = await updateEmployee("emp-1", payload);
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/admin/employees/emp-1",
-      expect.objectContaining({
-        method: "PATCH",
-        body: JSON.stringify(payload),
-      })
-    );
-    expect(result).toEqual(mockResponse);
-  });
-
-  it("toggleEmployeeStatus sends PATCH request to toggle endpoint", async () => {
-    const mockResponse = {
-      success: true,
-      statusCode: 200,
-      data: { _id: "emp-1", isActive: false },
-    };
-
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => mockResponse,
-    });
-
-    const result = await toggleEmployeeStatus("emp-1");
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/admin/employees/emp-1/toggle-status",
-      expect.objectContaining({ method: "PATCH" })
-    );
-    expect(result).toEqual(mockResponse);
-  });
-
-  it("throws error with backend message when response is not ok", async () => {
+  it("fetchEmployeeById throws error with backend message when response is not ok", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
-      status: 409,
-      json: async () => ({ message: "An account with this email already exists" }),
+      status: 404,
+      json: async () => ({ message: "Employee not found" }),
     });
 
-    await expect(
-      createEmployee({
-        name: "Dup",
-        email: "dup@mire.com",
-        password: "Secret123!",
-        role: "ADMIN",
-      })
-    ).rejects.toThrow("An account with this email already exists");
+    await expect(fetchEmployeeById("invalid-id")).rejects.toThrow("Employee not found");
   });
 });

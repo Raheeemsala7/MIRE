@@ -1,0 +1,2847 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "MIRE Women Fashion E-commerce & Business Management API",
+    "version": "1.0.0",
+    "description": "Production-ready REST API for MIRE Luxury & Modest Women's Fashion Brand.\nFeatures complete E-commerce storefront, Admin Business Management, Order Fulfillment, Real-Time Unified Social Inbox (WhatsApp, Instagram, Facebook), Returns Management, Dynamic Bundles Engine, Multi-Provider Payments (Stripe, Paymob, COD), and Inventory Movement Tracking.",
+    "contact": {
+      "name": "MIRE Architecture & Engineering",
+      "email": "engineering@mirefashion.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api/v1",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Provide your JWT access token (Bearer <token>)"
+      }
+    },
+    "schemas": {
+      "StandardResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "statusCode": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "PaginatedResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "statusCode": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Data retrieved successfully"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "example": 1
+              },
+              "limit": {
+                "type": "integer",
+                "example": 20
+              },
+              "total": {
+                "type": "integer",
+                "example": 100
+              },
+              "totalPages": {
+                "type": "integer",
+                "example": 5
+              },
+              "hasNextPage": {
+                "type": "boolean",
+                "example": true
+              },
+              "hasPrevPage": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "statusCode": {
+            "type": "integer",
+            "example": 400
+          },
+          "message": {
+            "type": "string",
+            "example": "Error description"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "example": "email"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Invalid email format"
+                }
+              }
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "673a5e8c1b2f3a001c9d4e5f"
+          },
+          "name": {
+            "type": "string",
+            "example": "Layla El-Sayed"
+          },
+          "email": {
+            "type": "string",
+            "example": "layla@mirefashion.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201012345678"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "SUPER_ADMIN",
+              "ADMIN",
+              "ORDER_MANAGER",
+              "CUSTOMER_SUPPORT",
+              "INVENTORY_MANAGER",
+              "ACCOUNTANT",
+              "CUSTOMER"
+            ],
+            "example": "ADMIN"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "orders:read",
+              "orders:write",
+              "products:manage"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "673a5e8c1b2f3a001c9d4e60"
+          },
+          "name": {
+            "type": "string",
+            "example": "Rose Satin Evening Maxi Dress"
+          },
+          "slug": {
+            "type": "string",
+            "example": "rose-satin-evening-maxi-dress"
+          },
+          "sku": {
+            "type": "string",
+            "example": "MIRE-DRS-001"
+          },
+          "description": {
+            "type": "string",
+            "example": "Elegant double-lined satin maxi dress with bishop sleeves."
+          },
+          "price": {
+            "type": "number",
+            "example": 1450
+          },
+          "discountPrice": {
+            "type": "number",
+            "example": 1250
+          },
+          "category": {
+            "type": "string",
+            "example": "673a5e8c1b2f3a001c9d4e50"
+          },
+          "brand": {
+            "type": "string",
+            "example": "MIRE"
+          },
+          "colors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "Blush Pink"
+                },
+                "code": {
+                  "type": "string",
+                  "example": "#fbcfe8"
+                }
+              }
+            }
+          },
+          "sizes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "XS",
+                "S",
+                "M",
+                "L",
+                "XL",
+                "XXL"
+              ]
+            },
+            "example": [
+              "S",
+              "M",
+              "L"
+            ]
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "color": {
+                  "type": "string",
+                  "example": "Blush Pink"
+                },
+                "size": {
+                  "type": "string",
+                  "example": "M"
+                },
+                "sku": {
+                  "type": "string",
+                  "example": "MIRE-DRS-001-BP-M"
+                },
+                "stockQuantity": {
+                  "type": "integer",
+                  "example": 15
+                }
+              }
+            }
+          },
+          "totalStock": {
+            "type": "integer",
+            "example": 45
+          },
+          "isFeatured": {
+            "type": "boolean",
+            "example": true
+          },
+          "isNewArrival": {
+            "type": "boolean",
+            "example": true
+          },
+          "isBestSeller": {
+            "type": "boolean",
+            "example": false
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DRAFT",
+              "ARCHIVED"
+            ],
+            "example": "ACTIVE"
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "673a5e8c1b2f3a001c9d4e70"
+          },
+          "orderNumber": {
+            "type": "string",
+            "example": "MIRE-2026-1001"
+          },
+          "customerInfo": {
+            "type": "object",
+            "properties": {
+              "fullName": {
+                "type": "string",
+                "example": "Nouran Mostafa"
+              },
+              "email": {
+                "type": "string",
+                "example": "nouran@example.com"
+              },
+              "phone": {
+                "type": "string",
+                "example": "+201123456789"
+              }
+            }
+          },
+          "shippingAddress": {
+            "type": "object",
+            "properties": {
+              "street": {
+                "type": "string",
+                "example": "14 El-Thawra St"
+              },
+              "city": {
+                "type": "string",
+                "example": "Heliopolis"
+              },
+              "governorate": {
+                "type": "string",
+                "example": "Cairo"
+              },
+              "country": {
+                "type": "string",
+                "example": "Egypt"
+              }
+            }
+          },
+          "pricing": {
+            "type": "object",
+            "properties": {
+              "subtotal": {
+                "type": "number",
+                "example": 1250
+              },
+              "shippingFee": {
+                "type": "number",
+                "example": 50
+              },
+              "discount": {
+                "type": "number",
+                "example": 100
+              },
+              "totalAmount": {
+                "type": "number",
+                "example": 1200
+              }
+            }
+          },
+          "paymentInfo": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": [
+                  "COD",
+                  "STRIPE",
+                  "PAYMOB"
+                ],
+                "example": "COD"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PAID",
+                  "FAILED",
+                  "CANCELLED",
+                  "REFUNDED"
+                ],
+                "example": "PENDING"
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "CONFIRMED",
+              "PROCESSING",
+              "READY_TO_SHIP",
+              "SHIPPED",
+              "DELIVERED",
+              "CANCELLED",
+              "RETURNED",
+              "CUSTOMER_NOT_RESPONDING",
+              "FAILED_DELIVERY"
+            ],
+            "example": "NEW"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication, registration, JWT tokens & password recovery"
+    },
+    {
+      "name": "Employees",
+      "description": "Staff & Role-based Access Control management"
+    },
+    {
+      "name": "Products",
+      "description": "Product catalog, variant-level stock, searching & filtering"
+    },
+    {
+      "name": "Categories",
+      "description": "Hierarchical category management"
+    },
+    {
+      "name": "Inventory",
+      "description": "Inventory movement logs, alerts & manual stock adjustments"
+    },
+    {
+      "name": "Bundles & Offers",
+      "description": "Promotions, fixed price bundles, BOGO, discounts"
+    },
+    {
+      "name": "Coupons",
+      "description": "Coupon codes, limits & validations"
+    },
+    {
+      "name": "Cart",
+      "description": "Shopping cart, guest checkout & price recalculation"
+    },
+    {
+      "name": "Orders",
+      "description": "Order lifecycle, status workflows, assignment, CSV/Excel export"
+    },
+    {
+      "name": "Returns",
+      "description": "Return requests, inspection, customer contact attempts & inventory restock"
+    },
+    {
+      "name": "Payments",
+      "description": "Stripe, Egyptian Paymob & COD payment provider abstraction"
+    },
+    {
+      "name": "Social Inbox",
+      "description": "Unified Meta APIs for WhatsApp Cloud, Instagram & Messenger"
+    },
+    {
+      "name": "Analytics",
+      "description": "Sales, revenue, order statistics & business intelligence"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Meta Graph API & Stripe secure webhook receivers"
+    }
+  ],
+  "paths": {
+    "/wishlist": {
+      "get": {
+        "summary": "Retrieve user's paginated wishlist items",
+        "tags": [
+          "Wishlist"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated wishlist items"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add product to wishlist",
+        "tags": [
+          "Wishlist"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "productId"
+                ],
+                "properties": {
+                  "productId": {
+                    "type": "string"
+                  },
+                  "variantSku": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product added to wishlist"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Clear all items in user's wishlist",
+        "tags": [
+          "Wishlist"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wishlist cleared"
+          }
+        }
+      }
+    },
+    "/wishlist/check/{productId}": {
+      "get": {
+        "summary": "Check if a product is in current user's wishlist",
+        "tags": [
+          "Wishlist"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wishlist boolean status"
+          }
+        }
+      }
+    },
+    "/wishlist/items/{productId}": {
+      "delete": {
+        "summary": "Remove product from wishlist",
+        "tags": [
+          "Wishlist"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product removed from wishlist"
+          }
+        }
+      }
+    },
+    "/social/webhook/meta": {
+      "get": {
+        "summary": "Meta Webhook Challenge Verification (WhatsApp, IG, Messenger)",
+        "tags": [
+          "Webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "Challenge echoed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Ingest Meta Messaging Events (WhatsApp Cloud API, Instagram, Messenger)",
+        "tags": [
+          "Webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "Event received"
+          }
+        }
+      }
+    },
+    "/social/conversations": {
+      "get": {
+        "summary": "List unified social inbox conversations",
+        "tags": [
+          "Social Inbox"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated conversations"
+          }
+        }
+      }
+    },
+    "/social/conversations/{id}/messages": {
+      "get": {
+        "summary": "Get conversation message thread",
+        "tags": [
+          "Social Inbox"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message history"
+          }
+        }
+      }
+    },
+    "/social/conversations/{id}/reply": {
+      "post": {
+        "summary": "Send agent reply to customer on WhatsApp, IG, or Messenger",
+        "tags": [
+          "Social Inbox"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "example": "Hello! Your order has been dispatched."
+                  },
+                  "mediaUrl": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message sent"
+          }
+        }
+      }
+    },
+    "/social/conversations/{id}": {
+      "patch": {
+        "summary": "Update conversation status, assignee, or tags",
+        "tags": [
+          "Social Inbox"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation updated"
+          }
+        }
+      }
+    },
+    "/social/conversations/{id}/convert-to-order": {
+      "post": {
+        "summary": "Convert social conversation into an active order",
+        "tags": [
+          "Social Inbox"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Order created and linked"
+          }
+        }
+      }
+    },
+    "/social/conversations/{id}/link-customer": {
+      "post": {
+        "summary": "Link social conversation to existing customer profile",
+        "tags": [
+          "Social Inbox"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer linked"
+          }
+        }
+      }
+    },
+    "/social/accounts": {
+      "get": {
+        "summary": "Get connected social accounts configuration status",
+        "tags": [
+          "Social Inbox"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of connected channels"
+          }
+        }
+      },
+      "post": {
+        "summary": "Connect a new social channel account",
+        "tags": [
+          "Social Inbox"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account connected"
+          }
+        }
+      }
+    },
+    "/returns/request": {
+      "post": {
+        "summary": "Submit a return request for a delivered order",
+        "tags": [
+          "Returns"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "originalOrderId",
+                  "items",
+                  "reason"
+                ],
+                "properties": {
+                  "originalOrderId": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "enum": [
+                      "SIZE_TOO_SMALL",
+                      "SIZE_TOO_LARGE",
+                      "NOT_AS_PICTURED",
+                      "DEFECTIVE",
+                      "CHANGED_MIND",
+                      "WRONG_ITEM_SENT",
+                      "OTHER"
+                    ]
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": {
+                          "type": "string"
+                        },
+                        "sku": {
+                          "type": "string"
+                        },
+                        "color": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "string"
+                        },
+                        "quantity": {
+                          "type": "integer"
+                        },
+                        "unitPrice": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Return request initiated"
+          }
+        }
+      }
+    },
+    "/returns": {
+      "get": {
+        "summary": "List return requests with filter by status",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated returns"
+          }
+        }
+      }
+    },
+    "/returns/{id}": {
+      "get": {
+        "summary": "Get single return details",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Return details"
+          }
+        }
+      }
+    },
+    "/returns/{id}/status": {
+      "patch": {
+        "summary": "Update return status",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status updated"
+          }
+        }
+      }
+    },
+    "/returns/{id}/inspect": {
+      "post": {
+        "summary": "Inspect returned items and conditionally restock inventory",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "inspectionNotes",
+                  "itemInspections"
+                ],
+                "properties": {
+                  "inspectionNotes": {
+                    "type": "string"
+                  },
+                  "itemInspections": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "itemId": {
+                          "type": "string"
+                        },
+                        "condition": {
+                          "type": "string",
+                          "enum": [
+                            "UNOPENED",
+                            "TAGS_ATTACHED",
+                            "WORN",
+                            "DAMAGED",
+                            "DEFECTIVE"
+                          ]
+                        },
+                        "restockApproved": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inspection recorded and inventory restocked if approved"
+          }
+        }
+      }
+    },
+    "/returns/{id}/call-attempt": {
+      "post": {
+        "summary": "Log customer follow-up call attempt",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Call logged"
+          }
+        }
+      }
+    },
+    "/returns/{id}/assign": {
+      "patch": {
+        "summary": "Assign return handling to employee",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Return assigned"
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "Get all products with filters and search",
+        "tags": [
+          "Products"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minPrice",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "maxPrice",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "isFeatured",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "isNewArrival",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated product list"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new product with variants",
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Product"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully"
+          }
+        }
+      }
+    },
+    "/products/slug/{slug}": {
+      "get": {
+        "summary": "Get product by slug",
+        "tags": [
+          "Products"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details"
+          }
+        }
+      }
+    },
+    "/products/{id}/related": {
+      "get": {
+        "summary": "Get related products in same category",
+        "tags": [
+          "Products"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Related products"
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Get product by ID",
+        "tags": [
+          "Products"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update product details",
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Archive product",
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product archived"
+          }
+        }
+      }
+    },
+    "/payments/session": {
+      "post": {
+        "summary": "Create payment session (Stripe, Paymob, COD)",
+        "tags": [
+          "Payments"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "orderId",
+                  "method"
+                ],
+                "properties": {
+                  "orderId": {
+                    "type": "string"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "STRIPE",
+                      "PAYMOB",
+                      "COD"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment session URL and ID"
+          }
+        }
+      }
+    },
+    "/payments/transactions": {
+      "get": {
+        "summary": "List all payment transactions (Accountant / Admin)",
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated transaction list"
+          }
+        }
+      }
+    },
+    "/payments/refund": {
+      "post": {
+        "summary": "Issue payment refund",
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "transactionId"
+                ],
+                "properties": {
+                  "transactionId": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Refund status"
+          }
+        }
+      }
+    },
+    "/payments/webhook/stripe": {
+      "post": {
+        "summary": "Stripe Webhook Endpoint (HMAC signature verified)",
+        "tags": [
+          "Webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook received"
+          }
+        }
+      }
+    },
+    "/payments/webhook/paymob": {
+      "post": {
+        "summary": "Paymob Transaction Callback Webhook (HMAC verified)",
+        "tags": [
+          "Webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook processed"
+          }
+        }
+      }
+    },
+    "/orders/checkout": {
+      "post": {
+        "summary": "Place order from cart (Customer or Guest)",
+        "tags": [
+          "Orders"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "customerInfo",
+                  "shippingAddress"
+                ],
+                "properties": {
+                  "customerInfo": {
+                    "type": "object",
+                    "properties": {
+                      "fullName": {
+                        "type": "string",
+                        "example": "Hala Mahmoud"
+                      },
+                      "phone": {
+                        "type": "string",
+                        "example": "+201012345678"
+                      },
+                      "email": {
+                        "type": "string",
+                        "example": "hala@example.com"
+                      }
+                    }
+                  },
+                  "shippingAddress": {
+                    "type": "object",
+                    "properties": {
+                      "street": {
+                        "type": "string",
+                        "example": "123 Nile Corniche"
+                      },
+                      "city": {
+                        "type": "string",
+                        "example": "Zamalek"
+                      },
+                      "governorate": {
+                        "type": "string",
+                        "example": "Cairo"
+                      }
+                    }
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "enum": [
+                      "COD",
+                      "STRIPE",
+                      "PAYMOB"
+                    ],
+                    "example": "COD"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created with inventory reserved"
+          }
+        }
+      }
+    },
+    "/orders/export/csv": {
+      "get": {
+        "summary": "Export orders to CSV",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file download"
+          }
+        }
+      }
+    },
+    "/orders/export/excel": {
+      "get": {
+        "summary": "Export orders to Excel",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Excel spreadsheet download"
+          }
+        }
+      }
+    },
+    "/orders": {
+      "get": {
+        "summary": "List orders with filters (Admin/Staff) or Own Orders (Customer)",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated orders"
+          }
+        }
+      }
+    },
+    "/orders/manual": {
+      "post": {
+        "summary": "Create manual order (from Social Inbox or phone)",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Manual order created"
+          }
+        }
+      }
+    },
+    "/orders/bulk-status": {
+      "patch": {
+        "summary": "Bulk update order statuses",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bulk update results"
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "summary": "Get single order details",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details"
+          }
+        }
+      }
+    },
+    "/orders/{id}/status": {
+      "patch": {
+        "summary": "Update order status",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status updated"
+          }
+        }
+      }
+    },
+    "/orders/{id}/assign": {
+      "patch": {
+        "summary": "Assign order to employee",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order assigned"
+          }
+        }
+      }
+    },
+    "/orders/{id}/notes": {
+      "post": {
+        "summary": "Add internal staff note to order",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note added"
+          }
+        }
+      }
+    },
+    "/orders/{id}/delivery-attempt": {
+      "post": {
+        "summary": "Log delivery or customer call attempt",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delivery attempt recorded"
+          }
+        }
+      }
+    },
+    "/inventory/adjust": {
+      "post": {
+        "summary": "Manually adjust stock for a variant with audit trail",
+        "tags": [
+          "Inventory"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "productId",
+                  "variantSku",
+                  "quantityChange",
+                  "type",
+                  "reason"
+                ],
+                "properties": {
+                  "productId": {
+                    "type": "string"
+                  },
+                  "variantSku": {
+                    "type": "string"
+                  },
+                  "quantityChange": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "PURCHASE",
+                      "SALE",
+                      "RETURN",
+                      "ADJUSTMENT",
+                      "DAMAGE"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "New supplier shipment batch received"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stock adjusted successfully"
+          }
+        }
+      }
+    },
+    "/inventory/movements": {
+      "get": {
+        "summary": "List paginated stock movement audit trail",
+        "tags": [
+          "Inventory"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated inventory movements"
+          }
+        }
+      }
+    },
+    "/inventory/low-stock": {
+      "get": {
+        "summary": "Get low stock alerts for inventory replenishment",
+        "tags": [
+          "Inventory"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of low stock product variants"
+          }
+        }
+      }
+    },
+    "/employees": {
+      "get": {
+        "summary": "List all staff members",
+        "tags": [
+          "Employees"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "role",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated employees"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new employee account",
+        "tags": [
+          "Employees"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email",
+                  "password",
+                  "role"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "ADMIN",
+                      "ORDER_MANAGER",
+                      "CUSTOMER_SUPPORT",
+                      "INVENTORY_MANAGER",
+                      "ACCOUNTANT"
+                    ]
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Employee created"
+          }
+        }
+      }
+    },
+    "/employees/{id}": {
+      "get": {
+        "summary": "Get single employee",
+        "tags": [
+          "Employees"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee details"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update employee role and permissions",
+        "tags": [
+          "Employees"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee updated"
+          }
+        }
+      }
+    },
+    "/employees/{id}/toggle-status": {
+      "patch": {
+        "summary": "Activate/deactivate employee",
+        "tags": [
+          "Employees"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status updated"
+          }
+        }
+      }
+    },
+    "/customers": {
+      "get": {
+        "summary": "List all customers with search and filters",
+        "tags": [
+          "Customers"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated customers"
+          }
+        }
+      }
+    },
+    "/customers/{id}": {
+      "get": {
+        "summary": "Get customer details and recent order history",
+        "tags": [
+          "Customers"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer details"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update customer tags, notes, or profile details",
+        "tags": [
+          "Customers"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer updated"
+          }
+        }
+      }
+    },
+    "/coupons/validate": {
+      "post": {
+        "summary": "Validate a coupon code against current subtotal",
+        "tags": [
+          "Coupons"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "WELCOME10"
+                  },
+                  "subtotal": {
+                    "type": "number",
+                    "example": 1000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result with calculated discount"
+          }
+        }
+      }
+    },
+    "/coupons": {
+      "get": {
+        "summary": "List all coupons (Admin)",
+        "tags": [
+          "Coupons"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated coupons"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new discount coupon",
+        "tags": [
+          "Coupons"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Coupon created"
+          }
+        }
+      }
+    },
+    "/coupons/{id}": {
+      "patch": {
+        "summary": "Update coupon details",
+        "tags": [
+          "Coupons"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Coupon updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete coupon",
+        "tags": [
+          "Coupons"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Coupon deleted"
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "summary": "List all categories (storefront & admin)",
+        "tags": [
+          "Categories"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "includeInactive",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of categories"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create category",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Evening Dresses"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "parentCategory": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created"
+          }
+        }
+      }
+    },
+    "/categories/{slug}": {
+      "get": {
+        "summary": "Get category by slug",
+        "tags": [
+          "Categories"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category details"
+          }
+        }
+      }
+    },
+    "/categories/{id}": {
+      "patch": {
+        "summary": "Update category",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete category",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category deleted"
+          }
+        }
+      }
+    },
+    "/cart": {
+      "get": {
+        "summary": "Retrieve current cart for customer or guest",
+        "tags": [
+          "Cart"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-guest-id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cart details with calculated discounts"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add item to cart (root alias)",
+        "tags": [
+          "Cart"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "productId"
+                ],
+                "properties": {
+                  "productId": {
+                    "type": "string"
+                  },
+                  "variantSku": {
+                    "type": "string"
+                  },
+                  "sku": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "size": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "default": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated cart"
+          }
+        }
+      }
+    },
+    "/cart/items": {
+      "post": {
+        "summary": "Add item to cart with variant validation",
+        "tags": [
+          "Cart"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "productId"
+                ],
+                "properties": {
+                  "productId": {
+                    "type": "string"
+                  },
+                  "variantSku": {
+                    "type": "string"
+                  },
+                  "sku": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "size": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated cart"
+          }
+        }
+      }
+    },
+    "/cart/items/{itemId}": {
+      "patch": {
+        "summary": "Update cart item quantity",
+        "tags": [
+          "Cart"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "quantity"
+                ],
+                "properties": {
+                  "quantity": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated cart"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove item from cart",
+        "tags": [
+          "Cart"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item removed"
+          }
+        }
+      }
+    },
+    "/cart/bundle": {
+      "post": {
+        "summary": "Apply bundle offer to cart",
+        "tags": [
+          "Cart"
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundle applied"
+          }
+        }
+      }
+    },
+    "/cart/coupon": {
+      "post": {
+        "summary": "Apply coupon code to cart",
+        "tags": [
+          "Cart"
+        ],
+        "responses": {
+          "200": {
+            "description": "Coupon applied"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove applied coupon",
+        "tags": [
+          "Cart"
+        ],
+        "responses": {
+          "200": {
+            "description": "Coupon removed"
+          }
+        }
+      }
+    },
+    "/cart/governorate": {
+      "post": {
+        "summary": "Set delivery governorate to calculate shipping fee",
+        "tags": [
+          "Cart"
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipping calculated"
+          }
+        }
+      }
+    },
+    "/cart/clear": {
+      "delete": {
+        "summary": "Clear all items in cart",
+        "tags": [
+          "Cart"
+        ],
+        "responses": {
+          "200": {
+            "description": "Cart cleared"
+          }
+        }
+      }
+    },
+    "/bundles": {
+      "get": {
+        "summary": "List all bundles & promotions",
+        "tags": [
+          "Bundles & Offers"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "activeOnly",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of bundle promotions"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new promotional bundle",
+        "tags": [
+          "Bundles & Offers"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Bundle created"
+          }
+        }
+      }
+    },
+    "/bundles/{id}": {
+      "get": {
+        "summary": "Get bundle details with eligible products",
+        "tags": [
+          "Bundles & Offers"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundle details"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update bundle details",
+        "tags": [
+          "Bundles & Offers"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundle updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete bundle",
+        "tags": [
+          "Bundles & Offers"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundle deleted"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new customer",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Hala Mahmoud"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "hala@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Secret123"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "+201001234567"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered successfully"
+          },
+          "409": {
+            "description": "Email already in use"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login for customer, admin, or staff",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "admin@mirefashion.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Admin@123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful with access & refresh tokens"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/auth/refresh-token": {
+      "post": {
+        "summary": "Refresh JWT access token",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refreshToken"
+                ],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens refreshed"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout user and invalidate refresh token",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logged out"
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "summary": "Initiate password reset",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "customer@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset token generated"
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "summary": "Reset password using verification token",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token",
+                  "password"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "NewSecurePassword123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password successfully updated"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get currently authenticated user profile",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update profile details",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated"
+          }
+        }
+      }
+    },
+    "/analytics/dashboard": {
+      "get": {
+        "summary": "Get comprehensive analytics metrics, KPIs, and chart series for admin dashboard",
+        "tags": [
+          "Analytics"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "range",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "today",
+                "yesterday",
+                "7d",
+                "30d",
+                "custom"
+              ],
+              "default": "30d"
+            }
+          },
+          {
+            "in": "query",
+            "name": "startDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "endDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard overview KPIs and chart breakdowns"
+          }
+        }
+      }
+    }
+  }
+}

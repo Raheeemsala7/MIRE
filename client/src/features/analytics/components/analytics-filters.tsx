@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Calendar as CalendarIcon, RefreshCw } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -22,6 +22,8 @@ export function AnalyticsFilters({
   onRefresh,
 }: AnalyticsFiltersProps) {
   const t = useTranslations();
+  const locale = useLocale();
+  const isAr = locale === "ar";
   const [customOpen, setCustomOpen] = useState(false);
   const [customStart, setCustomStart] = useState(filter.startDate ?? "");
   const [customEnd, setCustomEnd] = useState(filter.endDate ?? "");
@@ -90,13 +92,13 @@ export function AnalyticsFilters({
                 {t("analytics-range-custom")}
               </h4>
               <p className="text-[11px] text-muted-foreground">
-                Choose start and end dates for analytics.
+                {t("analytics-custom-desc") || (isAr ? "اختر تاريخ البدء وتاريخ الانتهاء للمؤشرات." : "Choose start and end dates for analytics.")}
               </p>
             </div>
             <div className="space-y-2">
               <div>
                 <label htmlFor="custom-start-date" className="block text-[11px] font-medium text-muted-foreground">
-                  Start Date
+                  {t("analytics-custom-start") || (isAr ? "تاريخ البدء" : "Start Date")}
                 </label>
                 <Input
                   id="custom-start-date"
@@ -108,7 +110,7 @@ export function AnalyticsFilters({
               </div>
               <div>
                 <label htmlFor="custom-end-date" className="block text-[11px] font-medium text-muted-foreground">
-                  End Date
+                  {t("analytics-custom-end") || (isAr ? "تاريخ الانتهاء" : "End Date")}
                 </label>
                 <Input
                   id="custom-end-date"
@@ -126,14 +128,14 @@ export function AnalyticsFilters({
                 className="h-7 text-xs"
                 onClick={() => setCustomOpen(false)}
               >
-                Cancel
+                {t("analytics-custom-cancel") || (isAr ? "إلغاء" : "Cancel")}
               </Button>
               <Button
                 size="sm"
                 className="h-7 bg-primary text-xs font-medium text-primary-foreground hover:bg-primary/90"
                 onClick={handleApplyCustom}
               >
-                Apply
+                {t("analytics-custom-apply") || (isAr ? "تطبيق" : "Apply")}
               </Button>
             </div>
           </PopoverContent>

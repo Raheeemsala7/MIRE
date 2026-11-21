@@ -80,10 +80,10 @@ export const ReturnsOverview = React.memo(function ReturnsOverview({
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-      {cards.map((card, i) => {
+      {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <Card key={i} className="border-border/60 bg-card shadow-xs transition-all hover:border-border">
+          <Card key={card.title} className="border-border/60 bg-card shadow-xs transition-all hover:border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3.5 pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground line-clamp-1">
                 {card.title}

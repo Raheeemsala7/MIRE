@@ -4,8 +4,8 @@ import { Tajawal, Playfair_Display, Geist, Amiri } from "next/font/google";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { setRequestLocale, getMessages } from "next-intl/server";
-import { routing } from "@/src/i18n/routing";
-import { Providers } from "@/src/shared/context/providers";
+import { routing } from "@/i18n/routing";
+import { Providers } from "@/shared/context/providers";
 
 // The document's language and direction must resolve before <html> renders.
 // Only this layout may block; descendant pages retain instant-navigation checks.

@@ -103,7 +103,7 @@ export function CustomerDetails({
       </div>
 
       {/* Main Identity Card */}
-      <Card className="border border-ds-border-subtle overflow-hidden">
+      <Card className="border border-border/60 overflow-hidden">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card/60 p-6 border-b border-border/60">
           <div className="flex items-center gap-4">
             <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary/10 font-serif font-bold text-primary text-2xl uppercase">
@@ -211,7 +211,7 @@ export function CustomerDetails({
       {/* KPI Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Orders */}
-        <Card className="border border-ds-border-subtle bg-card/60">
+        <Card className="border border-border/60 bg-card/60">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -233,7 +233,7 @@ export function CustomerDetails({
         </Card>
 
         {/* Total Spent */}
-        <Card className="border border-ds-border-subtle bg-card/60">
+        <Card className="border border-border/60 bg-card/60">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -255,7 +255,7 @@ export function CustomerDetails({
         </Card>
 
         {/* Average Order Value */}
-        <Card className="border border-ds-border-subtle bg-card/60">
+        <Card className="border border-border/60 bg-card/60">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -285,7 +285,7 @@ export function CustomerDetails({
           <CustomerOrdersTable orders={recentOrders} />
 
           {/* Delivery Addresses */}
-          <Card className="border border-ds-border-subtle overflow-hidden">
+          <Card className="border border-border/60 overflow-hidden">
             <CardHeader className="p-5 border-b border-border/60 bg-card/60">
               <div className="flex items-center gap-2">
                 <MapPin className="size-4 text-primary" />
@@ -342,7 +342,7 @@ export function CustomerDetails({
         {/* Right Column (1 span): Tags, Internal Notes, Social Profiles */}
         <div className="space-y-6">
           {/* Customer Tags Card */}
-          <Card className="border border-ds-border-subtle overflow-hidden">
+          <Card className="border border-border/60 overflow-hidden">
             <CardHeader className="p-5 border-b border-border/60 bg-card/60 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2">
                 <Tag className="size-4 text-primary" />
@@ -383,7 +383,7 @@ export function CustomerDetails({
           </Card>
 
           {/* Internal Notes Card */}
-          <Card className="border border-ds-border-subtle overflow-hidden">
+          <Card className="border border-border/60 overflow-hidden">
             <CardHeader className="p-5 border-b border-border/60 bg-card/60 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="size-4 text-primary" />
@@ -421,7 +421,7 @@ export function CustomerDetails({
           </Card>
 
           {/* Social Profiles Card */}
-          <Card className="border border-ds-border-subtle overflow-hidden">
+          <Card className="border border-border/60 overflow-hidden">
             <CardHeader className="p-5 border-b border-border/60 bg-card/60 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2">
                 <Share2 className="size-4 text-primary" />

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { connection } from "next/server";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authorizeCredentials } from "@/lib/auth/credentials";
@@ -76,4 +77,7 @@ const nextAuth = NextAuth({
 
 export const { handlers, signIn, signOut } = nextAuth;
 // React cache deduplicates within a render, never across requests or users.
-export const auth = cache(async () => nextAuth.auth());
+export const auth = cache(async () => {
+  await connection();
+  return nextAuth.auth();
+});

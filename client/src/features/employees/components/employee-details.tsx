@@ -24,7 +24,11 @@ import {
   PERMISSIONS,
   BACKEND_PERMISSIONS_CATALOG,
 } from "@/config/rbac.config";
-import { getRoleBadgeVariant, formatEmployeeDate } from "../utils/employee.util";
+import {
+  getRoleBadgeVariant,
+  formatEmployeeDate,
+  formatPermissionLabel,
+} from "../utils/employee.util";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
 import { EmployeeStatusDialog } from "./employee-status-dialog";
 import type { Employee } from "../types/employee.types";
@@ -80,7 +84,7 @@ export function EmployeeDetails({
       </div>
 
       {/* Main Identity Card */}
-      <Card className="border border-ds-border-subtle overflow-hidden">
+      <Card className="border border-border/60 overflow-hidden">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card/60 p-6 border-b border-border/60">
           <div className="flex items-center gap-4">
             <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary/10 font-serif font-bold text-primary text-2xl uppercase">
@@ -269,7 +273,7 @@ export function EmployeeDetails({
                     className="flex items-center gap-1.5 py-1 px-2.5 text-xs font-normal bg-card"
                   >
                     <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400" />
-                    <span>{permissionCatalogMap.get(perm) || perm}</span>
+                    <span>{permissionCatalogMap.get(perm) || formatPermissionLabel(perm)}</span>
                     <span className="text-[10px] text-muted-foreground">({perm})</span>
                   </Badge>
                 ))}

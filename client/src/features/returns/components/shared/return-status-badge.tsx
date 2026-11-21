@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import type { ReturnStatus } from "../../types/return.types";
 import { getStatusStyle } from "../../utils/return.util";

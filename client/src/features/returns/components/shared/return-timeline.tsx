@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { Clock, CheckCircle2 } from "lucide-react";
 import type { StatusHistoryEntry } from "../../types/return.types";

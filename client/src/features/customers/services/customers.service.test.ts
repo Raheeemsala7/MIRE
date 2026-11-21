@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchCustomers,
   fetchCustomerById,
-  updateCustomer,
 } from "./customers.service";
 
 describe("Customers client service", () => {
@@ -110,85 +109,5 @@ describe("Customers client service", () => {
     await expect(fetchCustomerById("invalid-id")).rejects.toThrow(
       "Customer not found"
     );
-  });
-
-  it("updateCustomer sends PATCH with JSON body and returns updated customer", async () => {
-    const updatePayload = {
-      tags: ["VIP", "Loyal"],
-      notes: "Updated delivery note",
-    };
-
-    const mockResponse = {
-      success: true,
-      statusCode: 200,
-      message: "Customer updated",
-      data: { _id: "cust-1", fullName: "Nour", ...updatePayload },
-    };
-
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => mockResponse,
-    });
-
-    const result = await updateCustomer("cust-1", updatePayload);
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/admin/customers/cust-1",
-      expect.objectContaining({
-        method: "PATCH",
-        body: JSON.stringify(updatePayload),
-      })
-    );
-    expect(result).toEqual(mockResponse);
-  });
-
-  it("updateCustomer sends empty string fields when cleared by user", async () => {
-    const clearingPayload = {
-      fullName: "Nour",
-      phone: "+201011112222",
-      email: "",
-      secondaryPhone: "",
-      notes: "",
-      socialProfiles: {
-        whatsapp: "",
-        instagram: "",
-        facebook: "",
-      },
-    };
-
-    const mockResponse = {
-      success: true,
-      statusCode: 200,
-      message: "Customer updated",
-      data: { _id: "cust-1", ...clearingPayload },
-    };
-
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => mockResponse,
-    });
-
-    const result = await updateCustomer("cust-1", clearingPayload);
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/admin/customers/cust-1",
-      expect.objectContaining({
-        method: "PATCH",
-        body: JSON.stringify(clearingPayload),
-      })
-    );
-    expect(result).toEqual(mockResponse);
-  });
-
-  it("updateCustomer throws descriptive error on validation rejection", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 422,
-      json: async () => ({ message: "Validation error: Name too short" }),
-    });
-
-    await expect(
-      updateCustomer("cust-1", { fullName: "A" })
-    ).rejects.toThrow("Validation error: Name too short");
   });
 });

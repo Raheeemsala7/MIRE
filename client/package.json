@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:auth:smoke": "node scripts/auth-smoke.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.6",

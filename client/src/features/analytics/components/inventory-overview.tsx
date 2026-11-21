@@ -1,7 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { AlertTriangle, CheckCircle } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
+import { AlertTriangle, CheckCircle, Package } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -20,28 +20,29 @@ interface InventoryOverviewProps {
 
 export function InventoryOverview({ items = [], isLoading }: InventoryOverviewProps) {
   const t = useTranslations();
+  const locale = useLocale();
+  const isAr = locale === "ar";
 
   return (
-    <Card className="rounded-2xl border-border/60 bg-card shadow-xs">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="font-serif text-lg font-semibold text-foreground sm:text-xl">
-              {t("analytics-inventory-title")}
-            </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground">
-              {t("analytics-inventory-desc")}
-            </CardDescription>
-          </div>
-          {items.length > 0 && (
-            <Badge variant="destructive" className="text-[10px]">
-              {items.length} alerts
-            </Badge>
-          )}
+    <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
+      <CardHeader className="flex flex-row items-center justify-between pb-3 pt-5 px-6">
+        <div className="space-y-1">
+          <CardTitle className="text-base font-semibold text-foreground sm:text-lg flex items-center gap-2">
+            <Package className="size-4 text-primary" />
+            {t("analytics-inventory-title")}
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
+            {t("analytics-inventory-desc")}
+          </CardDescription>
         </div>
+        {items.length > 0 && (
+          <Badge variant="destructive" className="text-[10px] py-0">
+            {items.length} {t("analytics-alerts") || (isAr ? "تنبيهات" : "alerts")}
+          </Badge>
+        )}
       </CardHeader>
 
-      <CardContent className="pt-2">
+      <CardContent className="px-6 pb-6 pt-2">
         {isLoading ? (
           <div className="space-y-2.5">
             {[1, 2, 3].map((i) => (
@@ -63,10 +64,10 @@ export function InventoryOverview({ items = [], isLoading }: InventoryOverviewPr
             {items.slice(0, 5).map((item) => (
               <div
                 key={item.variantSku}
-                className="flex items-center justify-between py-2.5 text-xs first:pt-0 last:pb-0"
+                className="flex items-center justify-between py-2.5 text-xs first:pt-1 last:pb-1"
               >
-                <div className="space-y-0.5">
-                  <p className="font-medium text-foreground line-clamp-1 max-w-[220px]">
+                <div className="space-y-0.5 min-w-0 pr-2 rtl:pr-0 rtl:pl-2">
+                  <p className="font-medium text-foreground truncate max-w-[200px] sm:max-w-xs">
                     {item.productName}
                   </p>
                   <p className="font-mono text-[10px] text-muted-foreground">
@@ -74,7 +75,7 @@ export function InventoryOverview({ items = [], isLoading }: InventoryOverviewPr
                   </p>
                 </div>
 
-                <div className="text-end">
+                <div className="text-end shrink-0">
                   <span
                     className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[11px] font-semibold ${
                       item.stockQuantity === 0
@@ -86,7 +87,7 @@ export function InventoryOverview({ items = [], isLoading }: InventoryOverviewPr
                     {item.stockQuantity} {t("analytics-stock-remaining")}
                   </span>
                   <p className="text-[10px] text-muted-foreground">
-                    Threshold: {item.threshold}
+                    {t("analytics-threshold") || (isAr ? "الحد الأدنى" : "Threshold")}: {item.threshold}
                   </p>
                 </div>
               </div>

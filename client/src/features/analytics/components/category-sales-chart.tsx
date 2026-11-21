@@ -1,8 +1,9 @@
-
 "use client";
 
+import { useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Layers } from "lucide-react";
 
 import {
   Card,
@@ -36,16 +37,18 @@ export function CategorySalesChart({
   const isAr = locale === "ar";
   const currency = isAr ? "ج.م" : "EGP";
 
-  const numberFormatter = new Intl.NumberFormat(
-    isAr ? "ar-EG" : "en-US"
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(isAr ? "ar-EG-u-nu-latn" : "en-US"),
+    [isAr]
   );
 
-  const compactFormatter = new Intl.NumberFormat(
-    isAr ? "ar-EG" : "en-US",
-    {
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }
+  const compactFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(isAr ? "ar-EG-u-nu-latn" : "en-US", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }),
+    [isAr]
   );
 
   const chartConfig = {
@@ -59,19 +62,19 @@ export function CategorySalesChart({
     },
   } satisfies ChartConfig;
 
-  const hasSalesData = data.some(
-    (item) =>
-      (item.revenue || 0) > 0 ||
-      (item.count || 0) > 0
+  const hasSalesData = useMemo(
+    () =>
+      data.some(
+        (item) => (item.revenue || 0) > 0 || (item.count || 0) > 0
+      ),
+    [data]
   );
 
   return (
-    <Card
-      dir={isAr ? "rtl" : "ltr"}
-      className="rounded-2xl border-border/60 bg-card shadow-xs"
-    >
-      <CardHeader className="pb-3">
-        <CardTitle className="font-serif text-lg font-semibold text-foreground sm:text-xl">
+    <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
+      <CardHeader className="pb-3 pt-5 px-6">
+        <CardTitle className="text-base font-semibold text-foreground sm:text-lg flex items-center gap-2">
+          <Layers className="size-4 text-primary" />
           {t("analytics-chart-category-title")}
         </CardTitle>
 
@@ -80,7 +83,7 @@ export function CategorySalesChart({
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="pt-2">
+      <CardContent className="px-6 pb-6 pt-2">
         {isLoading ? (
           <Skeleton className="h-64 w-full rounded-xl" />
         ) : data.length === 0 || !hasSalesData ? (
@@ -139,11 +142,10 @@ export function CategorySalesChart({
                 type="category"
                 dataKey="category"
                 orientation={isAr ? "right" : "left"}
-                width={130}
+                width={85}
                 tickLine={false}
                 axisLine={false}
-                tickMargin={12}
-                interval={0}
+                tickMargin={10}
                 tick={{
                   fontSize: 11,
                   fill: "var(--foreground)",
@@ -153,21 +155,22 @@ export function CategorySalesChart({
               <ChartTooltip
                 cursor={{
                   fill: "var(--muted)",
-                  opacity: 0.2,
+                  opacity: 0.3,
                 }}
                 content={
                   <ChartTooltipContent
                     indicator="dot"
                     formatter={(value, name) => {
                       if (name === "revenue") {
-                        return `${numberFormatter.format(
+                        const formatted = numberFormatter.format(
                           Number(value)
-                        )} ${currency}`;
+                        );
+                        return `${formatted} ${currency}`;
                       }
 
-                      return `${numberFormatter.format(
-                        Number(value)
-                      )} ${t("analytics-units-sold")}`;
+                      return `${value} ${t(
+                        "analytics-units-sold"
+                      )}`;
                     }}
                   />
                 }
@@ -176,12 +179,7 @@ export function CategorySalesChart({
               <Bar
                 dataKey="revenue"
                 fill="var(--chart-1)"
-                radius={
-                  isAr
-                    ? [6, 0, 0, 6]
-                    : [0, 6, 6, 0]
-                }
-                maxBarSize={28}
+                radius={isAr ? [4, 0, 0, 4] : [0, 4, 4, 0]}
               />
             </BarChart>
           </ChartContainer>

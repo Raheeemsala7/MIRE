@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Check, ShoppingBag } from "lucide-react";
-import { useCartStore } from "@/src/shared/stores/cart-store";
+import { useCartStore } from "@/shared/stores/cart-store";
 import { ProductDetail } from "../types/product";
 import { ProductAccordion } from "./product-accordion";
 
@@ -22,7 +23,8 @@ export function ProductView({ product }: ProductViewProps) {
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
   const [selectedImage, setSelectedImage] = useState(product.colors[0].image);
 
-  const { addItem, setIsOpen } = useCartStore();
+  const addItem = useCartStore((state) => state.addItem);
+  const setIsOpen = useCartStore((state) => state.setIsOpen);
 
   const handleColorChange = (color: (typeof product.colors)[0]) => {
     setSelectedColor(color);
@@ -71,11 +73,12 @@ export function ProductView({ product }: ProductViewProps) {
                   : "border-transparent opacity-80 hover:opacity-100"
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={c.image}
                 alt={isRTL ? c.nameAr : c.nameEn}
-                className="w-full h-full object-cover"
+                fill
+                sizes="80px"
+                className="object-cover"
               />
             </button>
           ))}
@@ -83,11 +86,13 @@ export function ProductView({ product }: ProductViewProps) {
 
         {/* Main High-Resolution Photo */}
         <div className="flex-1 relative aspect-3/4 rounded-lg overflow-hidden bg-ds-secondary/20 shadow-xs border border-ds-border-subtle">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={selectedImage}
             alt={isRTL ? product.titleAr : product.titleEn}
-            className="w-full h-full object-cover transition-all duration-300"
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 58vw"
+            className="object-cover transition-all duration-300"
           />
         </div>
       </div>

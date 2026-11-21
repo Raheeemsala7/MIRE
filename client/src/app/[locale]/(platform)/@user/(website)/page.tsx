@@ -1,12 +1,12 @@
 import React, { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
-import { routing } from "@/src/i18n/routing";
-import { HeroSection } from "@/src/features/home/components/hero-section";
-import { CategoryGrid } from "@/src/features/home/components/category-grid";
-import { BrandStory } from "@/src/features/home/components/brand-story";
-import { NewArrivals } from "@/src/features/home/components/new-arrivals";
-import { OutfitsGallery } from "@/src/features/home/components/outfits-gallery";
-import { ValuePillars } from "@/src/features/home/components/value-pillars";
+import { routing } from "@/i18n/routing";
+import { HeroSection } from "@/features/home/components/hero-section";
+import { CategoryGrid } from "@/features/home/components/category-grid";
+import { BrandStory } from "@/features/home/components/brand-story";
+import { NewArrivals } from "@/features/home/components/new-arrivals";
+import { OutfitsGallery } from "@/features/home/components/outfits-gallery";
+import { ValuePillars } from "@/features/home/components/value-pillars";
 
 interface HomePageProps {
   params: Promise<{

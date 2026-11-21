@@ -58,3 +58,12 @@ export function formatEmployeeDate(dateString?: string, locale: string = "en"): 
     return dateString;
   }
 }
+
+export function formatPermissionLabel(perm: string): string {
+  if (!perm) return "";
+  if (perm === "*") return "All Capabilities (*)";
+  return perm
+    .split(/[:._]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}

@@ -3040,6 +3040,15 @@ Before implementing a feature:
 5. External integrations requiring dedicated HTTP endpoints:
    - Use Route Handlers only when necessary.
 
+## Test Cleanup Rules
+
+- Keep meaningful Vitest test files after execution.
+- Remove temporary test files created only for debugging.
+- Remove obsolete or duplicate tests after verifying coverage.
+- Clean generated coverage reports when no longer needed.
+- Never delete important regression tests.
+- Do not remove tests just because they passed.
+
 ## Final Principle
 
 When there are multiple valid implementations, prefer the solution that:

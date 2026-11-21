@@ -2,8 +2,6 @@ import type {
   CustomerFilters,
   CustomersPaginatedResponse,
   CustomerDetailsResponse,
-  SingleCustomerResponse,
-  UpdateCustomerPayload,
 } from "../types/customer.types";
 
 export async function fetchCustomers(
@@ -22,7 +20,6 @@ export async function fetchCustomers(
   const res = await fetch(url, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -43,7 +40,6 @@ export async function fetchCustomerById(
   const res = await fetch(`/api/admin/customers/${encodeURIComponent(id)}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -56,26 +52,4 @@ export async function fetchCustomerById(
   }
 
   return res.json() as Promise<CustomerDetailsResponse>;
-}
-
-export async function updateCustomer(
-  id: string,
-  payload: UpdateCustomerPayload
-): Promise<SingleCustomerResponse> {
-  const res = await fetch(`/api/admin/customers/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => null);
-    throw new Error(
-      errorBody?.message ||
-        errorBody?.error ||
-        `Failed to update customer (${res.status})`
-    );
-  }
-
-  return res.json() as Promise<SingleCustomerResponse>;
 }

@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { can } from "@/lib/permissions/can";
 import type { Permission } from "@/config/rbac.config";

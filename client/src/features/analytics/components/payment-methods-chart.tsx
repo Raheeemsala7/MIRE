@@ -1,7 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { CreditCard, Banknote } from "lucide-react";
+import { CreditCard, Banknote, Wallet } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -52,12 +53,16 @@ export function PaymentMethodsChart({ data = [], isLoading }: PaymentMethodsChar
     }
   };
 
-  const totalRevenue = data.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
+  const totalRevenue = useMemo(
+    () => data.reduce((acc, curr) => acc + (curr.revenue || 0), 0),
+    [data]
+  );
 
   return (
-    <Card className="rounded-2xl border-border/60 bg-card shadow-xs">
-      <CardHeader className="pb-3">
-        <CardTitle className="font-serif text-lg font-semibold text-foreground sm:text-xl">
+    <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
+      <CardHeader className="pb-3 pt-5 px-6">
+        <CardTitle className="text-base font-semibold text-foreground sm:text-lg flex items-center gap-2">
+          <Wallet className="size-4 text-primary" />
           {t("analytics-chart-payment-title")}
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
@@ -65,7 +70,7 @@ export function PaymentMethodsChart({ data = [], isLoading }: PaymentMethodsChar
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="pt-2">
+      <CardContent className="px-6 pb-6 pt-2">
         {isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-14 w-full rounded-xl" />
@@ -105,8 +110,7 @@ export function PaymentMethodsChart({ data = [], isLoading }: PaymentMethodsChar
             <div className="divide-y divide-border/40">
               {data.map((item) => {
                 const details = getMethodDetails(item.method);
-                const revenuePct =
-                  totalRevenue > 0 ? Math.round((item.revenue / totalRevenue) * 100) : 0;
+                const pct = totalRevenue > 0 ? Math.round((item.revenue / totalRevenue) * 100) : 0;
 
                 return (
                   <div
@@ -120,17 +124,14 @@ export function PaymentMethodsChart({ data = [], isLoading }: PaymentMethodsChar
                       <div>
                         <p className="font-medium text-foreground">{details.label}</p>
                         <p className="text-[11px] text-muted-foreground">
-                          {item.count} {t("analytics-orders-count")}
+                          {item.count} {t("analytics-orders-count")} ({pct}%)
                         </p>
                       </div>
                     </div>
 
-                    <div className="text-end">
+                    <div className="text-end font-mono">
                       <p className="font-semibold text-foreground">
                         {item.revenue.toLocaleString("en-US")} {currency}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground font-mono">
-                        {revenuePct}%
                       </p>
                     </div>
                   </div>

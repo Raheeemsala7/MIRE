@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { isAdminRole, isCustomerRole } from "@/lib/auth/roles";
@@ -20,8 +21,22 @@ async function AuthorizedPlatform({ admin, user, params }: PlatformProps) {
     return user;
   }
 
-  // Admin / Staff → Dashboard Slot
+  // Admin / Staff → Dashboard Slot (when accessing /admin/*) or Storefront (when browsing website /)
   if (isAdminRole(session.user.role)) {
+    const headerList = await headers();
+    const isAdminRouteHeader = headerList.get("x-is-admin-route");
+    const pathnameHeader = headerList.get("x-pathname") || "";
+
+    // If explicitly on storefront routes, allow admin to see the public website
+    if (
+      isAdminRouteHeader === "0" ||
+      pathnameHeader === `/${locale}` ||
+      pathnameHeader === `/${locale}/` ||
+      pathnameHeader === "/"
+    ) {
+      return user;
+    }
+
     return admin;
   }
 

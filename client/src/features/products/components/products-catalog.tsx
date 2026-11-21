@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/src/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
-import { useCartStore } from "@/src/shared/stores/cart-store";
+import { useCartStore } from "@/shared/stores/cart-store";
 
 export interface CatalogProduct {
   id: string;
@@ -124,7 +125,8 @@ export function ProductsCatalog() {
   const locale = useLocale();
   const isRTL = locale === "ar";
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const { addItem, setIsOpen } = useCartStore();
+  const addItem = useCartStore((state) => state.addItem);
+  const setIsOpen = useCartStore((state) => state.setIsOpen);
 
   const filterTabs = [
     { key: "all", label: isRTL ? "جميع المنتجات" : "All Products" },
@@ -196,11 +198,12 @@ export function ProductsCatalog() {
               href={`/products/${product.slug}`}
               className="relative aspect-3/4 overflow-hidden bg-ds-secondary/20 block"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={product.image}
                 alt={isRTL ? product.titleAr : product.titleEn}
-                className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700"
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className="object-cover group-hover:scale-104 transition-transform duration-700"
               />
               <span
                 className="absolute top-3 end-3 w-4 h-4 rounded-full border border-black/10 shadow-xs"

@@ -7,7 +7,7 @@ import type {
   RequestReturnPayload,
   SingleReturnResponse,
 } from "../types/return.types";
-import { submitReturnRequest } from "../services/returns.service";
+import { submitReturnRequestAction } from "../actions/return.actions";
 import { returnQueryKeys } from "./use-returns";
 
 export function useSubmitReturnRequest(
@@ -17,7 +17,8 @@ export function useSubmitReturnRequest(
   const t = useTranslations();
 
   return useMutation<SingleReturnResponse, Error, RequestReturnPayload>({
-    mutationFn: (payload: RequestReturnPayload) => submitReturnRequest(payload),
+    mutationFn: (payload: RequestReturnPayload) =>
+      submitReturnRequestAction(payload),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: returnQueryKeys.all });
       toast.success(

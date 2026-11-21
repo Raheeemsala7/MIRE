@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type {
   AnalyticsFilter,
   AnalyticsDashboardData,
@@ -36,6 +36,7 @@ export function useAnalytics(
     queryKey: analyticsQueryKeys.dashboard(filter),
     queryFn: () => fetchAnalyticsDashboard(filter),
     initialData: filter.range === "30d" && !filter.startDate ? initialData : undefined,
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 3, // 3 minutes
   });
 }

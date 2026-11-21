@@ -1,7 +1,10 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { Card } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
 interface KpiCardProps {
@@ -25,40 +28,43 @@ export function KpiCard({
 }: KpiCardProps) {
   if (isLoading) {
     return (
-      <Card className="rounded-2xl border-border/60 bg-card p-5 shadow-xs">
-        <div className="flex items-center justify-between">
+      <Card className="rounded-xl border border-border/60 bg-card py-4 shadow-xs">
+        <CardHeader className="flex flex-row items-center justify-between pb-2 pt-0 px-5 space-y-0">
           <Skeleton className="h-4 w-24" />
-          <Skeleton className="size-9 rounded-xl" />
-        </div>
-        <Skeleton className="mt-4 h-8 w-32" />
-        <Skeleton className="mt-2 h-3.5 w-40" />
+          <Skeleton className="size-4 rounded-full" />
+        </CardHeader>
+        <CardContent className="px-5 pt-0 pb-1">
+          <Skeleton className="h-7 w-32" />
+          <Skeleton className="mt-1.5 h-3.5 w-44" />
+        </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="relative overflow-hidden rounded-2xl border-border/60 bg-card p-5 shadow-xs transition-all hover:border-border hover:shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground">{title}</p>
-          <div className="flex items-baseline gap-2 pt-1">
-            <span className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-              {value}
-            </span>
-            {badge && <div>{badge}</div>}
-          </div>
-        </div>
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-primary ring-1 ring-border/50">
+    <Card className="rounded-xl border border-border/60 bg-card py-4 shadow-xs transition-colors hover:border-border">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 pt-0 px-5 space-y-0">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {title}
+        </CardTitle>
+        <div className="text-muted-foreground shrink-0 size-4 flex items-center justify-center">
           {icon}
         </div>
-      </div>
-
-      {(subtitle || trendText) && (
-        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5 text-[11px] text-muted-foreground">
-          {subtitle && <span>{subtitle}</span>}
-          {trendText && <span className="font-medium text-foreground">{trendText}</span>}
+      </CardHeader>
+      <CardContent className="px-5 pt-0 pb-1 space-y-1">
+        <div className="flex items-baseline gap-2">
+          <div className="text-2xl font-bold tracking-tight text-foreground">
+            {value}
+          </div>
+          {badge && <div>{badge}</div>}
         </div>
-      )}
+        {(subtitle || trendText) && (
+          <p className="text-xs text-muted-foreground flex items-center justify-between">
+            {subtitle && <span>{subtitle}</span>}
+            {trendText && <span className="font-medium text-foreground">{trendText}</span>}
+          </p>
+        )}
+      </CardContent>
     </Card>
   );
 }

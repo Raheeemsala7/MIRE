@@ -1,7 +1,8 @@
 import React from "react";
+import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Link } from "@/src/i18n/navigation";
-import { BotanicalIcon } from "@/src/shared/components/botanical-icon";
+import { Link } from "@/i18n/navigation";
+import { BotanicalIcon } from "@/shared/components/botanical-icon";
 
 export async function BrandStory() {
   const t = await getTranslations();
@@ -15,11 +16,12 @@ export async function BrandStory() {
           {/* Visual Column with Real Modest Outfit Photo & Botanical Icon */}
           <div className="md:col-span-5 flex items-center justify-center relative">
             <div className="relative w-full max-w-sm aspect-4/5 rounded-lg overflow-hidden shadow-md border border-white/60 bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/products/outfits/tapioca-brown.jpg"
                 alt="MIRÉ Modest Philosophy"
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 384px"
+                className="object-cover"
               />
               <div className="absolute top-4 end-4 text-white drop-shadow-md">
                 <BotanicalIcon size={48} />

@@ -1,15 +1,21 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { X, Trash2, ShoppingBag } from "lucide-react";
-import { useTranslations, useLocale } from "next-intl";
-import { useCartStore } from "../stores/cart-store";
+import { useTranslations } from "next-intl";
+import { toast } from "sonner";
+import { useCartStore } from "@/shared/stores/cart-store";
 
 export function CartDrawer() {
-  const { items, isOpen, setIsOpen, removeItem, getTotalPrice } = useCartStore();
+  const items = useCartStore((state) => state.items);
+  const isOpen = useCartStore((state) => state.isOpen);
+  const setIsOpen = useCartStore((state) => state.setIsOpen);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const totalPrice = useCartStore((state) =>
+    state.items.reduce((total, item) => total + item.price * item.quantity, 0)
+  );
   const t = useTranslations();
-  const locale = useLocale();
-  const isRTL = locale === "ar";
 
   if (!isOpen) return null;
 
@@ -21,7 +27,7 @@ export function CartDrawer() {
         onClick={() => setIsOpen(false)}
       />
 
-      <div className={`fixed inset-y-0 ${isRTL ? "left-0" : "right-0"} max-w-full flex pl-0`}>
+      <div className="fixed inset-y-0 end-0 max-w-full flex ps-0">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
           {/* Header */}
           <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
@@ -48,12 +54,10 @@ export function CartDrawer() {
                   <ShoppingBag className="w-8 h-8" />
                 </div>
                 <p className="text-zinc-600 font-medium">
-                  {isRTL ? "حقيبة التسوق فارغة حالياً" : "Your shopping bag is empty"}
+                  {t("common.cartEmpty")}
                 </p>
                 <p className="text-xs text-zinc-400 mt-1 max-w-xs">
-                  {isRTL
-                    ? "تصفحي مجموعتنا المميزة من الأزياء المحتشمة وأضيفي ما يناسبك"
-                    : "Explore our modest collections and add your favorite pieces."}
+                  {t("common.cartEmptySubtitle")}
                 </p>
               </div>
             ) : (
@@ -63,11 +67,12 @@ export function CartDrawer() {
                   className="flex items-center gap-4 py-3 border-b border-zinc-100"
                 >
                   <div className="w-16 h-20 rounded-md bg-ds-secondary/30 overflow-hidden flex-shrink-0 relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="64px"
+                      className="object-cover"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -79,7 +84,7 @@ export function CartDrawer() {
                     </p>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-zinc-500">
-                        {isRTL ? "الكمية:" : "Qty:"} {item.quantity}
+                        {t("common.qty")} {item.quantity}
                       </span>
                       <span className="text-sm font-semibold text-ds-primary">
                         {item.price * item.quantity} {t("common.currency")}
@@ -103,20 +108,20 @@ export function CartDrawer() {
             <div className="p-6 border-t border-zinc-100 bg-zinc-50/50">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-zinc-600">
-                  {isRTL ? "المجموع الكلي" : "Subtotal"}
+                  {t("common.subtotal")}
                 </span>
                 <span className="text-lg font-bold text-ds-primary">
-                  {getTotalPrice()} {t("common.currency")}
+                  {totalPrice} {t("common.currency")}
                 </span>
               </div>
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  alert(isRTL ? "شكراً لكِ! سيتم إتاحة الدفع قريباً." : "Thank you! Checkout is coming soon.");
+                  toast.info(t("common.checkoutSoon"));
                 }}
-                className="w-full py-3.5 px-4 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-sm font-medium transition-colors shadow-sm"
+                className="w-full py-3.5 px-4 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-sm font-medium transition-colors shadow-sm cursor-pointer"
               >
-                {isRTL ? "متابعة الشراء والتوصيل" : "PROCEED TO CHECKOUT"}
+                {t("common.checkout")}
               </button>
             </div>
           )}

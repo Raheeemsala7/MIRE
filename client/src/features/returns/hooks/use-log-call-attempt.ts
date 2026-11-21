@@ -7,7 +7,7 @@ import type {
   LogCallAttemptPayload,
   SingleReturnResponse,
 } from "../types/return.types";
-import { logReturnCallAttempt } from "../services/returns.service";
+import { logCallAttemptAction } from "../actions/return.actions";
 import { returnQueryKeys } from "./use-returns";
 
 interface LogCallAttemptVariables {
@@ -20,7 +20,7 @@ export function useLogCallAttempt(onSuccessCallback?: () => void) {
   const t = useTranslations();
 
   return useMutation<SingleReturnResponse, Error, LogCallAttemptVariables>({
-    mutationFn: ({ id, payload }) => logReturnCallAttempt(id, payload),
+    mutationFn: ({ id, payload }) => logCallAttemptAction(id, payload),
     onSuccess: (response, variables) => {
       queryClient.setQueryData<SingleReturnResponse>(
         returnQueryKeys.detail(variables.id),

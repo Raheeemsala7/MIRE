@@ -7,7 +7,7 @@ import type {
   UpdateReturnStatusPayload,
   SingleReturnResponse,
 } from "../types/return.types";
-import { updateReturnStatus } from "../services/returns.service";
+import { updateReturnStatusAction } from "../actions/return.actions";
 import { returnQueryKeys } from "./use-returns";
 
 interface UpdateStatusVariables {
@@ -20,7 +20,7 @@ export function useUpdateReturnStatus(onSuccessCallback?: () => void) {
   const t = useTranslations();
 
   return useMutation<SingleReturnResponse, Error, UpdateStatusVariables>({
-    mutationFn: ({ id, payload }) => updateReturnStatus(id, payload),
+    mutationFn: ({ id, payload }) => updateReturnStatusAction(id, payload),
     onSuccess: (response, variables) => {
       queryClient.setQueryData<SingleReturnResponse>(
         returnQueryKeys.detail(variables.id),

@@ -1,9 +1,9 @@
 import React, { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
-import { routing } from "@/src/i18n/routing";
-import { Link } from "@/src/i18n/navigation";
+import { routing } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 import { ChevronRight } from "lucide-react";
-import { ProductsCatalog } from "@/src/features/products/components/products-catalog";
+import { ProductsCatalog } from "@/features/products/components/products-catalog";
 
 interface ProductsPageProps {
   params: Promise<{

@@ -76,7 +76,7 @@ export function AnalyticsDashboard({ initialData, canViewOrders, canViewInventor
 
       {/* Main Error Banner (if analytics fails) */}
       {isAnalyticsError && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-xs text-destructive">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-xs text-destructive">
           <div className="flex items-center gap-2">
             <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
             <span>{t("analytics-error-desc")}</span>
@@ -93,37 +93,45 @@ export function AnalyticsDashboard({ initialData, canViewOrders, canViewInventor
         </div>
       )}
 
-      {/* KPI Overview Cards */}
+      {/* KPI Overview Cards (Row 1: 4 core cards + operational status bar) */}
       <KpiGrid
         overview={analyticsData?.overview}
         isLoading={isAnalyticsLoading && !analyticsData}
       />
 
-      {/* Main Charts Row: Revenue Area Chart (8 cols) + Order Status Donut (4 cols) */}
+      {/* Main Row: Overview Chart (7 cols) + Recent Sales / Orders (5 cols) (dashboard-01 style) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-8">
+        <div className={canViewOrders ? "lg:col-span-7" : "lg:col-span-12"}>
           <RevenueChart
             data={analyticsData?.charts?.dailyRevenue}
             isLoading={isAnalyticsLoading && !analyticsData}
           />
         </div>
+        {canViewOrders && (
+          <div className="lg:col-span-5">
+            <RecentOrders
+              orders={recentOrders}
+              isLoading={isOrdersLoading && !recentOrders}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Secondary Row: 3 Breakdown Cards (4 cols each) */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="lg:col-span-4">
           <OrderStatusChart
             data={analyticsData?.charts?.ordersByStatus}
             isLoading={isAnalyticsLoading && !analyticsData}
           />
         </div>
-      </div>
-
-      {/* Category Breakdown & Payment Channels (6 cols each) */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-6">
+        <div className="lg:col-span-4">
           <CategorySalesChart
             data={analyticsData?.charts?.salesByCategory}
             isLoading={isAnalyticsLoading && !analyticsData}
           />
         </div>
-        <div className="lg:col-span-6">
+        <div className="lg:col-span-4">
           <PaymentMethodsChart
             data={analyticsData?.charts?.paymentDistribution}
             isLoading={isAnalyticsLoading && !analyticsData}
@@ -131,24 +139,22 @@ export function AnalyticsDashboard({ initialData, canViewOrders, canViewInventor
         </div>
       </div>
 
-      {/* Tables & Operational Insights: Recent Orders (7 cols) + Top Products & Stock (5 cols) */}
+      {/* Tertiary Row: Top Products (7 cols) + Inventory Overview (5 cols) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-7">
-          {canViewOrders && <RecentOrders
-            orders={recentOrders}
-            isLoading={isOrdersLoading && !recentOrders}
-          />}
-        </div>
-        <div className="space-y-6 lg:col-span-5">
+        <div className={canViewInventory ? "lg:col-span-7" : "lg:col-span-12"}>
           <TopProducts
             data={analyticsData?.charts?.bestSellers}
             isLoading={isAnalyticsLoading && !analyticsData}
           />
-          {canViewInventory && <InventoryOverview
-            items={lowStockItems}
-            isLoading={isInventoryLoading && !lowStockItems}
-          />}
         </div>
+        {canViewInventory && (
+          <div className="lg:col-span-5">
+            <InventoryOverview
+              items={lowStockItems}
+              isLoading={isInventoryLoading && !lowStockItems}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

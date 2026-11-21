@@ -18,7 +18,7 @@ function makeQueryClient() {
         staleTime: 60 * 1000,
         retry: 2,
       },
-      mutations: { retry: 2 },
+      mutations: { retry: 0 },
     },
   });
 }

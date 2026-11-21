@@ -44,7 +44,7 @@ export function CustomerOrdersTable({ orders }: CustomerOrdersTableProps) {
   }
 
   return (
-    <Card className="border border-ds-border-subtle overflow-hidden">
+    <Card className="border border-border/60 overflow-hidden">
       <CardHeader className="p-5 border-b border-border/60 bg-card/60 flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
           <ShoppingBag className="size-4 text-primary" />

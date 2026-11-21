@@ -1,7 +1,8 @@
 import React from "react";
+import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Link } from "@/src/i18n/navigation";
-import { BotanicalIcon } from "@/src/shared/components/botanical-icon";
+import { Link } from "@/i18n/navigation";
+import { BotanicalIcon } from "@/shared/components/botanical-icon";
 
 export async function HeroSection() {
   const t = await getTranslations();
@@ -48,11 +49,13 @@ export async function HeroSection() {
           <div className="md:col-span-6">
             <div className="relative aspect-4/5 md:aspect-5/6 w-full rounded-lg overflow-hidden bg-ds-secondary/30 shadow-sm border border-ds-border-subtle group">
               {/* Real Modest Fashion Image */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/products/skirt/sky-blue.png"
                 alt="MIRÉ Modest Collection"
-                className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover group-hover:scale-103 transition-transform duration-700"
               />
 
               {/* Botanical sprig artwork in top corner */}

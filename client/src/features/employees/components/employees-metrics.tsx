@@ -16,7 +16,7 @@ export function EmployeesMetrics({ metrics }: EmployeesMetricsProps) {
       value: metrics.total,
       description: t("employees-metric-total-desc") || "Registered employee profiles",
       icon: Users,
-      iconColor: "text-ds-text-primary",
+      iconColor: "text-primary",
       bgBadge: "bg-primary/10 text-primary",
     },
     {
@@ -44,7 +44,7 @@ export function EmployeesMetrics({ metrics }: EmployeesMetricsProps) {
         return (
           <Card
             key={item.label}
-            className="relative overflow-hidden border border-ds-border-subtle bg-card/60 transition-shadow hover:shadow-xs"
+            className="relative overflow-hidden border border-border/60 bg-card/60 transition-shadow hover:shadow-xs"
           >
             <CardContent className="p-5">
               <div className="flex items-center justify-between">

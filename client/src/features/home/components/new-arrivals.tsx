@@ -1,6 +1,7 @@
 import React from "react";
+import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Link } from "@/src/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 
 export async function NewArrivals() {
   const t = await getTranslations();
@@ -75,11 +76,12 @@ export async function NewArrivals() {
               className="group block"
             >
               <div className="relative aspect-3/4 rounded-md overflow-hidden bg-ds-secondary/20 border border-transparent group-hover:border-ds-primary/30 transition-all duration-300 shadow-2xs group-hover:shadow-md">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
 

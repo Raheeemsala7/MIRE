@@ -1,6 +1,7 @@
 import React from "react";
+import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Link } from "@/src/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { Sparkles } from "lucide-react";
 
 export async function OutfitsGallery() {
@@ -87,11 +88,12 @@ export async function OutfitsGallery() {
             >
               {/* Full Outfit Image Container */}
               <div className="relative aspect-3/4 overflow-hidden bg-ds-secondary/20">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  className="object-cover group-hover:scale-104 transition-transform duration-700"
                 />
 
                 {/* Subtle Pantone chip overlay */}

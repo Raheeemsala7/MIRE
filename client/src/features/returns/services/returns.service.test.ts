@@ -2,21 +2,9 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import {
   fetchReturns,
   fetchReturnById,
-  updateReturnStatus,
-  inspectReturn,
-  logReturnCallAttempt,
-  assignReturn,
-  submitReturnRequest,
   fetchCustomerDeliveredOrders,
   fetchReturnsStats,
 } from "./returns.service";
-import {
-  RETURN_STATUSES,
-  RETURN_REASONS,
-  ITEM_CONDITIONS,
-  CALL_ATTEMPT_RESULTS,
-  REFUND_METHODS,
-} from "../types/return.types";
 
 describe("Returns Service API Client", () => {
   beforeEach(() => {
@@ -75,153 +63,6 @@ describe("Returns Service API Client", () => {
       expect.objectContaining({ method: "GET" })
     );
     expect(res).toEqual(mockReturn);
-  });
-
-  it("updateReturnStatus sends PATCH request with new status and notes", async () => {
-    const mockResponse = {
-      success: true,
-      data: { _id: "ret-123", status: RETURN_STATUSES.RETURN_APPROVED },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    } as Response);
-
-    const res = await updateReturnStatus("ret-123", {
-      status: RETURN_STATUSES.RETURN_APPROVED,
-      notes: "Approved by manager",
-    });
-
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/admin/returns/ret-123/status",
-      expect.objectContaining({
-        method: "PATCH",
-        body: JSON.stringify({
-          status: RETURN_STATUSES.RETURN_APPROVED,
-          notes: "Approved by manager",
-        }),
-      })
-    );
-    expect(res.data.status).toBe(RETURN_STATUSES.RETURN_APPROVED);
-  });
-
-  it("inspectReturn sends POST request with inspected items and notes", async () => {
-    const mockResponse = {
-      success: true,
-      data: { _id: "ret-123", status: RETURN_STATUSES.INSPECTED },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    } as Response);
-
-    const payload = {
-      inspectionNotes: "Item perfect, packaging intact.",
-      itemInspections: [
-        {
-          itemId: "item-1",
-          condition: ITEM_CONDITIONS.TAGS_ATTACHED,
-          restockApproved: true,
-        },
-      ],
-    };
-
-    const res = await inspectReturn("ret-123", payload);
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/admin/returns/ret-123/inspect",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify(payload),
-      })
-    );
-    expect(res.data.status).toBe(RETURN_STATUSES.INSPECTED);
-  });
-
-  it("logReturnCallAttempt sends POST request with outcome", async () => {
-    const mockResponse = {
-      success: true,
-      data: { _id: "ret-123" },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    } as Response);
-
-    const payload = {
-      result: CALL_ATTEMPT_RESULTS.CUSTOMER_CONFIRMED,
-      notes: "Customer confirmed Monday morning pickup",
-    };
-
-    await logReturnCallAttempt("ret-123", payload);
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/admin/returns/ret-123/call-attempt",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify(payload),
-      })
-    );
-  });
-
-  it("assignReturn sends PATCH request with employeeId", async () => {
-    const mockResponse = {
-      success: true,
-      data: { _id: "ret-123", assignedEmployee: "emp-99" },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    } as Response);
-
-    await assignReturn("ret-123", { employeeId: "emp-99" });
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/admin/returns/ret-123/assign",
-      expect.objectContaining({
-        method: "PATCH",
-        body: JSON.stringify({ employeeId: "emp-99" }),
-      })
-    );
-  });
-
-  it("submitReturnRequest sends POST request for customer return creation", async () => {
-    const mockResponse = {
-      success: true,
-      data: { _id: "ret-new", returnNumber: "RET-2026-0042", status: RETURN_STATUSES.RETURN_REQUESTED },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    } as Response);
-
-    const payload = {
-      originalOrderId: "ord-deliv-1",
-      items: [
-        {
-          productId: "prod-1",
-          sku: "SKU-1",
-          color: "Blue",
-          size: "L",
-          quantity: 1,
-          unitPrice: 1200,
-        },
-      ],
-      reason: RETURN_REASONS.SIZE_TOO_SMALL,
-      refundMethod: REFUND_METHODS.CASH,
-    };
-
-    const res = await submitReturnRequest(payload);
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/returns/request",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify(payload),
-      })
-    );
-    expect(res.data.returnNumber).toBe("RET-2026-0042");
   });
 
   it("fetchCustomerDeliveredOrders calls customer delivered orders endpoint", async () => {
@@ -284,16 +125,9 @@ describe("Returns Service API Client", () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: false,
       status: 400,
-      json: async () => ({ message: "Can only request returns for DELIVERED orders" }),
+      json: async () => ({ message: "Backend error" }),
     } as Response);
 
-    await expect(
-      submitReturnRequest({
-        originalOrderId: "ord-pending",
-        items: [],
-        reason: RETURN_REASONS.OTHER,
-        refundMethod: REFUND_METHODS.CASH,
-      })
-    ).rejects.toThrow("Can only request returns for DELIVERED orders");
+    await expect(fetchReturnById("ret-err")).rejects.toThrow("Backend error");
   });
 });

@@ -169,15 +169,15 @@ export function EmployeesTable({
   const endItem = Math.min(currentPage * currentLimit, totalCount);
 
   return (
-    <Card className="border border-ds-border-subtle overflow-hidden">
+    <Card className="border border-border/60 overflow-hidden">
       {/* Table Toolbar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-4 border-b border-border/60 bg-card/40">
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
           {isFetching ? (
-            <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-primary animate-spin rtl:left-auto rtl:right-3 pointer-events-none" />
+            <Loader2 className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-primary animate-spin pointer-events-none" />
           ) : (
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground rtl:left-auto rtl:right-3 pointer-events-none" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
           )}
           <Input
             value={searchInput}
@@ -189,13 +189,13 @@ export function EmployeesTable({
               }
             }}
             placeholder={t("employees-search-ph") || "Search by name or email…"}
-            className="pl-9 pr-8 rtl:pl-8 rtl:pr-9 h-9 text-xs"
+            className="ps-9 pe-8 h-9 text-xs"
           />
           {searchInput && (
             <button
               type="button"
               onClick={handleClearSearch}
-              className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+              className="absolute end-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
               aria-label="Clear search"
             >
               <X className="size-3.5" />
@@ -315,7 +315,7 @@ export function EmployeesTable({
                 <TableHead className="w-[20%] hidden md:table-cell">
                   {t("employees-col-created") || "Joined Date"}
                 </TableHead>
-                <TableHead className="w-[15%] text-right rtl:text-left">
+                <TableHead className="w-[15%] text-end">
                   {t("employees-col-actions") || "Actions"}
                 </TableHead>
               </TableRow>
@@ -384,7 +384,7 @@ export function EmployeesTable({
                     </TableCell>
 
                     {/* Actions Menu */}
-                    <TableCell className="text-right rtl:text-left">
+                    <TableCell className="text-end">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm" className="size-8 p-0">

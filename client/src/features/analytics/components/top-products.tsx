@@ -24,24 +24,20 @@ export function TopProducts({ data = [], isLoading }: TopProductsProps) {
   const currency = isAr ? "ج.م" : "EGP";
 
   return (
-    <Card className="rounded-2xl border-border/60 bg-card shadow-xs">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="font-serif text-lg font-semibold text-foreground sm:text-xl">
-              {t("analytics-top-products-title")}
-            </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground">
-              {t("analytics-top-products-desc")}
-            </CardDescription>
-          </div>
-          <div className="flex size-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
-            <Trophy className="size-4" aria-hidden="true" />
-          </div>
+    <Card className="rounded-xl border border-border/60 bg-card shadow-xs">
+      <CardHeader className="flex flex-row items-center justify-between pb-3 pt-5 px-6">
+        <div className="space-y-1">
+          <CardTitle className="text-base font-semibold text-foreground sm:text-lg flex items-center gap-2">
+            <Trophy className="size-4 text-amber-500" />
+            {t("analytics-top-products-title")}
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
+            {t("analytics-top-products-desc")}
+          </CardDescription>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-2">
+      <CardContent className="px-6 pb-6 pt-2">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -62,7 +58,7 @@ export function TopProducts({ data = [], isLoading }: TopProductsProps) {
             {data.map((item, index) => (
               <div
                 key={item._id}
-                className="flex items-center justify-between py-3 text-xs first:pt-0 last:pb-0"
+                className="flex items-center justify-between py-3 text-xs first:pt-1 last:pb-1"
               >
                 <div className="flex items-center gap-3">
                   <span
@@ -91,7 +87,7 @@ export function TopProducts({ data = [], isLoading }: TopProductsProps) {
                 </div>
 
                 <div className="text-end">
-                  <p className="font-semibold text-foreground">
+                  <p className="font-semibold text-foreground font-mono">
                     {item.totalRevenue.toLocaleString("en-US")} {currency}
                   </p>
                   <p className="text-[11px] text-muted-foreground">

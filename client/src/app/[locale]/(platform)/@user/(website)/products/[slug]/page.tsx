@@ -1,10 +1,10 @@
 import React, { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
-import { Link } from "@/src/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { ChevronRight } from "lucide-react";
-import { ProductView } from "@/src/features/products/components/product-view";
-import { RelatedProducts } from "@/src/features/products/components/related-products";
-import { ProductDetail } from "@/src/features/products/types/product";
+import { ProductView } from "@/features/products/components/product-view";
+import { RelatedProducts } from "@/features/products/components/related-products";
+import { ProductDetail } from "@/features/products/types/product";
 
 interface ProductPageProps {
   params: Promise<{

@@ -39,7 +39,15 @@ export default function proxy(request: NextRequest) {
   if (path === "/store") {
     return NextResponse.redirect(new URL(`/${locale}`, request.url));
   }
-  if (path === "/admin" || path === "/admin/dashboard") {
+  if (
+    path === "/admin" ||
+    path === "/admin/" ||
+    path === "/admin/dashboard" ||
+    path === "/ar/admin" ||
+    path === "/ar/admin/" ||
+    path === "/en/admin" ||
+    path === "/en/admin/"
+  ) {
     return NextResponse.redirect(new URL(`/${locale}/admin/dashboard`, request.url));
   }
 
@@ -51,7 +59,12 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return intlMiddleware(request);
+  request.headers.set("x-is-admin-route", isAdminRoute ? "1" : "0");
+  request.headers.set("x-pathname", path);
+  const response = intlMiddleware(request);
+  response.headers.set("x-is-admin-route", isAdminRoute ? "1" : "0");
+  response.headers.set("x-pathname", path);
+  return response;
 }
 
 export const config = {

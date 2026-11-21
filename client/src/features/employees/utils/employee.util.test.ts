@@ -3,6 +3,7 @@ import {
   calculateEmployeeMetrics,
   getRoleBadgeVariant,
   formatEmployeeDate,
+  formatPermissionLabel,
 } from "./employee.util";
 import type { Employee } from "../types/employee.types";
 
@@ -71,5 +72,12 @@ describe("employee.util", () => {
 
     const formattedAr = formatEmployeeDate("2026-01-15T10:00:00.000Z", "ar");
     expect(formattedAr).toContain("2026");
+  });
+
+  it("formats permission labels into clean human-readable titles", () => {
+    expect(formatPermissionLabel("")).toBe("");
+    expect(formatPermissionLabel("*")).toBe("All Capabilities (*)");
+    expect(formatPermissionLabel("orders:read")).toBe("Orders Read");
+    expect(formatPermissionLabel("custom_warehouse.inspect")).toBe("Custom Warehouse Inspect");
   });
 });

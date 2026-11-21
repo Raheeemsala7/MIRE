@@ -7,7 +7,7 @@ import type {
   InspectReturnPayload,
   SingleReturnResponse,
 } from "../types/return.types";
-import { inspectReturn } from "../services/returns.service";
+import { inspectReturnAction } from "../actions/return.actions";
 import { returnQueryKeys } from "./use-returns";
 
 interface InspectReturnVariables {
@@ -20,7 +20,7 @@ export function useInspectReturn(onSuccessCallback?: () => void) {
   const t = useTranslations();
 
   return useMutation<SingleReturnResponse, Error, InspectReturnVariables>({
-    mutationFn: ({ id, payload }) => inspectReturn(id, payload),
+    mutationFn: ({ id, payload }) => inspectReturnAction(id, payload),
     onSuccess: (response, variables) => {
       queryClient.setQueryData<SingleReturnResponse>(
         returnQueryKeys.detail(variables.id),

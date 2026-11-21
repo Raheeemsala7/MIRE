@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import type { CreateEmployeePayload } from "../types/employee.types";
-import { createEmployee } from "../services/employees.service";
+import { createEmployeeAction } from "../actions/employee.actions";
 import { employeeQueryKeys } from "./use-employees";
 
 export function useCreateEmployee(onSuccessCallback?: () => void) {
@@ -12,7 +12,7 @@ export function useCreateEmployee(onSuccessCallback?: () => void) {
   const t = useTranslations();
 
   return useMutation({
-    mutationFn: (payload: CreateEmployeePayload) => createEmployee(payload),
+    mutationFn: (payload: CreateEmployeePayload) => createEmployeeAction(payload),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: employeeQueryKeys.all });
       toast.success(

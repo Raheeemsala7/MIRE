@@ -14,12 +14,29 @@ type PlatformProps = {
 async function AuthorizedPlatform({ admin, user, params }: PlatformProps) {
   const locale = normalizeLocale((await params).locale);
   const session = await auth();
-  if (!session?.user) redirect(`/${locale}/auth/login`);
-  if (isAdminRole(session.user.role)) return admin;
-  if (isCustomerRole(session.user.role)) return user;
+
+  // Guest → Public Storefront
+  if (!session?.user) {
+    return user;
+  }
+
+  // Admin / Staff → Dashboard Slot
+  if (isAdminRole(session.user.role)) {
+    return admin;
+  }
+
+  // Customer → Storefront
+  if (isCustomerRole(session.user.role)) {
+    return user;
+  }
+
   redirect(`/${locale}/403`);
 }
 
 export default function PlatformLayout(props: PlatformProps) {
-  return <Suspense fallback={<AuthSkeleton />}><AuthorizedPlatform {...props} /></Suspense>;
+  return (
+    <Suspense fallback={<AuthSkeleton />}>
+      <AuthorizedPlatform {...props} />
+    </Suspense>
+  );
 }

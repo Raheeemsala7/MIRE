@@ -9,7 +9,9 @@ const shippingAddressSchema = z.object({
   governorate: z.string().min(2, 'Governorate is required'),
   postalCode: z.string().optional(),
   country: z.string().default('Egypt'),
-  landmark: z.string().optional()
+  landmark: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional()
 });
 
 const customerInfoSchema = z.object({
@@ -24,7 +26,8 @@ const checkoutCreateOrderSchema = z.object({
   shippingAddress: shippingAddressSchema,
   paymentMethod: z.enum(Object.values(PaymentMethods)).default(PaymentMethods.COD),
   orderNotes: z.string().optional(),
-  guestId: z.string().optional()
+  guestId: z.string().optional(),
+  items: z.array(z.any()).optional()
 });
 
 const manualCreateOrderSchema = z.object({

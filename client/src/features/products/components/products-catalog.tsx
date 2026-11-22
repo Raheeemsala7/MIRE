@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link } from "@/src/i18n/navigation";
 import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
-import { useCartStore } from "@/shared/stores/cart-store";
-import type { Product } from "../types/product.types";
+import { useCartStore } from "@/src/shared/stores/cart-store";
+import { WishlistToggle } from "@/src/features/wishlist";
 
 export interface CatalogProduct {
   id: string;
@@ -121,17 +120,12 @@ const ALL_PRODUCTS: CatalogProduct[] = [
   },
 ];
 
-interface ProductsCatalogProps {
-  initialProducts?: Product[];
-}
-
-export function ProductsCatalog({ initialProducts }: ProductsCatalogProps = {}) {
+export function ProductsCatalog() {
   const t = useTranslations("common");
   const locale = useLocale();
   const isRTL = locale === "ar";
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const addItem = useCartStore((state) => state.addItem);
-  const setIsOpen = useCartStore((state) => state.setIsOpen);
+  const { addItem, setIsOpen } = useCartStore();
 
   const filterTabs = [
     { key: "all", label: isRTL ? "جميع المنتجات" : "All Products" },
@@ -140,35 +134,10 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps = {}) 
     { key: "abaya", label: isRTL ? "عبايات وشيلات" : "Abayas & Hijabs" },
   ];
 
-  const allItems: CatalogProduct[] = React.useMemo(() => {
-    if (initialProducts && initialProducts.length > 0) {
-      return initialProducts.map((p) => {
-        const catSlug = typeof p.category === "object" ? p.category.slug : "skirt";
-        let catType: "skirt" | "outfit" | "abaya" = "skirt";
-        if (catSlug.includes("abaya")) catType = "abaya";
-        else if (catSlug.includes("outfit") || catSlug.includes("set") || catSlug.includes("dress")) catType = "outfit";
-
-        return {
-          id: p._id,
-          slug: p.slug,
-          titleEn: p.name,
-          titleAr: p.name,
-          category: catType,
-          categoryLabelEn: typeof p.category === "object" ? p.category.name : "Collection",
-          categoryLabelAr: typeof p.category === "object" ? p.category.name : "تشكيلة",
-          price: p.discountPrice || p.price,
-          swatchHex: p.colors?.[0]?.code || "#9ec1df",
-          image: p.images?.[0]?.url || "/products/skirt/sky-blue.png",
-        };
-      });
-    }
-    return ALL_PRODUCTS;
-  }, [initialProducts]);
-
   const filteredProducts =
     selectedCategory === "all"
-      ? allItems
-      : allItems.filter((p) => p.category === selectedCategory);
+      ? ALL_PRODUCTS
+      : ALL_PRODUCTS.filter((p) => p.category === selectedCategory);
 
   const handleQuickAdd = (product: CatalogProduct) => {
     addItem({
@@ -224,22 +193,26 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps = {}) 
             className="group bg-white rounded-lg overflow-hidden border border-ds-border-subtle hover:border-ds-primary/40 transition-all duration-300 shadow-2xs hover:shadow-md flex flex-col justify-between"
           >
             {/* Image Container with Link */}
-            <Link
-              href={`/products/${product.slug}`}
-              className="relative aspect-3/4 overflow-hidden bg-ds-secondary/20 block"
-            >
-              <Image
-                src={product.image}
-                alt={isRTL ? product.titleAr : product.titleEn}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover group-hover:scale-104 transition-transform duration-700"
-              />
+            <div className="relative aspect-3/4 overflow-hidden bg-ds-secondary/20 block">
+              <Link
+                href={`/products/${product.slug}`}
+                className="w-full h-full block"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={product.image}
+                  alt={isRTL ? product.titleAr : product.titleEn}
+                  className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700"
+                />
+              </Link>
+              <div className="absolute top-3 start-3 z-10">
+                <WishlistToggle product={product} />
+              </div>
               <span
-                className="absolute top-3 end-3 w-4 h-4 rounded-full border border-black/10 shadow-xs"
+                className="absolute top-3 end-3 w-4 h-4 rounded-full border border-black/10 shadow-xs pointer-events-none"
                 style={{ backgroundColor: product.swatchHex }}
               />
-            </Link>
+            </div>
 
             {/* Information & Action */}
             <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">

@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Check, ShoppingBag } from "lucide-react";
-import { useCartStore } from "@/shared/stores/cart-store";
+import { useCartStore } from "@/src/shared/stores/cart-store";
+import { WishlistToggle } from "@/src/features/wishlist";
 import { ProductDetail } from "../types/product";
 import { ProductAccordion } from "./product-accordion";
 
@@ -23,8 +23,7 @@ export function ProductView({ product }: ProductViewProps) {
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
   const [selectedImage, setSelectedImage] = useState(product.colors[0].image);
 
-  const addItem = useCartStore((state) => state.addItem);
-  const setIsOpen = useCartStore((state) => state.setIsOpen);
+  const { addItem, setIsOpen } = useCartStore();
 
   const handleColorChange = (color: (typeof product.colors)[0]) => {
     setSelectedColor(color);
@@ -73,12 +72,11 @@ export function ProductView({ product }: ProductViewProps) {
                   : "border-transparent opacity-80 hover:opacity-100"
               }`}
             >
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={c.image}
                 alt={isRTL ? c.nameAr : c.nameEn}
-                fill
-                sizes="80px"
-                className="object-cover"
+                className="w-full h-full object-cover"
               />
             </button>
           ))}
@@ -86,13 +84,11 @@ export function ProductView({ product }: ProductViewProps) {
 
         {/* Main High-Resolution Photo */}
         <div className="flex-1 relative aspect-3/4 rounded-lg overflow-hidden bg-ds-secondary/20 shadow-xs border border-ds-border-subtle">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={selectedImage}
             alt={isRTL ? product.titleAr : product.titleEn}
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 58vw"
-            className="object-cover transition-all duration-300"
+            className="w-full h-full object-cover transition-all duration-300"
           />
         </div>
       </div>
@@ -192,15 +188,27 @@ export function ProductView({ product }: ProductViewProps) {
           </div>
         </div>
 
-        {/* CTA Button: Add to Bag */}
-        <div className="pt-3">
+        {/* CTA Button: Add to Bag & Wishlist Toggle */}
+        <div className="pt-3 flex items-center gap-3">
           <button
             onClick={handleAddToBag}
-            className="w-full py-4 px-6 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-widest uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+            className="flex-1 py-4 px-6 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-widest uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>{t("addToBag")}</span>
           </button>
+          <WishlistToggle
+            variant="button"
+            product={{
+              id: product.id,
+              slug: product.slug,
+              titleEn: product.titleEn,
+              titleAr: product.titleAr,
+              price: product.price,
+              image: selectedImage,
+              color: isRTL ? selectedColor.nameAr : selectedColor.nameEn,
+            }}
+          />
         </div>
 
         {/* Accordions */}

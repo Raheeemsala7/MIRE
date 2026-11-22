@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface CartItem {
   id: string;
@@ -15,47 +16,78 @@ export interface CartItem {
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
+  updateQuantity: (id: string, color: string, size: string, quantity: number) => void;
   removeItem: (id: string, color: string, size: string) => void;
+  clearCart: () => void;
   setIsOpen: (isOpen: boolean) => void;
   getTotalCount: () => number;
   getTotalPrice: () => number;
 }
 
-export const useCartStore = create<CartStore>((set, get) => ({
-  items: [],
-  isOpen: false,
-  addItem: (newItem) => {
-    set((state) => {
-      const existingIndex = state.items.findIndex(
-        (i) =>
-          i.id === newItem.id &&
-          i.color === newItem.color &&
-          i.size === newItem.size
-      );
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      isOpen: false,
+      addItem: (newItem) => {
+        const qty = newItem.quantity || 1;
+        set((state) => {
+          const existingIndex = state.items.findIndex(
+            (i) =>
+              i.id === newItem.id &&
+              i.color === newItem.color &&
+              i.size === newItem.size
+          );
 
-      if (existingIndex > -1) {
-        const updated = [...state.items];
-        updated[existingIndex].quantity += 1;
-        return { items: updated };
-      }
+          if (existingIndex > -1) {
+            const updated = [...state.items];
+            updated[existingIndex].quantity += qty;
+            return { items: updated };
+          }
 
-      return { items: [...state.items, { ...newItem, quantity: 1 }] };
-    });
-  },
-  removeItem: (id, color, size) => {
-    set((state) => ({
-      items: state.items.filter(
-        (i) => !(i.id === id && i.color === color && i.size === size)
-      ),
-    }));
-  },
-  setIsOpen: (isOpen) => set({ isOpen }),
-  getTotalCount: () => {
-    return get().items.reduce((total, item) => total + item.quantity, 0);
-  },
-  getTotalPrice: () => {
-    return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
-  },
-}));
-
+          return { items: [...state.items, { ...newItem, quantity: qty }] };
+        });
+      },
+      updateQuantity: (id, color, size, quantity) => {
+        set((state) => {
+          if (quantity <= 0) {
+            return {
+              items: state.items.filter(
+                (i) => !(i.id === id && i.color === color && i.size === size)
+              ),
+            };
+          }
+          return {
+            items: state.items.map((i) =>
+              i.id === id && i.color === color && i.size === size
+                ? { ...i, quantity }
+                : i
+            ),
+          };
+        });
+      },
+      removeItem: (id, color, size) => {
+        set((state) => ({
+          items: state.items.filter(
+            (i) => !(i.id === id && i.color === color && i.size === size)
+          ),
+        }));
+      },
+      clearCart: () => set({ items: [] }),
+      setIsOpen: (isOpen) => set({ isOpen }),
+      getTotalCount: () => {
+        return get().items.reduce((total, item) => total + item.quantity, 0);
+      },
+      getTotalPrice: () => {
+        return get().items.reduce(
+          (total, item) => total + item.price * item.quantity,
+          0
+        );
+      },
+    }),
+    {
+      name: "mire-cart",
+    }
+  )
+);

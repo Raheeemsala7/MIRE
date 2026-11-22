@@ -66,6 +66,18 @@ class OrderController {
     }
   }
 
+  async trackOrder(req, res, next) {
+    try {
+      const order = await orderService.trackOrder(req.params.orderNumber);
+      return ApiResponse.success(res, {
+        message: 'Order tracking details retrieved',
+        data: order
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async updateStatus(req, res, next) {
     try {
       const order = await orderService.updateOrderStatus(

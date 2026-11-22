@@ -3,10 +3,11 @@
 import React, { useState } from "react";
 import NextLink from "next/link";
 import { useTranslations, useLocale } from "next-intl";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { Menu, X, ShoppingBag, UserRound } from "lucide-react";
-import { useCartStore } from "@/shared/stores/cart-store";
+import { Link, usePathname, useRouter } from "@/src/i18n/navigation";
+import { Menu, X, ShoppingBag, UserRound, Heart, Package, Truck } from "lucide-react";
+import { useCartStore } from "../stores/cart-store";
 import { CartDrawer } from "./cart-drawer";
+import { WishlistButton } from "@/src/features/wishlist";
 
 export function Header() {
   const t = useTranslations();
@@ -14,11 +15,9 @@ export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const totalCount = useCartStore((state) =>
-    state.items.reduce((total, item) => total + item.quantity, 0)
-  );
-  const setCartOpen = useCartStore((state) => state.setIsOpen);
+  const { getTotalCount, setIsOpen: setCartOpen } = useCartStore();
 
+  const totalCount = getTotalCount();
   const otherLocale = locale === "ar" ? "en" : "ar";
   const isRTL = locale === "ar";
 
@@ -73,22 +72,35 @@ export function Header() {
               </Link>
             </div>
 
-            {/* Trailing Actions: Language Toggle & Prominent Cart Button */}
-            <div className="flex items-center space-x-4 sm:space-x-5 rtl:space-x-reverse">
+            {/* Trailing Actions: Language Toggle, Wishlist, Account, Shopping Bag */}
+            <div className="flex items-center space-x-2.5 sm:space-x-3.5 rtl:space-x-reverse">
               {/* Language Switcher Pill */}
               <button
                 onClick={handleLanguageToggle}
-                className="px-3.5 py-1.5 rounded-full border border-ds-border-muted/70 hover:border-ds-primary bg-white/70 hover:bg-white text-xs tracking-wider uppercase font-medium text-ds-text-plain/90 hover:text-ds-primary transition-all cursor-pointer shadow-2xs"
+                className="px-3 py-1.5 rounded-full border border-ds-border-muted/70 hover:border-ds-primary bg-white/70 hover:bg-white text-xs tracking-wider uppercase font-medium text-ds-text-plain/90 hover:text-ds-primary transition-all cursor-pointer shadow-2xs"
               >
                 {t("common.langToggle")}
               </button>
 
-              {/* Sign in uses the unprefixed auth route. */}
+              {/* Wishlist Button with Heart Icon & Real-time Badge */}
+              <WishlistButton />
+
+              {/* Track Orders Link */}
+              <Link
+                href="/orders"
+                aria-label={isRTL ? "متابعة طلباتي" : "Track My Orders"}
+                title={isRTL ? "متابعة طلباتي" : "Track My Orders"}
+                className="flex size-9 sm:size-10 items-center justify-center rounded-full text-ds-text-plain hover:text-ds-primary border border-ds-border-muted/70 hover:border-ds-primary bg-white/70 hover:bg-white shadow-2xs transition-all group cursor-pointer"
+              >
+                <Truck className="size-4 group-hover:scale-110 transition-transform" />
+              </Link>
+
+              {/* User Account / Sign In */}
               <NextLink
                 href="/auth/login"
                 aria-label={t("login-submit")}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex size-11 items-center justify-center rounded-full text-ds-text-primary transition-colors hover:bg-ds-secondary-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-primary"
+                className="flex size-9 sm:size-10 items-center justify-center rounded-full text-ds-text-plain hover:text-ds-primary border border-ds-border-muted/70 hover:border-ds-primary bg-white/70 hover:bg-white shadow-2xs transition-all"
               >
                 <UserRound className="size-4" aria-hidden="true" />
               </NextLink>
@@ -96,7 +108,7 @@ export function Header() {
               {/* Shopping Bag Button with Icon & Badge */}
               <button
                 onClick={() => setCartOpen(true)}
-                className="relative flex items-center gap-2 px-3.5 py-2 rounded-full border border-ds-border-muted/70 hover:border-ds-primary bg-white/80 hover:bg-white text-ds-text-plain hover:text-ds-primary transition-all cursor-pointer group shadow-2xs"
+                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full border border-ds-border-muted/70 hover:border-ds-primary bg-white/80 hover:bg-white text-ds-text-plain hover:text-ds-primary transition-all cursor-pointer group shadow-2xs"
                 aria-label={t("common.bag")}
               >
                 <div className="relative flex items-center justify-center">
@@ -134,6 +146,24 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
+
+              <Link
+                href="/wishlist"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 text-ds-text-plain hover:text-ds-primary transition-colors py-1 border-b border-zinc-100/60 pb-2"
+              >
+                <Heart className="size-4 text-rose-500" />
+                <span>{isRTL ? "قائمة الرغبات" : "Wishlist"}</span>
+              </Link>
+
+              <Link
+                href="/orders"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 text-ds-text-plain hover:text-ds-primary transition-colors py-1 border-b border-zinc-100/60 pb-2"
+              >
+                <Package className="size-4 text-ds-primary" />
+                <span>{isRTL ? "طلباتي ومتابعة الشحن" : "My Orders"}</span>
+              </Link>
             </div>
 
             <div className="pt-2 flex items-center justify-between text-xs tracking-wider uppercase">

@@ -31,14 +31,17 @@ beforeEach(() => {
 
 describe("request-time session lookup", () => {
   it("does not connect or query MongoDB while the request boundary is pending", async () => {
-    const boundary = Promise.withResolvers<void>();
-    mocks.request.mockReturnValue(boundary.promise);
+    let resolveBoundary!: () => void;
+    const boundaryPromise = new Promise<void>((resolve) => {
+      resolveBoundary = resolve;
+    });
+    mocks.request.mockReturnValue(boundaryPromise);
     const { getSession } = await import("./session-store");
     const pending = getSession(id);
     expect(mocks.request).toHaveBeenCalledOnce();
     expect(mocks.connect).not.toHaveBeenCalled();
     expect(mocks.findOne).not.toHaveBeenCalled();
-    boundary.resolve();
+    resolveBoundary();
     expect(await pending).toMatchObject({ user: record.user, accessToken: "test-access" });
     expect(mocks.findOne).toHaveBeenCalledWith({ _id: "hashed-id" });
   });

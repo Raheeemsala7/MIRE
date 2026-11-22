@@ -106,7 +106,9 @@ const orderSchema = new mongoose.Schema(
       governorate: { type: String, required: true },
       postalCode: { type: String },
       country: { type: String, default: 'Egypt' },
-      landmark: { type: String }
+      landmark: { type: String },
+      latitude: { type: Number },
+      longitude: { type: Number }
     },
     items: [orderItemSchema],
     pricing: {

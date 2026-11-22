@@ -147,6 +147,23 @@ router.patch(
 
 /**
  * @swagger
+ * /orders/track/{orderNumber}:
+ *   get:
+ *     summary: Track public order status by order number
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: orderNumber
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Live order tracking details
+ */
+router.get('/track/:orderNumber', orderController.trackOrder.bind(orderController));
+
+/**
+ * @swagger
  * /orders/{id}:
  *   get:
  *     summary: Get single order details

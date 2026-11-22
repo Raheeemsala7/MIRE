@@ -20,8 +20,10 @@ export async function loginAction(
   if (!parsed.success) return { success: false, error: "validation" };
 
   try {
+    const rememberMe = Boolean(parsed.data.rememberMe);
+
     // 1. Authenticate with backend directly to verify credentials and obtain user details
-    const authData = await backendLogin(parsed.data.email, parsed.data.password);
+    const authData = await backendLogin(parsed.data.email, parsed.data.password, rememberMe);
     if (!authData?.user || !authData?.accessToken) {
       return { success: false, error: "invalid" };
     }
@@ -30,6 +32,7 @@ export async function loginAction(
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
+      rememberMe: String(rememberMe),
       redirect: false,
     });
 

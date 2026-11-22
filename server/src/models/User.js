@@ -112,6 +112,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false
     },
+    previousRefreshToken: {
+      type: String,
+      select: false
+    },
+    previousRefreshTokenExpiry: {
+      type: Date,
+      select: false
+    },
     passwordResetToken: {
       type: String,
       select: false

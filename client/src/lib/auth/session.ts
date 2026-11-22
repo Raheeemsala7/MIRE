@@ -77,6 +77,38 @@ async function fetchWithAuth<T>(
           data.message.toLowerCase().includes("invalid token")));
 
     if (isExpired) {
+      const refreshToken = ((token as any).refreshToken || (token.user as any)?.refreshToken) as string | undefined;
+      if (refreshToken) {
+        try {
+          const { backendRefresh } = await import("@/lib/auth/backend-client");
+          const refreshed = await backendRefresh(refreshToken);
+          if (refreshed?.accessToken) {
+            token.token = refreshed.accessToken;
+            token.accessToken = refreshed.accessToken;
+            if (refreshed.refreshToken) {
+              token.refreshToken = refreshed.refreshToken;
+            }
+
+            // Retry request with freshly renewed access token
+            const retryRes = await fetch(`${API_URL}${path}`, {
+              ...options,
+              headers: {
+                ...HEADERS.JsonBody,
+                ...HEADERS.authorize(refreshed.accessToken),
+                ...(options.headers || {}),
+              },
+            });
+
+            const retryData = await retryRes.json().catch(() => null);
+            if (retryRes.ok) {
+              return retryData as T;
+            }
+          }
+        } catch {
+          // Token renewal failed, fall through to clearAuthCookies
+        }
+      }
+
       await clearAuthCookies();
       throw new SessionExpiredError(data?.message || "Authorization token has expired");
     }

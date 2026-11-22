@@ -53,7 +53,7 @@ class AuthService {
   /**
    * Login user (customer, employee, admin)
    */
-  async login({ email, password }) {
+  async login({ email, password, rememberMe = false }) {
     const user = await User.findOne({ email }).select('+password +refreshToken');
     if (!user) {
       throw ApiError.unauthorized('Invalid email or password');
@@ -68,39 +68,72 @@ class AuthService {
       throw ApiError.unauthorized('Invalid email or password');
     }
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    const isRemember = Boolean(rememberMe);
+    const accessExpiry = isRemember ? '30d' : (process.env.JWT_ACCESS_EXPIRY || '7d');
+    const refreshExpiry = isRemember ? '90d' : (process.env.JWT_REFRESH_EXPIRY || '30d');
+
+    const accessToken = generateAccessToken(user, accessExpiry);
+    const refreshToken = generateRefreshToken(user, refreshExpiry, isRemember);
 
     user.refreshToken = refreshToken;
+    user.previousRefreshToken = null;
+    user.previousRefreshTokenExpiry = null;
     user.lastLogin = new Date();
     await user.save();
 
-    return { user: user.toJSON(), accessToken, refreshToken };
+    return { user: user.toJSON(), accessToken, refreshToken, rememberMe: isRemember };
   }
 
   /**
-   * Refresh access token
+   * Refresh access token with rotation and concurrent grace period
    */
   async refreshToken(token) {
     try {
       const decoded = verifyRefreshToken(token);
-      const user = await User.findById(decoded.id).select('+refreshToken');
-      if (!user || user.refreshToken !== token) {
-        throw ApiError.unauthorized('Invalid or expired refresh token');
+      const user = await User.findById(decoded.id).select(
+        '+refreshToken +previousRefreshToken +previousRefreshTokenExpiry'
+      );
+
+      if (!user) {
+        throw ApiError.unauthorized('User associated with refresh token no longer exists');
       }
 
       if (!user.isActive) {
         throw ApiError.forbidden('Account deactivated');
       }
 
-      const newAccessToken = generateAccessToken(user);
-      const newRefreshToken = generateRefreshToken(user);
+      const isRemember = Boolean(decoded.rememberMe);
+      const accessExpiry = isRemember ? '30d' : (process.env.JWT_ACCESS_EXPIRY || '7d');
+      const refreshExpiry = isRemember ? '90d' : (process.env.JWT_REFRESH_EXPIRY || '30d');
 
-      user.refreshToken = newRefreshToken;
-      await user.save();
+      // Check if current active refresh token
+      if (user.refreshToken === token) {
+        // Rotate token
+        const newAccessToken = generateAccessToken(user, accessExpiry);
+        const newRefreshToken = generateRefreshToken(user, refreshExpiry, isRemember);
 
-      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
-    } catch {
+        // Store previous token with 60s grace window for parallel requests
+        user.previousRefreshToken = user.refreshToken;
+        user.previousRefreshTokenExpiry = new Date(Date.now() + 60 * 1000);
+        user.refreshToken = newRefreshToken;
+        await user.save();
+
+        return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+      }
+
+      // Check if inside grace period of previously rotated token
+      if (
+        user.previousRefreshToken === token &&
+        user.previousRefreshTokenExpiry &&
+        user.previousRefreshTokenExpiry > new Date()
+      ) {
+        const freshAccessToken = generateAccessToken(user, accessExpiry);
+        return { accessToken: freshAccessToken, refreshToken: user.refreshToken };
+      }
+
+      throw ApiError.unauthorized('Invalid or expired refresh token');
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
       throw ApiError.unauthorized('Invalid or expired refresh token');
     }
   }
@@ -112,6 +145,8 @@ class AuthService {
     const user = await User.findById(userId);
     if (user) {
       user.refreshToken = null;
+      user.previousRefreshToken = null;
+      user.previousRefreshTokenExpiry = null;
       await user.save();
     }
     return true;

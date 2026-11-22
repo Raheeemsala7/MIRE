@@ -95,6 +95,46 @@ export async function getNextAuthToken() {
     // Check inner backend JWT accessToken expiration
     const innerToken = (jwt?.token || jwt?.accessToken) as string | undefined;
     if (innerToken && isJwtExpired(innerToken)) {
+      const refreshToken = (jwt?.refreshToken || (jwt?.user as any)?.refreshToken) as string | undefined;
+      if (refreshToken) {
+        try {
+          const { backendRefresh } = await import("@/lib/auth/backend-client");
+          const refreshed = await backendRefresh(refreshToken);
+          if (refreshed?.accessToken) {
+            jwt.accessToken = refreshed.accessToken;
+            jwt.token = refreshed.accessToken;
+            if (refreshed.refreshToken) {
+              jwt.refreshToken = refreshed.refreshToken;
+            }
+
+            // Attempt to update cookie if in a context where cookies can be mutated
+            try {
+              const { encode } = await import("next-auth/jwt");
+              const secret = (process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET)!;
+              const salt = cookieName || configuredName || "authjs.session-token";
+              const encoded = await encode({
+                token: jwt,
+                secret,
+                salt,
+              });
+              cookiesStore.set(cookieName || "authjs.session-token", encoded, {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production",
+                maxAge: jwt.exp ? Math.max(60, jwt.exp - Math.floor(Date.now() / 1000)) : 30 * 24 * 60 * 60,
+              });
+            } catch {
+              // Read-only server component context: token is still valid and returned in-memory
+            }
+
+            return jwt;
+          }
+        } catch {
+          // Refresh failed
+        }
+      }
+
       await clearAuthCookies();
       return null;
     }

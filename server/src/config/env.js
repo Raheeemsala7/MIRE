@@ -13,8 +13,8 @@ const env = {
   JWT: {
     ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || 'mire_jwt_access_super_secret_key_development_2026_x987',
     REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'mire_jwt_refresh_super_secret_key_development_2026_z123',
-    ACCESS_EXPIRY: process.env.JWT_ACCESS_EXPIRY || '1h',
-    REFRESH_EXPIRY: process.env.JWT_REFRESH_EXPIRY || '7d'
+    ACCESS_EXPIRY: process.env.JWT_ACCESS_EXPIRY || '7d',
+    REFRESH_EXPIRY: process.env.JWT_REFRESH_EXPIRY || '30d'
   },
 
   CORS_ORIGIN: (process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173').split(','),

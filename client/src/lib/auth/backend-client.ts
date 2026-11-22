@@ -116,7 +116,7 @@ export async function backendDelete<T>(path: `/${string}`, accessToken: string):
 // Auth Endpoints
 // -------------------------------------------------------------
 
-export async function backendLogin(email: string, password: string) {
+export async function backendLogin(email: string, password: string, rememberMe: boolean = false) {
   try {
     const res = await request<{
       success?: boolean;
@@ -124,18 +124,21 @@ export async function backendLogin(email: string, password: string) {
         user: { _id?: string; id?: string; name: string; email: string; role: any; permissions?: string[] };
         accessToken: string;
         refreshToken: string;
+        rememberMe?: boolean;
       };
       user?: any;
       accessToken?: string;
       refreshToken?: string;
+      rememberMe?: boolean;
     }>("/auth/login", {
       method: "POST",
-      body: { email, password },
+      body: { email, password, rememberMe: Boolean(rememberMe) },
     });
 
     const user = res.data?.user || res.user;
     const accessToken = res.data?.accessToken || res.accessToken;
     const refreshToken = res.data?.refreshToken || res.refreshToken || "";
+    const isRemember = res.data?.rememberMe ?? res.rememberMe ?? Boolean(rememberMe);
 
     if (!user || !accessToken) {
       throw new BackendAuthError(502, { message: "Malformed login response from backend" });
@@ -151,6 +154,7 @@ export async function backendLogin(email: string, password: string) {
       },
       accessToken: String(accessToken),
       refreshToken: String(refreshToken),
+      rememberMe: isRemember,
     };
   } catch (error) {
     if (error instanceof BackendApiError) {

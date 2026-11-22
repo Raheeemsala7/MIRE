@@ -9,6 +9,8 @@ declare module "next-auth" {
     permissions?: string[];
     accessToken?: string;
     refreshToken?: string;
+    rememberMe?: boolean;
+    accessTokenExpires?: number;
   }
 
   interface Session {
@@ -16,6 +18,7 @@ declare module "next-auth" {
       emailVerified?: Date | null;
     };
     accessToken?: string;
+    error?: string;
   }
 }
 
@@ -25,6 +28,9 @@ declare module "next-auth/jwt" {
     user?: SafeUser;
     accessToken?: string;
     refreshToken?: string;
+    rememberMe?: boolean;
+    accessTokenExpires?: number;
+    error?: string;
   }
 }
 

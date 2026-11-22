@@ -7,6 +7,7 @@ import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/src/shared/stores/cart-store";
 import { WishlistToggle } from "@/src/features/wishlist";
+import type { Product } from "../types/product.types";
 
 export interface CatalogProduct {
   id: string;
@@ -120,7 +121,11 @@ const ALL_PRODUCTS: CatalogProduct[] = [
   },
 ];
 
-export function ProductsCatalog() {
+interface ProductsCatalogProps {
+  initialProducts?: Product[];
+}
+
+export function ProductsCatalog({ initialProducts }: ProductsCatalogProps = {}) {
   const t = useTranslations("common");
   const locale = useLocale();
   const isRTL = locale === "ar";
@@ -134,10 +139,39 @@ export function ProductsCatalog() {
     { key: "abaya", label: isRTL ? "عبايات وشيلات" : "Abayas & Hijabs" },
   ];
 
+  const allItems: CatalogProduct[] = React.useMemo(() => {
+    if (initialProducts && initialProducts.length > 0) {
+      return initialProducts.map((p) => {
+        const catSlug = typeof p.category === "object" ? p.category.slug : "skirt";
+        let catType: "skirt" | "outfit" | "abaya" = "skirt";
+        if (catSlug.includes("outfit") || catSlug.includes("set")) catType = "outfit";
+        else if (catSlug.includes("abaya")) catType = "abaya";
+
+        const rawImage = p.images?.[0];
+        const imageUrl = typeof rawImage === "string" ? rawImage : rawImage?.url || "/products/skirt/sky-blue.png";
+        const colorCode = p.colors?.[0]?.code || "#746078";
+
+        return {
+          id: p._id,
+          slug: p.slug || "pleated-skirt",
+          titleEn: p.name,
+          titleAr: p.name,
+          category: catType,
+          categoryLabelEn: catType === "skirt" ? "Skirts" : catType === "outfit" ? "Sets" : "Abayas",
+          categoryLabelAr: catType === "skirt" ? "جيبات" : catType === "outfit" ? "أطقم" : "عبايات",
+          price: p.discountPrice || p.price,
+          swatchHex: colorCode,
+          image: imageUrl,
+        };
+      });
+    }
+    return ALL_PRODUCTS;
+  }, [initialProducts]);
+
   const filteredProducts =
     selectedCategory === "all"
-      ? ALL_PRODUCTS
-      : ALL_PRODUCTS.filter((p) => p.category === selectedCategory);
+      ? allItems
+      : allItems.filter((p) => p.category === selectedCategory);
 
   const handleQuickAdd = (product: CatalogProduct) => {
     addItem({
@@ -192,7 +226,7 @@ export function ProductsCatalog() {
             key={product.id}
             className="group bg-white rounded-lg overflow-hidden border border-ds-border-subtle hover:border-ds-primary/40 transition-all duration-300 shadow-2xs hover:shadow-md flex flex-col justify-between"
           >
-            {/* Image Container with Link */}
+            {/* Image Container with Link & Wishlist Toggle */}
             <div className="relative aspect-3/4 overflow-hidden bg-ds-secondary/20 block">
               <Link
                 href={`/products/${product.slug}`}

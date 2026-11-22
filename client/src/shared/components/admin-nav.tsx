@@ -19,6 +19,7 @@ import {
   Package,
   BadgePercent,
   ShoppingBag,
+  TicketPercent,
 } from "lucide-react";
 import { LogoutButton } from "@/features/auth/components/login/logout-button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -111,6 +112,12 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
     currentUser?.permissions
   );
 
+  const canViewCoupons = can(
+    currentUser?.role,
+    PERMISSIONS.COUPONS_VIEW,
+    currentUser?.permissions
+  );
+
   const navLinks = [
     {
       href: "/admin/dashboard",
@@ -125,6 +132,13 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
       icon: ShoppingBag,
       active: pathname.startsWith("/admin/orders"),
       visible: canViewOrders,
+    },
+    {
+      href: "/admin/coupons",
+      label: isAr ? "الكوبونات والخصومات" : "Coupons & Discounts",
+      icon: TicketPercent,
+      active: pathname.startsWith("/admin/coupons"),
+      visible: canViewCoupons,
     },
     {
       href: "/admin/products",
@@ -185,6 +199,8 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
         segments.push({ label: ordersLabel, href: "/admin/orders" });
         segments.push({ label: t("admin-nav-order-details") || (isAr ? "تفاصيل الطلب" : "Order Details") });
       }
+    } else if (pathname.startsWith("/admin/coupons")) {
+      segments.push({ label: isAr ? "الكوبونات والخصومات" : "Coupons & Discounts" });
     } else if (pathname.startsWith("/admin/bundles")) {
       const bundlesLabel = t("admin-nav-bundles") || (isAr ? "الباقات والعروض" : "Bundles & Offers");
       if (pathname === "/admin/bundles" || pathname === "/admin/bundles/") {

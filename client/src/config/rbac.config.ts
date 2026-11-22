@@ -35,6 +35,10 @@ export const PERMISSIONS = {
   BUNDLES_DELETE: "bundles.delete",
   ORDERS_VIEW: "orders.view",
   ORDERS_UPDATE: "orders.update",
+  COUPONS_VIEW: "coupons.view",
+  COUPONS_CREATE: "coupons.create",
+  COUPONS_UPDATE: "coupons.update",
+  COUPONS_DELETE: "coupons.delete",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -67,6 +71,10 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
     PERMISSIONS.RETURNS_LOG_CALL,
     PERMISSIONS.ORDERS_VIEW,
     PERMISSIONS.ORDERS_UPDATE,
+    PERMISSIONS.COUPONS_VIEW,
+    PERMISSIONS.COUPONS_CREATE,
+    PERMISSIONS.COUPONS_UPDATE,
+    PERMISSIONS.COUPONS_DELETE,
     // Delegated actions (uncomment to grant to Admin without changing any UI code):
     // PERMISSIONS.EMPLOYEES_CREATE,
     // PERMISSIONS.EMPLOYEES_UPDATE,
@@ -127,6 +135,10 @@ export const PERMISSION_BACKEND_MAP: Record<Permission, string> = {
   [PERMISSIONS.BUNDLES_DELETE]: "bundles:write",
   [PERMISSIONS.ORDERS_VIEW]: "orders:read",
   [PERMISSIONS.ORDERS_UPDATE]: "orders:write",
+  [PERMISSIONS.COUPONS_VIEW]: "coupons:read",
+  [PERMISSIONS.COUPONS_CREATE]: "coupons:write",
+  [PERMISSIONS.COUPONS_UPDATE]: "coupons:write",
+  [PERMISSIONS.COUPONS_DELETE]: "coupons:write",
 };
 
 /**

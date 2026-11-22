@@ -17,13 +17,11 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { useCartStore } from "../stores/cart-store";
+import { CouponInput } from "./coupon-input";
 import { toast } from "sonner";
 
 export function CartDrawer() {
   const [mounted, setMounted] = useState(false);
-  const [promoCode, setPromoCode] = useState("");
-  const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
-  const [promoError, setPromoError] = useState("");
 
   const {
     items,
@@ -32,6 +30,8 @@ export function CartDrawer() {
     removeItem,
     updateQuantity,
     getTotalPrice,
+    coupon,
+    getDiscountAmount,
   } = useCartStore();
 
   const t = useTranslations();
@@ -52,37 +52,9 @@ export function CartDrawer() {
     Math.round((totalPrice / freeShippingThreshold) * 100)
   );
 
-  const discountAmount = appliedDiscount
-    ? Math.round((totalPrice * appliedDiscount) / 100)
-    : 0;
+  const discountAmount = getDiscountAmount();
   const shippingFee = items.length === 0 || isFreeShipping ? 0 : 50;
   const grandTotal = Math.max(0, totalPrice - discountAmount + shippingFee);
-
-  const handleApplyPromo = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPromoError("");
-    const code = promoCode.trim().toUpperCase();
-
-    if (!code) return;
-
-    if (code === "MIRE10" || code === "WELCOME10") {
-      setAppliedDiscount(10);
-      toast.success(
-        isRTL
-          ? "تم تطبيق كود الخصم بنجاح! خصم 10%"
-          : "Promo code applied! 10% off"
-      );
-    } else if (code === "VIP15") {
-      setAppliedDiscount(15);
-      toast.success(
-        isRTL
-          ? "تم تطبيق كود الخصم بنجاح! خصم 15%"
-          : "VIP promo code applied! 15% off"
-      );
-    } else {
-      setPromoError(isRTL ? "كود الخصم غير صحيح أو منتهي" : "Invalid coupon code");
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden animate-in fade-in duration-300">
@@ -274,40 +246,7 @@ export function CartDrawer() {
           {items.length > 0 && (
             <div className="p-5 sm:p-6 border-t border-ds-border-subtle bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md space-y-4">
               {/* Promo Code Input */}
-              <form onSubmit={handleApplyPromo} className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Tag className="size-3.5 absolute start-3 top-1/2 -translate-y-1/2 text-ds-text-soft" />
-                    <input
-                      type="text"
-                      value={promoCode}
-                      onChange={(e) => {
-                        setPromoCode(e.target.value);
-                        setPromoError("");
-                      }}
-                      placeholder={isRTL ? "كود الخصم (جربي MIRE10)" : "Promo code (try MIRE10)"}
-                      className="w-full h-9 ps-8 pe-3 rounded-xl border border-ds-border-muted bg-ds-plain text-xs uppercase tracking-wider text-ds-text-plain focus:outline-none focus:ring-1 focus:ring-ds-primary"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="h-9 px-3.5 rounded-xl border border-ds-border-muted hover:border-ds-primary bg-ds-plain text-xs font-semibold text-ds-text-plain hover:text-ds-primary transition-colors cursor-pointer"
-                  >
-                    {isRTL ? "تطبيق" : "Apply"}
-                  </button>
-                </div>
-                {appliedDiscount && (
-                  <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1 pt-0.5">
-                    <Check className="size-3" />
-                    {isRTL ? `تم تفعيل خصم ${appliedDiscount}% بنجاح` : `${appliedDiscount}% discount applied`}
-                  </p>
-                )}
-                {promoError && (
-                  <p className="text-[11px] text-rose-500 font-medium pt-0.5">
-                    {promoError}
-                  </p>
-                )}
-              </form>
+              <CouponInput />
 
               {/* Price Breakdown */}
               <div className="space-y-1.5 text-xs">
@@ -316,7 +255,7 @@ export function CartDrawer() {
                   <span className="font-mono">{totalPrice} {isRTL ? "ج.م" : "EGP"}</span>
                 </div>
 
-                {appliedDiscount && (
+                {discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-600 font-medium">
                     <span>{isRTL ? "قيمة الخصم" : "Discount"}</span>
                     <span className="font-mono">-{discountAmount} {isRTL ? "ج.م" : "EGP"}</span>

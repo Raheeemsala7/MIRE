@@ -21,13 +21,15 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/src/shared/stores/cart-store";
 import { useAddressStore, AddressList } from "@/src/features/address";
+import { CouponInput } from "@/src/shared/components/coupon-input";
+import { OrderTrackingTimeline } from "@/src/shared/components/order-tracking-timeline";
 import type { PaymentMethod, PlacedOrder } from "../types/checkout";
 
 export function CheckoutFlow() {
   const locale = useLocale();
   const isAr = locale === "ar";
 
-  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, getDiscountAmount, coupon, clearCart } = useCartStore();
   const { getSelectedAddress } = useAddressStore();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -45,93 +47,43 @@ export function CheckoutFlow() {
 
   const selectedAddress = getSelectedAddress();
   const subtotal = getTotalPrice();
+  const discountAmount = getDiscountAmount();
   const freeShippingThreshold = 1500;
-  const shippingFee = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 50;
-  const totalAmount = subtotal + shippingFee;
+  const shippingFee = (subtotal - discountAmount) >= freeShippingThreshold || subtotal === 0 ? 0 : 50;
+  const totalAmount = Math.max(0, subtotal - discountAmount) + shippingFee;
 
   // Render Order Confirmation View ONLY if an order was placed AND cart is currently empty
   if (placedOrder && items.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl text-center py-12 px-4 animate-in fade-in duration-300">
-        <div className="mx-auto flex size-20 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 ring-8 ring-emerald-500/5 mb-6">
-          <PackageCheck className="size-10" />
+      <div className="mx-auto max-w-2xl text-center py-10 px-4 animate-in fade-in duration-300 space-y-6">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 ring-8 ring-emerald-500/5">
+          <PackageCheck className="size-8" />
         </div>
 
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 mb-3">
-          <Sparkles className="size-3.5" />
-          {isAr ? "تم تأكيد طلبك بنجاح!" : "Order Confirmed!"}
-        </span>
-
-        <h1 className="font-brand-serif text-3xl sm:text-4xl font-semibold text-ds-text-plain">
-          {isAr ? "شكراً لثقتكِ بـ ميري" : "Thank you for shopping with MIRÉ"}
-        </h1>
-        <p className="mt-2 text-sm text-ds-text-muted">
-          {isAr
-            ? `رقم الطلب الخاص بكِ هو: `
-            : `Your order tracking number is: `}
-          <span className="font-mono font-bold text-ds-primary">
-            {placedOrder.orderNumber}
+        <div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 mb-2">
+            <Sparkles className="size-3.5" />
+            {isAr ? "تم تنفيذ طلبك بنجاح!" : "Order Successfully Placed!"}
           </span>
-        </p>
 
-        {/* Order Details Summary Card */}
-        <div className="mt-8 rounded-3xl border border-ds-border-muted bg-ds-elevated p-6 sm:p-8 text-start space-y-6">
-          <div className="flex items-center justify-between border-b border-ds-border-muted pb-4">
-            <div>
-              <span className="text-xs text-ds-text-soft">
-                {isAr ? "حالة الطلب" : "Order Status"}
-              </span>
-              <p className="font-semibold text-sm text-ds-text-plain flex items-center gap-1.5 mt-0.5">
-                <Clock className="size-4 text-amber-500" />
-                <span>{isAr ? "قيد المراجعة والتجهيز" : "Processing"}</span>
-              </p>
-            </div>
-            <div className="text-end">
-              <span className="text-xs text-ds-text-soft">
-                {isAr ? "إجمالي المبلغ" : "Total Amount"}
-              </span>
-              <p className="font-bold text-lg text-ds-primary font-mono mt-0.5">
-                {placedOrder.pricing.totalAmount} {isAr ? "ج.م" : "EGP"}
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <span className="text-xs font-semibold text-ds-text-plain uppercase tracking-wider">
-              {isAr ? "عنوان التوصيل المحدد على الخريطة" : "Pinned Delivery Address"}
-            </span>
-            <div className="mt-2 rounded-2xl bg-ds-subtle/50 p-4 border border-ds-border-subtle text-xs text-ds-text-muted space-y-1">
-              <p className="font-semibold text-ds-text-plain">
-                {placedOrder.customerInfo.fullName} • {placedOrder.customerInfo.phone}
-              </p>
-              <p className="flex items-center gap-1.5">
-                <MapPin className="size-3.5 text-ds-primary shrink-0" />
-                <span>
-                  {placedOrder.shippingAddress.governorate}، {placedOrder.shippingAddress.city}، {placedOrder.shippingAddress.street}
-                </span>
-              </p>
-              {placedOrder.shippingAddress.latitude && placedOrder.shippingAddress.longitude && (
-                <p className="font-mono text-[11px] text-ds-text-soft pt-1">
-                  📍 {placedOrder.shippingAddress.latitude.toFixed(4)}, {placedOrder.shippingAddress.longitude.toFixed(4)}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <span className="text-xs font-semibold text-ds-text-plain uppercase tracking-wider">
-              {isAr ? "طريقة الدفع" : "Payment Method"}
-            </span>
-            <p className="mt-1 text-sm text-ds-text-plain">
-              {placedOrder.paymentInfo.method === "COD"
-                ? isAr ? "الدفع نقداً عند الاستلام (COD)" : "Cash on Delivery (COD)"
-                : isAr ? "بطاقة بنكية / Paymob" : "Credit Card / Paymob"}
-            </p>
-          </div>
+          <h1 className="font-brand-serif text-2xl sm:text-3xl font-semibold text-ds-text-plain">
+            {isAr ? "شكراً لتسوقكِ مع ميري" : "Thank you for shopping with MIRÉ"}
+          </h1>
         </div>
+
+        {/* Live Order Tracking Timeline */}
+        <OrderTrackingTimeline
+          orderNumber={placedOrder.orderNumber}
+          status="NEW"
+          createdAt={new Date()}
+          customerName={placedOrder.customerInfo?.fullName || selectedAddress?.fullName}
+          customerPhone={placedOrder.customerInfo?.phone || selectedAddress?.phone}
+          shippingGovernorate={placedOrder.shippingAddress?.governorate || selectedAddress?.governorate}
+          shippingCity={placedOrder.shippingAddress?.city || selectedAddress?.city}
+        />
 
         {/* CTA Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/orders"
             onClick={() => setPlacedOrder(null)}
@@ -205,6 +157,14 @@ export function CheckoutFlow() {
         },
         paymentMethod,
         orderNotes,
+        couponCode: coupon?.code,
+        couponDiscount: discountAmount,
+        pricing: {
+          subtotal,
+          couponDiscount: discountAmount,
+          shippingFee,
+          totalAmount,
+        },
         items: items.map((it) => ({
           productId: it.id,
           id: it.id,
@@ -590,28 +550,40 @@ export function CheckoutFlow() {
         </div>
 
         {/* Financial Breakdown */}
-        <div className="space-y-2.5 border-t border-ds-border-muted pt-4 text-xs">
-          <div className="flex justify-between text-ds-text-muted">
-            <span>{isAr ? "المجموع الفرعي" : "Subtotal"}</span>
-            <span className="font-mono">{subtotal} {isAr ? "ج.م" : "EGP"}</span>
-          </div>
+        <div className="space-y-3 border-t border-ds-border-muted pt-4 text-xs">
+          {/* Coupon Input */}
+          <CouponInput />
 
-          <div className="flex justify-between text-ds-text-muted">
-            <span>{isAr ? "مصاريف الشحن" : "Shipping"}</span>
-            <span className="font-mono">
-              {shippingFee === 0 ? (
-                <span className="text-emerald-600 font-semibold">{isAr ? "مجاني" : "Free"}</span>
-              ) : (
-                `${shippingFee} ${isAr ? "ج.م" : "EGP"}`
-              )}
-            </span>
-          </div>
+          <div className="space-y-2 pt-2">
+            <div className="flex justify-between text-ds-text-muted">
+              <span>{isAr ? "المجموع الفرعي" : "Subtotal"}</span>
+              <span className="font-mono">{subtotal} {isAr ? "ج.م" : "EGP"}</span>
+            </div>
 
-          <div className="flex justify-between border-t border-ds-border-muted pt-3 font-semibold text-sm text-ds-text-plain">
-            <span>{isAr ? "المجموع الإجمالي" : "Total Amount"}</span>
-            <span className="font-mono text-base text-ds-primary font-bold">
-              {totalAmount} {isAr ? "ج.م" : "EGP"}
-            </span>
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-emerald-600 font-medium">
+                <span>{isAr ? "خصم الكوبون" : "Coupon Discount"}</span>
+                <span className="font-mono">-{discountAmount} {isAr ? "ج.م" : "EGP"}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between text-ds-text-muted">
+              <span>{isAr ? "مصاريف الشحن" : "Shipping"}</span>
+              <span className="font-mono">
+                {shippingFee === 0 ? (
+                  <span className="text-emerald-600 font-semibold">{isAr ? "مجاني" : "Free"}</span>
+                ) : (
+                  `${shippingFee} ${isAr ? "ج.م" : "EGP"}`
+                )}
+              </span>
+            </div>
+
+            <div className="flex justify-between border-t border-ds-border-muted pt-3 font-semibold text-sm text-ds-text-plain">
+              <span>{isAr ? "المجموع الإجمالي" : "Total Amount"}</span>
+              <span className="font-mono text-base text-ds-primary font-bold">
+                {totalAmount} {isAr ? "ج.م" : "EGP"}
+              </span>
+            </div>
           </div>
         </div>
 

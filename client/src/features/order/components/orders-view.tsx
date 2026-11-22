@@ -24,6 +24,7 @@ import {
   Box,
 } from "lucide-react";
 import { useCartStore } from "@/src/shared/stores/cart-store";
+import { OrderTrackingTimeline } from "@/shared/components/order-tracking-timeline";
 import { toast } from "sonner";
 
 interface OrderItem {
@@ -394,26 +395,16 @@ export function OrdersView({ userName }: { userName?: string }) {
         </div>
 
         {/* Live Tracking Visual Stepper */}
-        <div className="px-5 sm:px-6 py-4 bg-ds-plain/60 border-t border-b border-ds-border-muted/50">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-ds-text-plain flex items-center gap-1.5">
-              <Truck className="size-3.5 text-ds-primary" />
-              {isAr ? "مسار وحالة الشحنة المباشرة" : "Live Shipment Tracking"}
-            </span>
-
-            {isOrderActive && (
-              <span className="text-[11px] text-ds-primary font-medium flex items-center gap-1">
-                <Clock className="size-3" />
-                <span>
-                  {isAr
-                    ? `التوصيل المتوقع: ${estDeliveryDate.toLocaleDateString("ar-EG", { weekday: "short", day: "numeric", month: "short" })}`
-                    : `Est. Delivery: ${estDeliveryDate.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })}`}
-                </span>
-              </span>
-            )}
-          </div>
-
-          {renderTimeline(order.status)}
+        <div className="p-4 sm:p-5 bg-ds-plain/40 border-t border-b border-ds-border-muted/50">
+          <OrderTrackingTimeline
+            orderNumber={order.orderNumber}
+            status={order.status}
+            createdAt={order.createdAt}
+            shippingGovernorate={order.shippingAddress?.governorate}
+            shippingCity={order.shippingAddress?.city}
+            customerName={order.customerInfo?.fullName}
+            customerPhone={order.customerInfo?.phone}
+          />
         </div>
 
         {/* Expanded Details Body */}

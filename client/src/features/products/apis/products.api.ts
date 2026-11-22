@@ -1,7 +1,7 @@
 import "server-only";
 
-import { serverApiGet } from "@/lib/auth/session";
-import { apiUrl, BackendApiError } from "@/lib/auth/backend-client";
+import { API_URL, HEADERS } from "@/shared/constant/api.constant";
+import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 import { buildProductQueryParams } from "../utils/product.util";
 import type {
   ProductFilters,
@@ -19,29 +19,66 @@ import type {
 export async function getAdminProducts(
   filters: ProductFilters = {}
 ): Promise<ProductsPaginatedResponse> {
+  const token = await getNextAuthToken();
   const query = buildProductQueryParams({ ...filters, admin: true });
-  const path = `/products${query ? `?${query}` : ""}` as `/${string}`;
-  return serverApiGet<ProductsPaginatedResponse>(path);
+  const url = `${API_URL}/products${query ? `?${query}` : ""}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch admin products: ${res.status}`);
+  }
+
+  return res.json() as Promise<ProductsPaginatedResponse>;
 }
 
 /**
  * Admin: Fetch single product by ID
  */
 export async function getAdminProductById(id: string): Promise<SingleProductResponse> {
+  const token = await getNextAuthToken();
   const cleanId = encodeURIComponent(id.trim());
-  return serverApiGet<SingleProductResponse>(`/products/${cleanId}` as `/${string}`);
+  const url = `${API_URL}/products/${cleanId}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch admin product: ${res.status}`);
+  }
+
+  return res.json() as Promise<SingleProductResponse>;
 }
 
 /**
  * Admin: Fetch real overview aggregate stats using actual backend responses
  */
 export async function getAdminProductOverviewStats(): Promise<ProductOverviewStats> {
+  const token = await getNextAuthToken();
+  const headers = {
+    ...HEADERS.JsonBody,
+    ...(token?.token ? HEADERS.authorize(token.token) : {}),
+  };
+
   try {
     const [allRes, activeRes, archivedRes, lowStockRes] = await Promise.all([
-      serverApiGet<ProductsPaginatedResponse>("/products?limit=1&admin=true"),
-      serverApiGet<ProductsPaginatedResponse>("/products?limit=1&status=ACTIVE&admin=true"),
-      serverApiGet<ProductsPaginatedResponse>("/products?limit=1&status=ARCHIVED&admin=true"),
-      serverApiGet<{ success: boolean; data: unknown[] }>("/inventory/low-stock").catch(() => null),
+      fetch(`${API_URL}/products?limit=1&admin=true`, { headers, cache: "no-store" }).then((r) => r.json()),
+      fetch(`${API_URL}/products?limit=1&status=ACTIVE&admin=true`, { headers, cache: "no-store" }).then((r) => r.json()),
+      fetch(`${API_URL}/products?limit=1&status=ARCHIVED&admin=true`, { headers, cache: "no-store" }).then((r) => r.json()),
+      fetch(`${API_URL}/inventory/low-stock`, { headers, cache: "no-store" }).then((r) => r.json()).catch(() => null),
     ]);
 
     const totalProducts = allRes?.meta?.total ?? 0;
@@ -70,10 +107,7 @@ export async function getAdminProductOverviewStats(): Promise<ProductOverviewSta
       lowStockProducts,
       outOfStockProducts,
     };
-  } catch (error) {
-    if (error instanceof BackendApiError && error.status === 403) {
-      throw error;
-    }
+  } catch {
     return {
       totalProducts: 0,
       activeProducts: 0,
@@ -91,11 +125,11 @@ export async function getPublicProducts(
   filters: ProductFilters = {}
 ): Promise<ProductsPaginatedResponse> {
   const query = buildProductQueryParams(filters);
-  const url = `${apiUrl()}/products${query ? `?${query}` : ""}`;
+  const url = `${API_URL}/products${query ? `?${query}` : ""}`;
 
   const res = await fetch(url, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: { ...HEADERS.JsonBody },
     next: {
       tags: ["products"],
       revalidate: 60,
@@ -116,11 +150,11 @@ export async function getPublicProductBySlug(
   slug: string
 ): Promise<SingleProductResponse> {
   const cleanSlug = encodeURIComponent(slug.trim());
-  const url = `${apiUrl()}/products/slug/${cleanSlug}`;
+  const url = `${API_URL}/products/slug/${cleanSlug}`;
 
   const res = await fetch(url, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: { ...HEADERS.JsonBody },
     next: {
       tags: ["products", `product-slug-${slug}`],
       revalidate: 60,
@@ -142,11 +176,11 @@ export async function getPublicRelatedProducts(
   limit: number = 4
 ): Promise<{ success: boolean; data: Product[] }> {
   const cleanId = encodeURIComponent(id.trim());
-  const url = `${apiUrl()}/products/${cleanId}/related?limit=${limit}`;
+  const url = `${API_URL}/products/${cleanId}/related?limit=${limit}`;
 
   const res = await fetch(url, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: { ...HEADERS.JsonBody },
     next: {
       tags: ["products", `product-related-${id}`],
       revalidate: 60,
@@ -165,10 +199,10 @@ export async function getPublicRelatedProducts(
  */
 export async function getCategories(): Promise<CategoryItem[]> {
   try {
-    const url = `${apiUrl()}/categories`;
+    const url = `${API_URL}/categories`;
     const res = await fetch(url, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...HEADERS.JsonBody },
       next: {
         tags: ["categories"],
         revalidate: 300,

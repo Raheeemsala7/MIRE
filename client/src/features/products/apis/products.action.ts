@@ -2,8 +2,8 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
-import { serverApiPost, serverApiPatch, serverApiDelete } from "@/lib/auth/session";
-import { BackendApiError } from "@/lib/auth/backend-client";
+import { API_URL, HEADERS } from "@/shared/constant/api.constant";
+import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import {
@@ -43,7 +43,6 @@ function invalidateProductCaches(slug?: string, id?: string) {
 export async function createProductAction(
   payload: CreateProductInput
 ): Promise<SingleProductResponse> {
-  // Authorization
   const session = await auth();
   const authorization = assertSessionPermission(
     session,
@@ -54,7 +53,6 @@ export async function createProductAction(
     throw new Error(authorization.error || "Unauthorized");
   }
 
-  // Validation
   const parseResult = createProductSchema.safeParse(payload);
   if (!parseResult.success) {
     const errorDetails = Object.values(parseResult.error.flatten().fieldErrors)
@@ -73,22 +71,23 @@ export async function createProductAction(
     })),
   };
 
-  // Execution
-  try {
-    const response = await serverApiPost<SingleProductResponse>(
-      "/products",
-      sanitizedPayload
-    );
+  const token = await getNextAuthToken();
+  const res = await fetch(`${API_URL}/products`, {
+    method: "POST",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+    body: JSON.stringify(sanitizedPayload),
+  });
 
-    invalidateProductCaches(response?.data?.slug, response?.data?._id);
-    return response;
-  } catch (error) {
-    if (error instanceof BackendApiError) {
-      throw new Error(error.messageText || "Failed to create product in backend service");
-    }
-    if (error instanceof Error) throw error;
-    throw new Error("Failed to create product");
+  const response: SingleProductResponse = await res.json();
+  if (!res.ok || !response?.success) {
+    throw new Error((response as any)?.message || "Failed to create product");
   }
+
+  invalidateProductCaches(response?.data?.slug, response?.data?._id);
+  return response;
 }
 
 /**
@@ -98,7 +97,6 @@ export async function updateProductAction(
   id: string,
   payload: UpdateProductInput
 ): Promise<SingleProductResponse> {
-  // Authorization
   const session = await auth();
   const authorization = assertSessionPermission(
     session,
@@ -113,7 +111,6 @@ export async function updateProductAction(
     throw new Error("Product ID is required");
   }
 
-  // Validation
   const parseResult = updateProductSchema.safeParse(payload);
   if (!parseResult.success) {
     const errorDetails = Object.values(parseResult.error.flatten().fieldErrors)
@@ -137,22 +134,23 @@ export async function updateProductAction(
       : {}),
   };
 
-  // Execution
-  try {
-    const response = await serverApiPatch<SingleProductResponse>(
-      `/products/${cleanId}` as `/${string}`,
-      sanitizedPayload
-    );
+  const token = await getNextAuthToken();
+  const res = await fetch(`${API_URL}/products/${cleanId}`, {
+    method: "PATCH",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+    body: JSON.stringify(sanitizedPayload),
+  });
 
-    invalidateProductCaches(response?.data?.slug, response?.data?._id);
-    return response;
-  } catch (error) {
-    if (error instanceof BackendApiError) {
-      throw new Error(error.messageText || "Failed to update product in backend service");
-    }
-    if (error instanceof Error) throw error;
-    throw new Error("Failed to update product");
+  const response: SingleProductResponse = await res.json();
+  if (!res.ok || !response?.success) {
+    throw new Error((response as any)?.message || "Failed to update product");
   }
+
+  invalidateProductCaches(response?.data?.slug, response?.data?._id);
+  return response;
 }
 
 /**
@@ -161,7 +159,6 @@ export async function updateProductAction(
 export async function archiveProductAction(
   id: string
 ): Promise<{ success: boolean; message: string }> {
-  // Authorization
   const session = await auth();
   const authorization = assertSessionPermission(
     session,
@@ -177,23 +174,24 @@ export async function archiveProductAction(
   }
 
   const cleanId = encodeURIComponent(id.trim());
+  const token = await getNextAuthToken();
 
-  // Execution
-  try {
-    const response = await serverApiDelete<{ success: boolean; message?: string }>(
-      `/products/${cleanId}` as `/${string}`
-    );
+  const res = await fetch(`${API_URL}/products/${cleanId}`, {
+    method: "DELETE",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+  });
 
-    invalidateProductCaches(undefined, id);
-    return {
-      success: true,
-      message: response.message || "Product archived successfully",
-    };
-  } catch (error) {
-    if (error instanceof BackendApiError) {
-      throw new Error(error.messageText || "Failed to archive product");
-    }
-    if (error instanceof Error) throw error;
-    throw new Error("Failed to archive product");
+  const response = await res.json();
+  if (!res.ok || !response?.success) {
+    throw new Error(response?.message || "Failed to archive product");
   }
+
+  invalidateProductCaches(undefined, id);
+  return {
+    success: true,
+    message: response.message || "Product archived successfully",
+  };
 }

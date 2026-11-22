@@ -1,7 +1,7 @@
 import "server-only";
 
-import { serverApiGet } from "@/lib/auth/session";
-import { BackendApiError } from "@/lib/auth/backend-client";
+import { API_URL, HEADERS } from "@/shared/constant/api.constant";
+import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 import { buildBundleQueryParams, getBundleStatus } from "../utils/bundle.util";
 import type {
   BundleFilters,
@@ -16,9 +16,24 @@ import type {
 export async function getAdminBundles(
   filters: BundleFilters = {}
 ): Promise<BundlesPaginatedResponse> {
+  const token = await getNextAuthToken();
   const query = buildBundleQueryParams(filters);
-  const path = `/bundles${query ? `?${query}` : ""}` as `/${string}`;
-  return serverApiGet<BundlesPaginatedResponse>(path);
+  const url = `${API_URL}/bundles${query ? `?${query}` : ""}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch admin bundles: ${res.status}`);
+  }
+
+  return res.json() as Promise<BundlesPaginatedResponse>;
 }
 
 /**
@@ -27,18 +42,40 @@ export async function getAdminBundles(
 export async function getAdminBundleById(
   id: string
 ): Promise<SingleBundleResponse> {
+  const token = await getNextAuthToken();
   const cleanId = encodeURIComponent(id.trim());
-  return serverApiGet<SingleBundleResponse>(`/bundles/${cleanId}` as `/${string}`);
+  const url = `${API_URL}/bundles/${cleanId}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch bundle: ${res.status}`);
+  }
+
+  return res.json() as Promise<SingleBundleResponse>;
 }
 
 /**
  * Admin: Fetch bundle overview aggregate stats backed by real backend data
  */
 export async function getAdminBundleOverviewStats(): Promise<BundleOverviewStats> {
+  const token = await getNextAuthToken();
+  const headers = {
+    ...HEADERS.JsonBody,
+    ...(token?.token ? HEADERS.authorize(token.token) : {}),
+  };
+
   try {
     const [allRes, activeRes] = await Promise.all([
-      serverApiGet<BundlesPaginatedResponse>("/bundles?limit=100"),
-      serverApiGet<BundlesPaginatedResponse>("/bundles?limit=1&activeOnly=true"),
+      fetch(`${API_URL}/bundles?limit=100`, { headers, cache: "no-store" }).then((r) => r.json()),
+      fetch(`${API_URL}/bundles?limit=1&activeOnly=true`, { headers, cache: "no-store" }).then((r) => r.json()),
     ]);
 
     const bundles = Array.isArray(allRes?.data) ? allRes.data : [];
@@ -50,7 +87,6 @@ export async function getAdminBundleOverviewStats(): Promise<BundleOverviewStats
     let expiredBundles = 0;
     let inactiveBundles = 0;
 
-    // If totalBundles <= bundles.length, we have the complete dataset loaded
     if (totalBundles <= bundles.length) {
       for (const bundle of bundles) {
         const status = getBundleStatus(bundle, now);
@@ -66,9 +102,6 @@ export async function getAdminBundleOverviewStats(): Promise<BundleOverviewStats
             break;
         }
       }
-    } else {
-      // If total exceeds the 100-limit page, inactive bundles are total minus active
-      inactiveBundles = Math.max(0, totalBundles - activeBundles);
     }
 
     return {
@@ -78,10 +111,7 @@ export async function getAdminBundleOverviewStats(): Promise<BundleOverviewStats
       expiredBundles,
       inactiveBundles,
     };
-  } catch (error) {
-    if (error instanceof BackendApiError && error.status === 403) {
-      throw error;
-    }
+  } catch {
     return {
       totalBundles: 0,
       activeBundles: 0,

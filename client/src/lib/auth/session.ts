@@ -2,13 +2,14 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { backendGet, backendPost, backendPatch, backendDelete, BackendApiError } from "./backend-client";
 import type { AppRole, SafeUser } from "./types";
 import { hasRole } from "./roles";
 import { normalizeLocale } from "./permissions";
+import { API_URL, HEADERS } from "@/shared/constant/api.constant";
+import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 export { destination } from "./permissions";
 
-/** Compatibility accessors delegate identity entirely to Auth.js. */
+/** Identity accessors delegating to Auth.js */
 export const currentSession = auth;
 export async function currentUser(): Promise<SafeUser | null> {
   return (await auth())?.user ?? null;
@@ -22,29 +23,40 @@ export async function requireRole(roles: readonly AppRole[], locale: string = "a
   return session.user;
 }
 
-async function getAccessToken(): Promise<string> {
-  const session = await auth();
-  const token = (session as any)?.accessToken;
-  if (!token) throw new BackendApiError(401);
-  return token;
+/** Direct native fetch helper with Bearer token authentication */
+async function fetchWithAuth<T>(
+  path: `/${string}`,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = await getNextAuthToken();
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+      ...(options.headers || {}),
+    },
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.message || `Request failed with status ${res.status}`);
+  }
+  return data;
 }
 
 export async function serverApiGet<T>(path: `/${string}`): Promise<T> {
-  const token = await getAccessToken();
-  return backendGet<T>(path, token);
+  return fetchWithAuth<T>(path, { method: "GET", cache: "no-store" });
 }
 
 export async function serverApiPost<T>(path: `/${string}`, body: unknown): Promise<T> {
-  const token = await getAccessToken();
-  return backendPost<T>(path, body, token);
+  return fetchWithAuth<T>(path, { method: "POST", body: JSON.stringify(body) });
 }
 
 export async function serverApiPatch<T>(path: `/${string}`, body: unknown): Promise<T> {
-  const token = await getAccessToken();
-  return backendPatch<T>(path, body, token);
+  return fetchWithAuth<T>(path, { method: "PATCH", body: JSON.stringify(body) });
 }
 
 export async function serverApiDelete<T>(path: `/${string}`): Promise<T> {
-  const token = await getAccessToken();
-  return backendDelete<T>(path, token);
+  return fetchWithAuth<T>(path, { method: "DELETE" });
 }

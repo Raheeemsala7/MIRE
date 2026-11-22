@@ -2,8 +2,8 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
-import { serverApiPost, serverApiPatch, serverApiDelete } from "@/lib/auth/session";
-import { BackendApiError } from "@/lib/auth/backend-client";
+import { API_URL, HEADERS } from "@/shared/constant/api.constant";
+import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import {
@@ -58,22 +58,24 @@ export async function createBundleAction(
   }
 
   const validatedData = parseResult.data;
+  const token = await getNextAuthToken();
 
-  try {
-    const response = await serverApiPost<SingleBundleResponse>(
-      "/bundles",
-      validatedData
-    );
+  const res = await fetch(`${API_URL}/bundles`, {
+    method: "POST",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+    body: JSON.stringify(validatedData),
+  });
 
-    invalidateBundleCaches(response?.data?._id);
-    return response;
-  } catch (error) {
-    if (error instanceof BackendApiError) {
-      throw new Error(error.messageText || "Failed to create bundle in backend service");
-    }
-    if (error instanceof Error) throw error;
-    throw new Error("Failed to create bundle");
+  const response: SingleBundleResponse = await res.json();
+  if (!res.ok || !response?.success) {
+    throw new Error((response as any)?.message || "Failed to create bundle");
   }
+
+  invalidateBundleCaches(response?.data?._id);
+  return response;
 }
 
 /**
@@ -102,22 +104,24 @@ export async function updateBundleAction(
   }
 
   const cleanId = encodeURIComponent(id.trim());
+  const token = await getNextAuthToken();
 
-  try {
-    const response = await serverApiPatch<SingleBundleResponse>(
-      `/bundles/${cleanId}` as `/${string}`,
-      parseResult.data
-    );
+  const res = await fetch(`${API_URL}/bundles/${cleanId}`, {
+    method: "PATCH",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+    body: JSON.stringify(parseResult.data),
+  });
 
-    invalidateBundleCaches(response?.data?._id || id);
-    return response;
-  } catch (error) {
-    if (error instanceof BackendApiError) {
-      throw new Error(error.messageText || "Failed to update bundle in backend service");
-    }
-    if (error instanceof Error) throw error;
-    throw new Error("Failed to update bundle");
+  const response: SingleBundleResponse = await res.json();
+  if (!res.ok || !response?.success) {
+    throw new Error((response as any)?.message || "Failed to update bundle");
   }
+
+  invalidateBundleCaches(response?.data?._id || id);
+  return response;
 }
 
 /**
@@ -137,24 +141,26 @@ export async function deleteBundleAction(
   }
 
   const cleanId = encodeURIComponent(id.trim());
+  const token = await getNextAuthToken();
 
-  try {
-    const response = await serverApiDelete<{ success: boolean; message: string }>(
-      `/bundles/${cleanId}` as `/${string}`
-    );
+  const res = await fetch(`${API_URL}/bundles/${cleanId}`, {
+    method: "DELETE",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+  });
 
-    invalidateBundleCaches(id);
-    return {
-      success: true,
-      message: response?.message || "Bundle deleted successfully",
-    };
-  } catch (error) {
-    if (error instanceof BackendApiError) {
-      throw new Error(error.messageText || "Failed to delete bundle in backend service");
-    }
-    if (error instanceof Error) throw error;
-    throw new Error("Failed to delete bundle");
+  const response = await res.json();
+  if (!res.ok || !response?.success) {
+    throw new Error(response?.message || "Failed to delete bundle");
   }
+
+  invalidateBundleCaches(id);
+  return {
+    success: true,
+    message: response?.message || "Bundle deleted successfully",
+  };
 }
 
 /**
@@ -175,20 +181,22 @@ export async function toggleBundleStatusAction(
   }
 
   const cleanId = encodeURIComponent(id.trim());
+  const token = await getNextAuthToken();
 
-  try {
-    const response = await serverApiPatch<SingleBundleResponse>(
-      `/bundles/${cleanId}` as `/${string}`,
-      { isActive }
-    );
+  const res = await fetch(`${API_URL}/bundles/${cleanId}`, {
+    method: "PATCH",
+    headers: {
+      ...HEADERS.JsonBody,
+      ...(token?.token ? HEADERS.authorize(token.token) : {}),
+    },
+    body: JSON.stringify({ isActive }),
+  });
 
-    invalidateBundleCaches(id);
-    return response;
-  } catch (error) {
-    if (error instanceof BackendApiError) {
-      throw new Error(error.messageText || "Failed to toggle bundle status");
-    }
-    if (error instanceof Error) throw error;
-    throw new Error("Failed to toggle bundle status");
+  const response: SingleBundleResponse = await res.json();
+  if (!res.ok || !response?.success) {
+    throw new Error((response as any)?.message || "Failed to toggle bundle status");
   }
+
+  invalidateBundleCaches(id);
+  return response;
 }

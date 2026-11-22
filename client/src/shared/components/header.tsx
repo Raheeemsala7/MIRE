@@ -38,7 +38,7 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Desktop Navigation - Leading */}
-            <nav className="hidden md:flex items-center space-x-8 rtl:space-x-reverse text-xs tracking-widest uppercase font-medium text-ds-text-plain/85 hover:text-ds-text-plain">
+            <nav className="hidden md:flex items-center space-x-8 text-xs tracking-widest uppercase font-medium text-ds-text-plain/85 hover:text-ds-text-plain">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}

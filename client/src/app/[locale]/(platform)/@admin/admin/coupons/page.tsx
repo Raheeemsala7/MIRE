@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { requirePermission } from "@/lib/permissions/server-authorization";
-import { serverApiGet } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/config/rbac.config";
-import { CouponsManager, type CouponItem } from "@/features/admin/coupons";
-import { getCoupons as getCouponsFromStore } from "@/lib/coupons-store";
+import { CouponsManager } from "@/features/admin/coupons";
+import { getAdminCoupons } from "@/features/admin/coupons/server/queries";
 
 interface AdminCouponsPageProps {
   params: Promise<{ locale: string }>;
@@ -25,29 +24,17 @@ export async function generateMetadata({
   };
 }
 
-async function getCoupons(): Promise<CouponItem[]> {
-  try {
-    const res = await serverApiGet<any>("/coupons");
-    if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-      return res.data;
-    }
-  } catch {
-    // fallback
-  }
-
-  return getCouponsFromStore() as CouponItem[];
-}
-
 export default async function AdminCouponsPage({
   params,
 }: AdminCouponsPageProps) {
   const { locale } = await params;
   const isAr = locale === "ar";
 
-  // Require coupons permissions
+  // Require coupons permissions on the server
   await requirePermission(PERMISSIONS.COUPONS_VIEW, locale);
 
-  const initialCoupons = await getCoupons();
+  // Fetch real coupons directly from backend database
+  const initialCoupons = await getAdminCoupons();
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">

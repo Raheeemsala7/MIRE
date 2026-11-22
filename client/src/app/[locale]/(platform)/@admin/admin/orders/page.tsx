@@ -10,7 +10,6 @@ import {
   type OrderDoc,
   type OrdersPaginatedResponse,
 } from "@/features/admin/orders";
-import { REAL_DATABASE_ORDERS } from "@/app/api/admin/orders/route";
 
 interface AdminOrdersPageProps {
   params: Promise<{ locale: string }>;
@@ -51,33 +50,17 @@ async function getInitialOrdersData(
     const response = await serverApiGet<OrdersPaginatedResponse>(
       `/orders?${query.toString()}` as `/${string}`
     );
-    if (response?.success && Array.isArray(response.data) && response.data.length > 0) {
+    if (response?.success && Array.isArray(response.data)) {
       return { orders: response.data, total: response.total ?? response.data.length };
     }
   } catch (error) {
     if (error instanceof BackendApiError && error.status === 403) {
       redirect(`/${locale}/403`);
     }
+    console.error("getInitialOrdersData backend error:", error);
   }
 
-  // Fallback to real database orders
-  let filtered = [...REAL_DATABASE_ORDERS] as unknown as OrderDoc[];
-  if (status && status !== "ALL") {
-    filtered = filtered.filter((o) => o.status === status);
-  }
-  if (search) {
-    const term = search.toLowerCase();
-    filtered = filtered.filter(
-      (o) =>
-        o.orderNumber.toLowerCase().includes(term) ||
-        o.customerInfo?.fullName?.toLowerCase().includes(term) ||
-        o.customerInfo?.phone?.includes(term) ||
-        o.shippingAddress?.city?.toLowerCase().includes(term) ||
-        o.shippingAddress?.governorate?.toLowerCase().includes(term)
-    );
-  }
-
-  return { orders: filtered, total: filtered.length };
+  return { orders: [], total: 0 };
 }
 
 export default async function AdminOrdersPage(props: AdminOrdersPageProps) {

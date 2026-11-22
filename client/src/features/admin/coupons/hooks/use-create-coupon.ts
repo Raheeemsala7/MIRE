@@ -4,9 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { createCouponAction } from "../server/actions";
 import { couponQueryKeys } from "./use-coupons";
-import type { CouponRecord } from "@/lib/coupons-store";
+import type { CouponItem } from "../components/coupons-manager";
 
-export function useCreateCoupon(onSuccessCallback?: (coupon: CouponRecord) => void) {
+export function useCreateCoupon(onSuccessCallback?: (coupon: CouponItem) => void) {
   const queryClient = useQueryClient();
 
   return useMutation({

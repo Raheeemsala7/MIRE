@@ -51,6 +51,7 @@ import {
   type OrderStatus,
   ORDER_STATUS_CONFIG,
 } from "../types/order-admin.types";
+import { useUpdateOrderStatus } from "../hooks/use-update-order-status";
 
 interface OrderDetailsViewProps {
   order: OrderDoc;
@@ -96,76 +97,60 @@ export function OrderDetailsView({ order: initialOrder }: OrderDetailsViewProps)
   const [order, setOrder] = useState<OrderDoc>(initialOrder);
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus>(order.status);
   const [reason, setReason] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const currentStep = getStepNumber(order.status);
   const isCancelled = order.status === "CANCELLED";
 
-  const handleUpdateStatus = async () => {
+  const updateStatusMutation = useUpdateOrderStatus();
+
+  const handleUpdateStatus = () => {
     if (selectedStatus === order.status) {
       toast.info(isAr ? "الطلب بالفعل في هذه الحالة" : "Order is already in this status");
       return;
     }
 
-    setIsUpdating(true);
-    try {
-      const res = await fetch(`/api/admin/orders/${order._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: selectedStatus,
-          reason:
-            reason.trim() ||
-            (isAr
-              ? `تحديث الحالة إلى ${ORDER_STATUS_CONFIG[selectedStatus]?.labelAr}`
-              : `Status updated to ${selectedStatus}`),
-        }),
-      });
+    const note =
+      reason.trim() ||
+      (isAr
+        ? `تحديث الحالة إلى ${ORDER_STATUS_CONFIG[selectedStatus]?.labelAr}`
+        : `Status updated to ${selectedStatus}`);
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update status");
-      }
-
-      const updatedHistory = [
-        ...(order.statusHistory || []),
-        {
-          status: selectedStatus,
-          reason:
-            reason.trim() ||
-            (isAr
-              ? `تحديث الحالة إلى ${ORDER_STATUS_CONFIG[selectedStatus]?.labelAr}`
-              : `Status updated to ${selectedStatus}`),
-          timestamp: new Date().toISOString(),
-          changedBy: { name: "الإدارة" },
-        },
-      ];
-
-      setOrder((prev) => ({
-        ...prev,
+    updateStatusMutation.mutate(
+      {
+        orderId: order._id,
         status: selectedStatus,
-        paymentInfo: {
-          ...prev.paymentInfo,
-          // If delivered and method is COD, mark as paid automatically
-          status:
-            selectedStatus === "DELIVERED" && prev.paymentInfo.method === "COD"
-              ? "PAID"
-              : prev.paymentInfo.status,
-        },
-        statusHistory: updatedHistory,
-      }));
+        reason: note,
+      },
+      {
+        onSuccess: () => {
+          const updatedHistory = [
+            ...(order.statusHistory || []),
+            {
+              status: selectedStatus,
+              reason: note,
+              timestamp: new Date().toISOString(),
+              changedBy: { name: "الإدارة" },
+            },
+          ];
 
-      setReason("");
-      toast.success(
-        isAr
-          ? `تم تحديث حالة الطلب بنجاح إلى: ${ORDER_STATUS_CONFIG[selectedStatus]?.labelAr}`
-          : `Order status successfully updated to: ${selectedStatus}`
-      );
-    } catch (err: any) {
-      toast.error(err.message || (isAr ? "حدث خطأ أثناء تحديث الحالة" : "Error updating status"));
-    } finally {
-      setIsUpdating(false);
-    }
+          setOrder((prev) => ({
+            ...prev,
+            status: selectedStatus,
+            paymentInfo: {
+              ...prev.paymentInfo,
+              status:
+                selectedStatus === "DELIVERED" && prev.paymentInfo.method === "COD"
+                  ? "PAID"
+                  : prev.paymentInfo.status,
+            },
+            statusHistory: updatedHistory,
+          }));
+
+          setReason("");
+          router.refresh();
+        },
+      }
+    );
   };
 
   const getStatusBadge = (status: OrderStatus) => {
@@ -398,7 +383,7 @@ export function OrderDetailsView({ order: initialOrder }: OrderDetailsViewProps)
             <div className="md:col-span-3">
               <Button
                 type="button"
-                disabled={isUpdating}
+                disabled={updateStatusMutation.isPending}
                 onClick={handleUpdateStatus}
                 className="w-full h-10 text-xs font-medium rounded-xl gap-2 shadow-xs cursor-pointer"
               >

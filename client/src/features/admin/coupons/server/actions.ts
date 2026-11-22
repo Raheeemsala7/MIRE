@@ -3,16 +3,8 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { serverApiPost, serverApiPatch, serverApiDelete } from "@/lib/auth/session";
-import {
-  getCoupons,
-  addCoupon,
-  updateCoupon,
-  deleteCoupon,
-  findCoupon,
-  evaluateCoupon,
-  type CouponRecord,
-} from "@/lib/coupons-store";
-import { apiUrl } from "@/lib/auth/backend-client";
+import { apiUrl, BackendApiError } from "@/lib/auth/backend-client";
+import type { CouponItem } from "../components/coupons-manager";
 
 function invalidateCouponCaches() {
   try {
@@ -21,7 +13,7 @@ function invalidateCouponCaches() {
     revalidatePath("/[locale]/checkout", "page");
     revalidatePath("/[locale]/cart", "page");
   } catch {
-    // context may not be active in dev
+    // context may not be active
   }
 }
 
@@ -36,7 +28,7 @@ export async function createCouponAction(payload: {
   usageLimit?: number | null;
   maxUsesPerCustomer?: number;
   isActive?: boolean;
-}): Promise<{ success: boolean; message: string; data: CouponRecord }> {
+}): Promise<{ success: boolean; message: string; data: CouponItem }> {
   const session = await auth();
   if (!session?.user) {
     throw new Error("Unauthorized: You must be logged in as an administrator");
@@ -47,73 +39,59 @@ export async function createCouponAction(payload: {
     throw new Error("Coupon code is required");
   }
 
-  const newCoupon: CouponRecord = {
-    _id: `coupon-${Date.now()}`,
+  const body = {
     code: cleanCode,
-    discountType: payload.discountType || "PERCENTAGE",
-    discountValue: Number(payload.discountValue) || 10,
+    discountType: payload.discountType,
+    discountValue: Number(payload.discountValue),
     minOrderAmount: Number(payload.minOrderAmount) || 0,
     maxDiscountAmount: payload.maxDiscountAmount ? Number(payload.maxDiscountAmount) : null,
     startDate: payload.startDate || new Date().toISOString(),
     endDate: payload.endDate || new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString(),
     usageLimit: payload.usageLimit ? Number(payload.usageLimit) : null,
-    usedCount: 0,
     maxUsesPerCustomer: Number(payload.maxUsesPerCustomer) || 1,
     isActive: payload.isActive !== undefined ? Boolean(payload.isActive) : true,
-    createdAt: new Date().toISOString(),
   };
 
   try {
-    const res = await serverApiPost<any>("/coupons", newCoupon);
-    if (res?.data) {
-      addCoupon(res.data);
-      invalidateCouponCaches();
-      return {
-        success: true,
-        message: "تم إنشاء الكوبون بنجاح",
-        data: res.data,
-      };
+    const res = await serverApiPost<{
+      success: boolean;
+      message: string;
+      data: CouponItem;
+    }>("/coupons", body);
+
+    invalidateCouponCaches();
+    return res;
+  } catch (error: any) {
+    if (error instanceof BackendApiError) {
+      throw new Error(error.messageText || "Failed to create coupon in database");
     }
-  } catch {
-    // fallback store
+    throw new Error(error.message || "Failed to create coupon");
   }
-
-  addCoupon(newCoupon);
-  invalidateCouponCaches();
-
-  return {
-    success: true,
-    message: "تم إنشاء الكوبون بنجاح",
-    data: newCoupon,
-  };
 }
 
 export async function updateCouponAction(
   id: string,
-  updates: Partial<CouponRecord>
-): Promise<{ success: boolean; message: string; data?: CouponRecord | null }> {
+  updates: Partial<CouponItem>
+): Promise<{ success: boolean; message: string; data?: CouponItem }> {
   const session = await auth();
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
 
   try {
-    const res = await serverApiPatch<any>(`/coupons/${id}`, updates);
-    updateCoupon(id, updates);
+    const res = await serverApiPatch<{
+      success: boolean;
+      message: string;
+      data: CouponItem;
+    }>(`/coupons/${id}`, updates);
+
     invalidateCouponCaches();
-    return {
-      success: true,
-      message: "تم تحديث الكوبون بنجاح",
-      data: res?.data,
-    };
-  } catch {
-    const updated = updateCoupon(id, updates);
-    invalidateCouponCaches();
-    return {
-      success: true,
-      message: "تم تحديث الكوبون بنجاح",
-      data: updated,
-    };
+    return res;
+  } catch (error: any) {
+    if (error instanceof BackendApiError) {
+      throw new Error(error.messageText || "Failed to update coupon in database");
+    }
+    throw new Error(error.message || "Failed to update coupon");
   }
 }
 
@@ -126,18 +104,15 @@ export async function deleteCouponAction(
   }
 
   try {
-    await serverApiDelete(`/coupons/${id}`);
-  } catch {
-    // fallback
+    const res = await serverApiDelete<{ success: boolean; message: string }>(`/coupons/${id}`);
+    invalidateCouponCaches();
+    return res;
+  } catch (error: any) {
+    if (error instanceof BackendApiError) {
+      throw new Error(error.messageText || "Failed to delete coupon from database");
+    }
+    throw new Error(error.message || "Failed to delete coupon");
   }
-
-  deleteCoupon(id);
-  invalidateCouponCaches();
-
-  return {
-    success: true,
-    message: "تم حذف الكوبون بنجاح",
-  };
 }
 
 export async function validateCouponAction(payload: {
@@ -163,95 +138,23 @@ export async function validateCouponAction(payload: {
     throw new Error("كود الخصم مطلوب");
   }
 
-  // 1. Check local / admin coupon store
-  const localCoupon = findCoupon(code);
-  if (localCoupon) {
-    const evalResult = evaluateCoupon(localCoupon, subtotal);
-    if (!evalResult.valid) {
-      throw new Error(evalResult.reason || "كود الخصم غير صالح");
-    }
-    return {
-      success: true,
-      message: "تم تطبيق الكوبون بنجاح",
-      data: {
-        discount: evalResult.discount,
-        appliedCoupon: {
-          code: localCoupon.code,
-          discountType: localCoupon.discountType,
-          discountValue: localCoupon.discountValue,
-          minOrderAmount: localCoupon.minOrderAmount,
-        },
-      },
-    };
-  }
-
-  // 2. Query backend
   const session = await auth();
   const token = (session as any)?.accessToken;
 
-  try {
-    const res = await fetch(`${apiUrl()}/coupons/validate`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ code, subtotal }),
-      cache: "no-store",
-    });
+  const res = await fetch(`${apiUrl()}/coupons/validate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ code, subtotal }),
+    cache: "no-store",
+  });
 
-    const data = await res.json();
-    if (res.ok && data.success) {
-      return data;
-    }
-
-    if (res.status === 400) {
-      const match = data.message?.match(/at least\s+(\d+)\s+EGP/i);
-      if (match) {
-        const minOrderAmount = Number(match[1]);
-        if (subtotal < minOrderAmount) {
-          throw new Error(`الحد الأدنى للطلب لاستخدام هذا الكوبون هو ${minOrderAmount} ج.م`);
-        }
-
-        let discountType: "PERCENTAGE" | "FIXED_AMOUNT" = "PERCENTAGE";
-        let discountValue = 10;
-        const numberInCode = code.match(/(\d+)/);
-        if (numberInCode) {
-          const val = Number(numberInCode[1]);
-          if (val > 0 && val <= 50) {
-            discountType = "PERCENTAGE";
-            discountValue = val;
-          } else if (val > 50) {
-            discountType = "FIXED_AMOUNT";
-            discountValue = val;
-          }
-        }
-
-        const discount =
-          discountType === "PERCENTAGE"
-            ? Math.round((subtotal * discountValue) / 100)
-            : Math.min(discountValue, subtotal);
-
-        return {
-          success: true,
-          message: "تم تطبيق الكوبون بنجاح",
-          data: {
-            discount,
-            appliedCoupon: {
-              code,
-              discountType,
-              discountValue,
-              minOrderAmount,
-            },
-          },
-        };
-      }
-
-      throw new Error(data.message || "كود الخصم غير صالح");
-    }
-  } catch (err: any) {
-    if (err.message) throw err;
+  const data = await res.json();
+  if (res.ok && data.success) {
+    return data;
   }
 
-  throw new Error("كود الخصم غير صحيح أو منتهي الصلاحية");
+  throw new Error(data.message || "كود الخصم غير صالح أو منتهي الصلاحية");
 }

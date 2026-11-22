@@ -1,3071 +1,688 @@
-# Project Architecture Rules
-
-## Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript (strict mode)
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Data Fetching**: TanStack React Query v5
-- **Forms**: React Hook Form + Zod
-- **Auth**: NextAuth v4
-- **i18n**: next-intl v4
-- **Toasts**: Sonner
-
----
-
-## Folder Structure
-
-```
-src/
-├── app/
-│   ├── api/
-│   │   └── <route>/
-│   │       └── route.ts                  # Route Handler (avoid exposing tokens/API URL)
-│   ├── <route>/                          # kebab-case always
-│   │   ├── _actions/                     # Private server actions (not reused elsewhere)
-│   │   │   └── <action-name>.action.ts
-│   │   ├── _components/                  # Truly private, one-off components only
-│   │   │   │                             # (page-specific wrappers, unique layout shells)
-│   │   │   │                             # NOT for feature sections — those go in features/
-│   │   │   └── <component-name>.tsx
-│   │   ├── _hooks/                       # Private hooks (not reused elsewhere)
-│   │   │   └── <hook-name>.ts
-│   │   ├── _utils/                       # Private utils (not reused elsewhere)
-│   │   │   └── <utility-name>.ts
-│   │   ├── <nested-route>/               # Nested route segment
-│   │   ├── not-found.tsx
-│   │   ├── error.tsx
-│   │   ├── loading.tsx
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── layout.tsx                        # Root layout
-│   ├── page.tsx
-│   ├── error.tsx
-│   ├── global-error.tsx
-│   ├── not-found.tsx
-│   └── loading.tsx
-│
-├── components/
-│   ├── shared/                           # Small, generic, highly reusable (no feature logic)
-│   │   └── <component-name>.tsx
-│   ├── features/                         # Anything belonging to a feature domain
-│   │   └── <feature-name>/               # Grouped by domain regardless of reuse count
-│   │       └── <component-name>.tsx      # (home/, products/, auth/, bag/, categories/...)
-│   ├── skeletons/
-│   │   ├── shared/                       # Base skeleton parts (e.g. bar.skeleton.tsx)
-│   │   │   └── <component-name>.skeleton.tsx
-│   │   └── <feature-name>/               # Feature skeletons (e.g. product.skeleton.tsx)
-│   │       └── <component-name>.skeleton.tsx
-│   ├── layout/
-│   │   ├── app/                          # Global UI: Navbar, Footer
-│   │   │   └── <component-name>.tsx
-│   │   └── <feature-name>/               # Feature layout: sidebar, auth-header
-│   │       └── <component-name>.tsx
-│   └── ui/                               # shadcn generated — NEVER edit manually
-│       └── <component-name>.tsx
-│
-├── components/providers/
-│   ├── app/
-│   │   ├── index.tsx                     # Groups all global providers
-│   │   └── components/
-│   │       └── <provider>.provider.tsx
-│   └── <feature-name>/
-│       └── <provider-name>.provider.tsx
-│
-├── hooks/
-│   ├── shared/                           # Non-feature-specific hooks
-│   │   └── <hook-name>.ts
-│   └── <feature-name>/                   # Feature-specific hooks
-│       └── <hook-name>.ts
-│
-├── lib/
-│   ├── constants/
-│   │   └── <feature-name>.constant.ts
-│   ├── schemes/                          # Zod validation schemas
-│   │   └── <feature-name>.schema.ts
-│   ├── types/
-│   │   └── <feature-name>.d.ts
-│   ├── utils/
-│   │   └── <feature-name>.util.ts
-│   ├── services/                         # API call functions (fetch wrappers)
-│   │   └── <feature-name>.service.ts
-│   └── actions/                          # Global server actions (reused across routes)
-│       └── <feature-name>.action.ts
-│
-├── messages/
-│   └── <language>.json                   # Flat, one-level translations
-│
-├── i18n/
-│   ├── request.ts
-│   ├── routing.ts
-│   └── navigation.ts
-│
-├── middleware.ts
-└── auth.ts
-```
-
----
-
-## Naming Conventions
-
-| Type          | Convention                  | Example                                |
-| ------------- | --------------------------- | -------------------------------------- |
-| Route folders | kebab-case                  | `forgot-password/`, `product-details/` |
-| Components    | PascalCase                  | `ProductCard.tsx`                      |
-| Hooks         | camelCase + `use` prefix    | `useProducts.ts`                       |
-| Schemas       | camelCase + `Schema` suffix | `loginSchema`                          |
-| Services      | camelCase + feature         | `auth.service.ts`                      |
-| Actions       | camelCase + `Action` suffix | `registerAction`                       |
-| Constants     | SCREAMING_SNAKE_CASE        | `JSON_HEADER`, `BASE_URL`              |
-| Types files   | camelCase + `.d.ts`         | `product.d.ts`                         |
-| Utility files | camelCase + feature         | `date.util.ts`                         |
-
----
-
-## TypeScript Rules
-
-- Never use `any` — use `unknown` and narrow it, or define a proper type
-- Always derive TypeScript types from Zod schemas using `z.infer<typeof schema>`
-- Type all function return values explicitly
-- Prefer discriminated unions over boolean flags
-
-```typescript
-// ✅ Good — type derived from schema
-export type LoginFields = z.infer<typeof loginSchema>;
-
-// ✅ Good — unknown narrowed
-function handleError(error: unknown) {
-  if (error instanceof Error) return error.message;
-  return "Unexpected error";
-}
-
-// ❌ Bad
-const handler = async (data: any) => { ... };
-```
-
----
-
-## File Exports
-
-- One component per file
-- Named exports for all components
-- Default export only for Next.js pages and layouts
-
-```typescript
-// ✅ components/features/products/ProductCard.tsx
-export function ProductCard({ product }: ProductCardProps) { ... }
-
-// ✅ app/products/page.tsx
-export default function ProductsPage() { ... }
-```
-
----
-
-## Code Quality Rules
-
-**Blank lines between sections** — always leave a blank line after `"use client"`, imports, constants, and between logical sections inside a component or function.
-
-**Comments before sections** — add a short, concise comment before each logical section inside a component body. Do not write obvious or long descriptions.
-
-```typescript
-// ✅ Good — concise section comments
-"use client";
-
-import { useTranslations } from "next-intl";
-
-export default function MyComponent() {
-  // Translation
-  const t = useTranslations("products");
-
-  // State
-  const [open, setOpen] = useState(false);
-
-  // Queries
-  const { data } = useProducts();
-
-  // Functions
-  function handleOpen() { setOpen(true); }
-
-  return <></>;
-}
-```
-
-**No commented-out code** — remove all dead code. If intentionally kept, add a clear comment explaining why.
-
-**No `console.log`** — remove all console.log before committing. Use `console.error` only for caught errors if needed.
-
-**No unused imports** — every import must be used. Unused imports increase bundle size.
-
-**Stable keys in lists** — never use array index as a React key. Use a unique, stable identifier from the data.
-
-```typescript
-// ✅ Good
-products.map((product) => <ProductCard key={product.id} product={product} />)
-
-// ❌ Bad
-products.map((product, index) => <ProductCard key={index} product={product} />)
-```
-
----
-
-## Import Order
-
-```typescript
-// 1. React / Next.js core
-import { useState } from "react";
-import { useRouter } from "next-intl"; // NOT next/navigation
-
-// 2. Third-party libraries
-import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
-
-// 3. Internal aliases
-import { Button } from "@/components/ui/button";
-import { loginSchema } from "@/lib/schemes/auth.schema";
-
-// 4. Relative
-import { ProductCard } from "./ProductCard";
-import type { ProductCardProps } from "./types";
-```
-
----
-
-## Component Internal Order
-
-Always follow this order inside every component body:
-
-```typescript
-export default function MyComponent() {
-  // Translation
-  // Navigation
-  // State
-  // Ref
-  // Context
-  // Hooks
-  // Queries
-  // Mutation
-  // Form & validation
-  // Variables  (flexible — use when needed)
-  // Functions
-  // Effects
-
-  return <></>;
-}
-```
-
-## <!--  -->
-
-description: Next.js 14 App Router — Server vs Client components, data fetching strategy, Route Handlers, Suspense, metadata
-globs: ["app/**/*.tsx", "app/**/*.ts"]
-alwaysApply: false
-
----
-
-# Next.js 14 App Router Rules
-
-## Server vs Client Components
-
-Default to Server Components. Add `"use client"` only when the component needs:
-
-- Event listeners (`onClick`, `onChange`, etc.)
-- Browser APIs (`window`, `localStorage`, etc.)
-- React hooks (`useState`, `useEffect`, `useRef`, etc.)
-- Third-party client-only libraries
-
-**Never place `"use client"` on a page or layout.** Keep pages as Server Components and extract the interactive part into a child `_components/` file.
-
-```typescript
-// ✅ app/products/page.tsx — stays Server Component
-export default async function ProductsPage() {
-  const products = await getProducts();
-  return <ProductList products={products} />;
-}
-
-// ✅ app/products/_components/add-to-cart-button.tsx — isolated client boundary
-"use client";
-
-export function AddToCartButton({ productId }: { productId: string }) {
-  const [loading, setLoading] = useState(false);
-  // ...
-}
-```
-
----
-
-## Data Fetching Strategy
-
-**Default: server-side fetching** — call services directly in async Server Components and wrap with `<Suspense>`.
-
-**Client-side fetching** — only when data depends on client state, interactivity, or real-time updates. In these cases, use a Route Handler (`app/api/`) and React Query.
-
-**Never use Axios** — use the native `fetch()` API. Next.js extends `fetch` with built-in caching, revalidation, and deduplication.
-
-```typescript
-// ✅ Server Component with Suspense
-// app/products/page.tsx
-import { Suspense } from "react";
-import { ProductListSkeleton } from "@/components/skeletons/products/product-list.skeleton";
-import { ProductList } from "./_components/product-list";
-
-export default function ProductsPage() {
-  return (
-    <Suspense fallback={<ProductListSkeleton />}>
-      <ProductList />
-    </Suspense>
-  );
-}
-
-// app/products/_components/product-list.tsx — async, so Suspense works
-import { getProducts } from "@/lib/services/product.service";
-
-export async function ProductList() {
-  const products = await getProducts();
-  return (
-    <ul>
-      {products.map((product) => (
-        <li key={product.id}>{product.name}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-**Suspense only works when the child component is `async` and returns a Promise.** A non-async component wrapped in `<Suspense>` has no effect.
-
----
-
-## Mutations Strategy
-
-Always use **Server Actions** for mutations (create, update, delete).
-
-When the mutation is triggered from a **Client Component**, combine the Server Action with a **React Query mutation** via a custom hook for better caching, revalidation, and UX.
-
-Flow: **Server Action → Custom Hook (useMutation) → Form/Client Component**
-
-See `03-mutations.mdc` for the full pattern.
-
----
-
-## Route Handlers (`app/api/`)
-
-Use Route Handlers only when you need to avoid exposing sensitive information (tokens, API URLs) on the client. Do not create a Route Handler for every endpoint — server-side fetching directly in Server Components is preferred.
-
-```typescript
-// app/api/products/route.ts
-import { NextRequest, NextResponse } from "next/server";
-
-import { JSON_HEADER } from "@/lib/constants/api.constant";
-
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const page = searchParams.get("page") ?? "1";
-
-  const res = await fetch(`${process.env.API}/products?page=${page}`, {
-    headers: { ...JSON_HEADER },
-  });
-
-  const data = await res.json();
-
-  return NextResponse.json(data);
-}
-```
-
----
-
-## App Directory Files
-
-| File               | Purpose                                                               |
-| ------------------ | --------------------------------------------------------------------- |
-| `layout.tsx`       | Persistent shell — wraps all children, never re-renders on navigation |
-| `page.tsx`         | Route content — required in every route segment                       |
-| `loading.tsx`      | Shown while server-side promises are pending (auto Suspense boundary) |
-| `error.tsx`        | Catches errors in the segment — must be `"use client"`                |
-| `not-found.tsx`    | Shown when `notFound()` is called inside the segment                  |
-| `global-error.tsx` | Root-level error catch — required at `app/` root                      |
-
-```typescript
-// app/<route>/error.tsx
-"use client";
-
-type ErrorProps = {
-  error: Error & { digest?: string };
-  reset: () => void;
-};
-
-export default function RouteError({ error, reset }: ErrorProps) {
-  return (
-    <div>
-      <p>{error.message}</p>
-      <button onClick={reset}>Try again</button>
-    </div>
-  );
-}
-```
-
----
-
-## Metadata
-
-Export `metadata` or `generateMetadata` from every page:
-
-```typescript
-// Static metadata
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Products",
-  description: "Browse our catalog",
-};
-
-// Dynamic metadata
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
-  const product = await getProduct(params.id);
-
-  return {
-    title: product.name,
-    description: product.description,
-  };
-}
-```
-
----
-
-## Server-Side Search (URL-based)
-
-Search inputs must write to the URL (not local state) and must be debounced. Data must be fetched already filtered from the server — never fetch all data and filter in memory on the client.
-
-```typescript
-// ✅ URL-driven search with debounce
-"use client";
-
-import { useSearchParams } from "next/navigation";         // useSearchParams is NOT locale-specific
-import { useDebouncedCallback } from "use-debounce";
-import { useRouter, usePathname } from "@/i18n/navigation"; // useRouter & usePathname ARE locale-specific
-
-export function SearchInput() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  // Debounced to avoid a request on every keystroke
-  const handleSearch = useDebouncedCallback((value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (value) {
-      params.set("q", value);
-    } else {
-      params.delete("q");
-    }
-
-    router.replace(`${pathname}?${params.toString()}`);
-  }, 400);
-
-  return (
-    <input
-      defaultValue={searchParams.get("q") ?? ""}
-      onChange={(e) => handleSearch(e.target.value)}
-    />
-  );
-}
-```
-
----
-
-## Images
-
-Always use `next/image` — never use the plain `<img>` tag. The Next.js `<Image>` component provides automatic optimization, lazy loading, WebP/AVIF output, CLS prevention, and better Core Web Vitals.
-
-```typescript
-// ✅ Good
-import Image from "next/image";
-
-<Image
-  src={product.imageUrl}
-  alt={product.name}
-  width={400}
-  height={400}
-  className="object-cover"
-/>
-
-// For fill containers
-<div className="relative aspect-square">
-  <Image src={src} alt={alt} fill className="object-cover" />
-</div>
-
-// ❌ Bad
-<img src={product.imageUrl} alt={product.name} />
-```
-
-## <!--  -->
-
-description: Mutations flow — Server Action, custom hook with React Query, form component integration
-globs: ["lib/actions/**", "hooks/**", "**/_actions/**", "**/_hooks/**", "**/*.tsx"]
-alwaysApply: false
-
----
-
-# Mutations Flow
-
-Always follow this three-layer pattern for mutations triggered from Client Components:
-
-```
-Server Action  →  Custom Hook (useMutation)  →  Form / Client Component
-```
-
----
-
-## Layer 1 — Server Action
-
-Place in `lib/actions/<feature>.action.ts` if reused globally, or in `app/<route>/_actions/<name>.action.ts` if private to that route.
-
-```typescript
-// lib/actions/auth.action.ts
-"use server";
-
-import { JSON_HEADER } from "@/lib/constants/api.constant";
-import type { RegistrationFields } from "@/lib/schemes/auth.schema";
-import type { APIResponse, RegisterResponse } from "@/lib/types/auth.d";
-
-export const registerAction = async (
-  fields: RegistrationFields,
-): Promise<APIResponse<RegisterResponse>> => {
-  const response = await fetch(`${process.env.API}/auth/signup`, {
-    method: "POST",
-    body: JSON.stringify(fields),
-    headers: { ...JSON_HEADER },
-  });
-
-  const payload: APIResponse<RegisterResponse> = await response.json();
-
-  return payload;
-};
-```
-
----
-
-## Layer 2 — Custom Hook
-
-Place in `hooks/<feature-name>/<hook-name>.ts` if reused, or `app/<route>/_hooks/<hook-name>.ts` if private.
-
-Always handle `onError` inside the mutation.
-
-```typescript
-// hooks/auth/use-register.ts
-"use client";
-
-import { useMutation } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation"; // useSearchParams is NOT locale-specific
-import { useRouter } from "@/i18n/navigation"; // useRouter IS locale-specific
-
-import { registerAction } from "@/lib/actions/auth.action";
-import type { RegistrationFields } from "@/lib/schemes/auth.schema";
-
-export default function useRegister() {
-  // Navigation
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Mutation
-  const { isPending, error, mutate } = useMutation({
-    mutationFn: async (fields: RegistrationFields) => registerAction(fields),
-    onSuccess: () => {
-      router.push(`/auth/login?${searchParams.toString()}`);
-    },
-    onError: () => {
-      // Error is returned and surfaced in the form
-    },
-  });
-
-  return { isPending, error, register: mutate };
-}
-```
-
----
-
-## Layer 3 — Form Component
-
-Place in `app/<route>/_components/<form-name>.tsx` or `components/features/<feature>/<form-name>.tsx`.
-
-Always follow the internal order: Translation → Navigation → Hooks → Form → Functions.
-
-```typescript
-// app/auth/register/_components/register-form.tsx
-"use client";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { registerSchema, type RegistrationFields } from "@/lib/schemes/auth.schema";
-import useRegister from "@/hooks/auth/use-register";
-
-export default function RegisterForm() {
-  // Translation
-  const t = useTranslations("auth");
-
-  // Hooks
-  const { isPending, error, register } = useRegister();
-
-  // Form
-  const form = useForm<RegistrationFields>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      rePassword: "",
-    },
-  });
-
-  // Functions
-  function onSubmit(values: RegistrationFields) {
-    register(values);
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-
-        {/* First name */}
-        <FormField
-          control={form.control}
-          name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              {/* Label */}
-              <FormLabel>{t("firstname-label")}</FormLabel>
-
-              {/* Field */}
-              <FormControl>
-                <Input
-                  placeholder={t("firstname-placeholder")}
-                  autoComplete="given-name"
-                  {...field}
-                />
-              </FormControl>
-
-              {/* Feedback */}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Submit */}
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? t("registering") : t("register")}
-        </Button>
-
-      </form>
-    </Form>
-  );
-}
-```
-
----
-
-## Services vs Actions
-
-|                 | `lib/services/`                        | `lib/actions/`                        |
-| --------------- | -------------------------------------- | ------------------------------------- |
-| **Runs on**     | Server (called from Server Components) | Server only (`"use server"`)          |
-| **Called from** | Server Components, Route Handlers      | Client Components (via mutation hook) |
-| **Use for**     | GET / read operations                  | POST / PUT / DELETE mutations         |
-
-```typescript
-// lib/services/product.service.ts — used in Server Components
-export async function getProducts(): Promise<Product[]> {
-  const res = await fetch(`${process.env.API}/products`, {
-    next: { revalidate: 300 },
-  });
-  const data: APIResponse<Product[]> = await res.json();
-  return data.payload;
-}
-
-// lib/actions/product.action.ts — used in mutations from Client Components
-("use server");
-
-export const deleteProductAction = async (
-  id: string,
-): Promise<APIResponse<void>> => {
-  const res = await fetch(`${process.env.API}/products/${id}`, {
-    method: "DELETE",
-    headers: { ...JSON_HEADER },
-  });
-  return res.json();
-};
-```
-
----
-
-## Query Key Factory
-
-Centralize all query keys — never hardcode strings inline.
-
-```typescript
-// lib/constants/query-keys.constant.ts
-export const queryKeys = {
-  products: {
-    all: ["products"] as const,
-    list: (filters?: ProductFilters) => ["products", "list", filters] as const,
-    detail: (id: string) => ["products", "detail", id] as const,
-  },
-  orders: {
-    all: ["orders"] as const,
-    byUser: (userId: string) => ["orders", userId] as const,
-  },
-} as const;
-```
-
----
-
-## Read Queries (Client-side)
-
-Wrap every `useQuery` call in a custom hook. Never call `useQuery` directly inside a component.
-
-```typescript
-// hooks/products/use-products.ts
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
-
-import { queryKeys } from "@/lib/constants/query-keys.constant";
-import type { ProductFilters } from "@/lib/types/product.d";
-
-export function useProducts(filters: ProductFilters) {
-  return useQuery({
-    queryKey: queryKeys.products.list(filters),
-    queryFn: () =>
-      fetch(
-        `/api/products?${new URLSearchParams(filters as Record<string, string>)}`,
-      ).then((r) => r.json()),
-    staleTime: 1000 * 60 * 5,
-  });
-}
-```
-
----
-
-## Rules Summary
-
-- ✅ Server Actions for all mutations
-- ✅ Custom hook wraps every mutation/query — never call `useMutation`/`useQuery` raw in components
-- ✅ Always handle `onError` in mutation hooks
-- ✅ Use Next.js `fetch()` — never Axios
-- ✅ Services for reads in Server Components, Actions for mutations from Client Components
-- ✅ Centralize query keys in constants
-- ❌ Never fetch in `useEffect`
-- ❌ Never filter/sort data on the client if it can be done on the server
-<!--  -->
-
----
-
-description: Forms — Zod schema definitions, React Hook Form patterns, shadcn Form components
-globs: ["lib/schemes/**", "**/_components/**", "components/features/**"]
-
-================================================================
-CLEAN CODE - QUICK REFERENCE
-================================================================
-Keep this open while you work.
-If you only remember three things:
-
-1. Write names the next person can read.
-2. Keep functions small.
-3. Don't repeat yourself.
-   Priority when rules clash:
-   Make it work -> Make it readable -> Make it well-structured.
-   ================================================================
-4. # NAMES
-   A good name tells you WHAT and WHY without a comment.
-   BAD:
-   const [data, setData] = useState(null);
-   const [flag, setFlag] = useState(false);
-   GOOD:
-   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-   const [isCheckoutDisabled, setIsCheckoutDisabled] = useState(false);
-   Rules:
-
-- Functions are verbs: getProducts, submitOrder, isLoading.
-- Booleans start with: is / has / should.
-- No magic numbers. Give them a name:
-  BAD: if (day > 5)
-  GOOD: if (day > WORK_DAYS_PER_WEEK)
-- Pick one word per concept. Don't mix get / fetch / retrieve
-  for the same thing across the codebase.
-- # No types inside names (strName, IProduct). The IDE shows the type.
-
-2. # FUNCTIONS
-   Small. One job. Few arguments.
-
-- Aim for ~20 lines or less.
-- A function should do ONE thing. If it does several,
-  those are separate functions it calls.
-  BAD - does everything:
-  async function submitOrder(form) {
-  // validate... format... call API... toast... redirect... log...
-  }
-  GOOD - each step has a name:
-  async function submitOrder(form: OrderForm) {
-  const data = validateOrder(form);
-  const payload = formatOrder(data);
-  await createOrder(payload);
-  notifyOrderPlaced();
-  redirectToConfirmation();
-  }
-  No boolean flag arguments. A flag means the function does two things - split it.
-  BAD: renderItem(item, true)
-  GOOD: renderActiveItem(item);
-  renderInactiveItem(item);
-  More rules:
-- Prefer one object argument over many positional ones.
-- A function either ANSWERS a question or DOES an action. Never both.
-- # No hidden side effects. addProduct only adds a product.
-
-3. # DRY (DON'T REPEAT YOURSELF)
-   Copy-paste is the #1 source of bugs. If you're copying:
-
-- Repeated JSX -> reusable component
-- Repeated logic -> utility function
-- Repeated useEffect /
-  state logic -> custom hook
-  Workflow: make it work first, then refactor.
-  ================================================================
-
-4. # COMMENTS
-   Default: don't write one. A good name is better.
-   AVOID:
-
-- Comments that just restate the code.
-- Commented-out code (git has the history).
-- "Fixed a bug here" diary entries.
-- JSDoc on every function.
-  OK TO USE:
-- Section headers over a GROUP of lines (// State, // Effects).
-- // WARNING: or // TODO: with real context.
-- # Explaining a non-obvious WHY, not WHAT.
-
-5.  # COMPONENT STRUCTURE
-
-    Declare things in this order inside a component, with section
-    comments above each group.
-    Order:
-    Translation -> Navigation -> State -> Ref -> Context -> Query
-    -> Mutation -> Custom hooks -> Form -> Variables -> Functions
-    -> Effects
-    Example:
-    function ProductCard({ id }: { id: string }) {
-    // Translation
-    const t = useTranslations("ProductCard");
-    // Navigation
-    const router = useRouter();
-
-        // State
-        const [isOpen, setIsOpen] = useState(false);
-
-        // Ref
-        const cardRef = useRef<HTMLDivElement>(null);
-
-        // Context
-        const { currency } = useContext(StoreContext);
-
-        // Query
-        const { data: product } = useSuspenseQuery(productQuery(id));
-
-        // Mutation
-        const { mutate: addToCart } = useMutation({ mutationFn: addToCartAction });
-
-        // Custom hooks
-        const { isFavorite, toggleFavorite } = useFavorite(id);
-
-        // Form
-        const form = useForm({ resolver: zodResolver(reviewSchema) });
-
-        // Variables (derived)
-        const formattedPrice = formatPrice(product.price, currency);
-
-        // Functions (handlers)
-        const handleAddToCart = () => addToCart(id);
-
-        // Effects (rare, last)
-        useEffect(() => { /* ... */ }, []);
-        return /* ... */;
-
-    # }
-
-6.  # REACT RULES OF THUMB
-    DERIVE, DON'T DUPLICATE.
-    If you can compute it, don't store it.
-    BAD:
-    const [items, setItems] = useState([]);
-    const [itemCount, setItemCount] = useState(0);
-    GOOD:
-    const [items, setItems] = useState([]);
-    const itemCount = items.length;
-    DON'T PUT PROPS IN STATE.
-    Use the prop directly, or derive from it.
-    useEffect SHOULD BE RARE.
-    If it just syncs derived state, compute it in render instead.
-    USE THE RIGHT TOOL:
-
-- Multiple state pieces change together -> useReducer
-- useMemo / useCallback / memo -> only when needed,
-  not by reflex
-- Values not depending on props/state -> declare OUTSIDE
-  the component
-  OTHER:
-- Use <>...</> instead of a wrapper <div> when no element is needed.
-- # Don't reach for context when local state works.
-
-7. # ERRORS & TYPES
-
-- Use async/await, not .then() chains.
-- Handle errors in ONE shared place, not a try/catch in
-  every component.
-- Show the user a message they understand. Never a raw error.
-- Use optional chaining (a?.b?.c) for possibly-missing values.
-- Never use `any`. Type from the API response, or use `unknown`
-  and narrow.
-  ================================================================
-
-8. # CSS & HTML
-
-- One styling approach per project (Tailwind OR CSS modules,
-  not both).
-- Flexbox vs Grid:
-  Flexbox -> when content shapes the layout
-  (navbar, row of items)
-  Grid -> when layout shapes the content
-  (page templates, card grids)
-- Avoid !important. Fix the specificity instead.
-- Use semantic HTML: <button>, <nav>, <section>.
-  Not <div> for everything.
-- Prefer min() / max() / clamp() / auto-fit over piles of
-  media queries.
-  ================================================================
-
-9. # PROJECT STACK RULES
-   NEXT.JS (App Router, v16):
-
-- Middleware file is `proxy.ts` (not middleware.ts).
-- Server components by default. Push 'use client' down to the
-  smallest interactive leaf. Never on a whole page.
-  TYPESCRIPT:
-- Strict mode. No `any`.
-  TAILWIND v4:
-- Use semantic tokens: bg-primary, text-destructive, border-ring.
-  Never raw hex.
-- Reusable components are w-full, sized by the parent.
-  No baked-in widths like w-82.
-  SHADCN/UI:
-- Use it for primitives.
-  NEXT-INTL (i18n):
-- Locales: /en and /ar. Flat message keys.
-- Never hardcode user-facing strings.
-- For RTL, use logical properties: ps-, pe-, ms-, me-,
-  inset-s-0. Not left / right.
-  FORMS:
-- React Hook Form + Zod. One schema, shared resolver,
-  no manual validation state.
-  SERVER STATE:
-- React Query. Gate devtools behind
-  process.env.NODE_ENV === "development".
-  STRUCTURE:
-- Feature-based folders under src/shared/.
-- Kebab-case route folders.
-- One alias: @/ -> src/.
-  ACCESSIBILITY:
-- <label> linked to each input.
-- aria-label on icon-only buttons.
-- Visible focus-visible states.
-- # aria-invalid + aria-describedby on error fields.
-  # SELF-CHECK BEFORE YOU PUSH
-  [ ] Can someone read my names and know what they do?
-  [ ] Is each function doing ONE thing?
-  [ ] Did I copy-paste anything that should be a
-  component / hook / util?
-  [ ] Any `any` in my types?
-  [ ] Any hardcoded strings that should be in the i18n messages?
-  [ ] Any raw colors instead of semantic tokens?
-  [ ] Any useEffect I could replace with a derived value?
-  [ ] Did I leave commented-out code or console.logs?
-  ================================================================
-  Code is read ~10x more than it's written.
-  Write it for the next person.
-
-\*\*\* End Patch
-alwaysApply: false
-
----
-
-# Forms — React Hook Form + Zod + shadcn
-
-## Schema First
-
-Always define the Zod schema in `lib/schemes/<feature>.schema.ts` before writing the form. Derive the TypeScript type from the schema — never duplicate types.
-
-```typescript
-// lib/schemes/auth.schema.ts
-import { z } from "zod";
-
-export const registerSchema = z
-  .object({
-    firstName: z.string().min(2, "First name must be at least 2 characters"),
-    lastName: z.string().min(2, "Last name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    rePassword: z.string(),
-  })
-  .refine((data) => data.password === data.rePassword, {
-    message: "Passwords do not match",
-    path: ["rePassword"],
-  });
-
-// Always derive types from schemas — never define separately
-export type RegistrationFields = z.infer<typeof registerSchema>;
-```
-
----
-
-## shadcn Form Components
-
-Always use shadcn `<Form>` components with React Hook Form. Never wire up raw native HTML forms.
-
-The shadcn `<Form>` setup provides accessibility, consistent error display, and clean integration with `react-hook-form`'s `control`.
-
-```typescript
-"use client";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { loginSchema, type LoginFields } from "@/lib/schemes/auth.schema";
-
-export function LoginForm() {
-  // Translation
-  const t = useTranslations("auth");
-
-  // Form
-  const form = useForm<LoginFields>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  // Functions
-  function onSubmit(values: LoginFields) {
-    // Pass to mutation hook
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
-        {/* Email */}
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("email-label")}</FormLabel>
-              <FormControl>
-                <Input
-                  type="email"
-                  placeholder={t("email-placeholder")}
-                  autoComplete="email"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Password */}
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("password-label")}</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  placeholder={t("password-placeholder")}
-                  autoComplete="current-password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Submit */}
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {t("login")}
-        </Button>
-
-      </form>
-    </Form>
-  );
-}
-```
-
----
-
-## Field Comment Structure
-
-Every form field must follow this comment structure:
-
-```typescript
-{/* Field name */}
-<FormField
-  control={form.control}
-  name="fieldName"
-  render={({ field }) => (
-    <FormItem>
-      {/* Label */}
-      <FormLabel>{t("label")}</FormLabel>
-
-      {/* Field */}
-      <FormControl>
-        <Input {...field} />
-      </FormControl>
-
-      {/* Feedback */}
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-```
-
----
-
-## Form with Mutation Hook
-
-```typescript
-export default function RegisterForm() {
-  // Translation
-  const t = useTranslations("auth");
-
-  // Hooks
-  const { isPending, register } = useRegister();
-
-  // Form
-  const form = useForm<RegistrationFields>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", rePassword: "" },
-  });
-
-  // Functions
-  function onSubmit(values: RegistrationFields) {
-    register(values);
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        {/* fields */}
-        <Button type="submit" disabled={isPending}>
-          {isPending ? t("submitting") : t("submit")}
-        </Button>
-      </form>
-    </Form>
-  );
-}
-```
-
----
-
-## Rules Summary
-
-- ✅ All schemas go in `lib/schemes/<feature>.schema.ts`
-- ✅ Always derive `type` from schema with `z.infer<typeof schema>`
-- ✅ Always use shadcn `<Form>` + `<FormField>` — never raw HTML forms
-- ✅ Always use `zodResolver` — never manual validation
-- ✅ Use `form.formState.isSubmitting` or mutation `isPending` to disable submit
-- ✅ Server-side errors go to mutation `onError` callback
-- ❌ Never use `useState` to track form field values
-- ❌ Never access `register()` directly — always use `<FormField>` with `control`
-<!--  -->
-
----
-
-description: Component architecture — categories, structure, skeletons, loading/error/empty states
-globs: ["components/**/*.tsx", "app/**/_components/**/*.tsx"]
-alwaysApply: false
-
----
-
-# Component Architecture
-
-## Component Categories
-
-| Folder                            | Purpose                                           | Example                                   |
-| --------------------------------- | ------------------------------------------------- | ----------------------------------------- |
-| `components/shared/`              | Generic, small, highly reusable, no feature logic | `Headline.tsx`, `SectionWrapper.tsx`      |
-| `components/features/<feature>/`  | Feature-specific, less customizable               | `ProductCard.tsx`, `CartSummary.tsx`      |
-| `components/skeletons/<feature>/` | Feature skeleton loaders                          | `product-card.skeleton.tsx`               |
-| `components/skeletons/shared/`    | Base skeleton building blocks                     | `bar.skeleton.tsx`, `circle.skeleton.tsx` |
-| `components/layout/app/`          | Global persistent UI                              | `Navbar.tsx`, `Footer.tsx`                |
-| `components/layout/<feature>/`    | Feature-level layout UI                           | `AuthHeader.tsx`, `DashboardSidebar.tsx`  |
-| `components/ui/`                  | shadcn generated — never edit                     | `button.tsx`, `input.tsx`                 |
-| `app/<route>/_components/`        | Private components, not reused elsewhere          | `register-form.tsx`                       |
-
----
-
-## Props Pattern
-
-Every component that accepts props must have an explicit typed interface. Always pass all required props — never assume defaults unless the prop is explicitly marked optional.
-
-```typescript
-// ✅ Good
-interface ProductCardProps {
-  product: Product;
-  className?: string;
-  onAddToCart?: (id: string) => void;
-}
-
-export function ProductCard({
-  product,
-  className,
-  onAddToCart,
-}: ProductCardProps) {
-  // ...
-}
-```
-
----
-
-## Loading / Error / Empty States
-
-Every data-driven component must handle all three states:
-
-```typescript
-// components/features/products/product-list.tsx
-"use client";
-
-export function ProductList({ filters }: { filters: ProductFilters }) {
-  // Queries
-  const { data: products, isLoading, isError } = useProducts(filters);
-
-  // Loading state
-  if (isLoading) return <ProductListSkeleton />;
-
-  // Error state
-  if (isError) return <ErrorState message="Failed to load products" />;
-
-  // Empty state
-  if (!products?.length) return <EmptyState title="No products found" />;
-
-  return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {products.map((product) => (
-        <li key={product.id}>
-          <ProductCard product={product} />
-        </li>
-      ))}
-    </ul>
-  );
-}
-```
-
----
-
-## Skeleton Pattern
-
-Create a skeleton for every data-driven component. Place it in `components/skeletons/<feature>/`.
-
-Build feature skeletons using base shared skeleton components from `components/skeletons/shared/`.
-
-```typescript
-// components/skeletons/shared/bar.skeleton.tsx
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-
-interface BarSkeletonProps {
-  className?: string;
-}
-
-export function BarSkeleton({ className }: BarSkeletonProps) {
-  return <Skeleton className={cn("h-4 rounded", className)} />;
-}
-
-// components/skeletons/products/product-card.skeleton.tsx
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { BarSkeleton } from "@/components/skeletons/shared/bar.skeleton";
-
-export function ProductCardSkeleton() {
-  return (
-    <Card className="overflow-hidden">
-      <Skeleton className="aspect-square w-full" />
-      <CardContent className="space-y-2 p-4">
-        <BarSkeleton className="w-3/4" />
-        <BarSkeleton className="w-1/2" />
-      </CardContent>
-    </Card>
-  );
-}
-
-// Feature list skeleton
-export function ProductListSkeleton() {
-  return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {/* Index as key is acceptable here — items are static placeholders with no identity or state */}
-      {Array.from({ length: 6 }).map((_, i) => (
-        <li key={i}>
-          <ProductCardSkeleton />
-        </li>
-      ))}
-    </ul>
-  );
-}
-```
-
----
-
-## Suspense Wrapping (Server Components)
-
-When a component fetches data server-side, the parent wraps it in `<Suspense>` with a skeleton fallback. The fetching component must be `async`.
-
-```typescript
-// app/products/page.tsx — Server Component, no "use client"
-import { Suspense } from "react";
-import { ProductListSkeleton } from "@/components/skeletons/products/product-list.skeleton";
-import { ProductList } from "./_components/product-list";
-
-export default function ProductsPage() {
-  return (
-    <section>
-      <Suspense fallback={<ProductListSkeleton />}>
-        <ProductList />
-      </Suspense>
-    </section>
-  );
-}
-
-// app/products/_components/product-list.tsx — must be async
-import { getProducts } from "@/lib/services/product.service";
-
-export async function ProductList() {
-  const products = await getProducts();
-  // ...
-}
-```
-
----
-
-## Dialog Pattern
-
-```typescript
-// components/shared/confirm-dialog.tsx
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-interface ConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
-  onConfirm: () => void;
-  isPending?: boolean;
-  variant?: "default" | "destructive";
-}
-
-export function ConfirmDialog({
-  open,
-  onOpenChange,
-  title,
-  description,
-  onConfirm,
-  isPending,
-  variant = "default",
-}: ConfirmDialogProps) {
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            disabled={isPending}
-            className={
-              variant === "destructive"
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : ""
-            }
-          >
-            {isPending ? "Loading..." : "Confirm"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-```
-
----
-
-## Rules Summary
-
-- ✅ Match the component to its correct category folder
-- ✅ Every data-driven component handles loading, error, and empty states
-- ✅ Every data-driven component has a matching skeleton
-- ✅ All required props must always be passed — unless explicitly optional
-- ✅ Use `key={item.id}` — never `key={index}`
-- ✅ Accept and forward `className` prop for composability
-- ❌ Never use `React.FC` type — use regular function declarations
-- ❌ Never import from a sibling feature folder — promote to `components/shared/`
-- ❌ Never edit files inside `components/ui/`
-<!--  -->
-
----
-
-description: Styling — Tailwind CSS conventions, shadcn/ui usage, cn utility, text casing, no static values
-globs: ["**/*.tsx", "**/*.ts"]
-alwaysApply: false
-
----
-
-# Styling — Tailwind CSS + shadcn/ui
-
-## Pixel-Perfect UI
-
-The UI must match the Figma design **exactly**. Every component must be implemented to pixel-perfect accuracy — spacing, font sizes, colors, border radius, shadows, and responsive breakpoints must all match the design spec precisely.
-
-Before marking any UI task complete:
-
-- Compare side-by-side with the Figma frame
-- Check all breakpoints (`sm`, `md`, `lg`, `xl`)
-- Verify spacing, padding, and margin values match the design tokens
-- Never approximate — if a value doesn't map to a Tailwind class, check the design token or use the exact value from the design system
-
----
-
-## shadcn/ui Rules
-
-Never manually edit files inside `components/ui/`. They are generated and owned by shadcn.
-
-Add components via CLI only:
-
-```bash
-npx shadcn@latest add [component-name]
-```
-
-Extend by wrapping — never by modifying the source:
-
-```typescript
-// ✅ Extend by wrapping — components/shared/loading-button.tsx
-import { Loader2 } from "lucide-react";
-
-import { Button, type ButtonProps } from "@/components/ui/button";
-
-interface LoadingButtonProps extends ButtonProps {
-  isLoading?: boolean;
-  loadingText?: string;
-}
-
-export function LoadingButton({
-  isLoading,
-  loadingText,
-  children,
-  disabled,
-  ...props
-}: LoadingButtonProps) {
-  return (
-    <Button disabled={isLoading || disabled} {...props}>
-      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {isLoading && loadingText ? loadingText : children}
-    </Button>
-  );
-}
-```
-
----
-
-## `cn()` Utility
-
-Use `cn()` whenever you need JavaScript logic inside a `className`. Never use string concatenation or template literals for conditional classes.
-
-```typescript
-import { cn } from "@/lib/utils";
-
-// ✅ Good
-<div className={cn(
-  "base-class another-class",
-  isActive && "active-class",
-  variant === "destructive" && "text-destructive border-destructive",
-  className
-)} />
-
-// ❌ Bad
-<div className={`base-class ${isActive ? "active-class" : ""}`} />
-<div className={"base-class " + (isActive ? "active-class" : "")} />
-```
-
----
-
-## No Static Values in Tailwind
-
-Do not use arbitrary static values like `w-[1280px]`. Always use Tailwind's built-in utility scale. Use the `container` class for consistent page-width layouts.
-
-```typescript
-// ✅ Good
-<div className="container mx-auto px-4">
-<div className="w-full max-w-7xl">
-<div className="h-12 w-12">
-
-// ❌ Bad
-<div className="w-[1280px]">
-<div className="h-[48px] w-[48px]">
-```
-
----
-
-## Text Casing — Use CSS, Not Content
-
-Control text case with Tailwind utility classes. Never hardcode content in uppercase or lowercase in JSX.
-
-```typescript
-// ✅ Good — easy to change later without editing content
-<h2 className="uppercase tracking-widest">section title</h2>
-<span className="capitalize">category name</span>
-
-// ❌ Bad — hardcoded, hard to update
-<h2>SECTION TITLE</h2>
-<span>Category Name</span>
-```
-
----
-
-## Dark Mode — Use CSS Variables
-
-All colors must use shadcn's CSS variable tokens, not hardcoded Tailwind color values. This ensures dark mode works automatically.
-
-```typescript
-// ✅ Good — works in both light and dark mode
-<div className="bg-background text-foreground">
-<p className="text-muted-foreground">
-<div className="border border-border bg-card text-card-foreground">
-<span className="text-destructive">
-
-// ❌ Bad — breaks in dark mode
-<div className="bg-white text-gray-900">
-<p className="text-gray-500">
-<div className="border border-gray-200 bg-white">
-```
-
----
-
-## CVA for Component Variants
-
-Use `class-variance-authority` for components that have multiple visual variants:
-
-```typescript
-// components/shared/status-badge.tsx
-import { cva, type VariantProps } from "class-variance-authority";
-
-import { cn } from "@/lib/utils";
-
-const badgeVariants = cva(
-  "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
-  {
-    variants: {
-      status: {
-        active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
-        inactive: "bg-muted text-muted-foreground",
-        pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
-        error: "bg-destructive/10 text-destructive",
-      },
-    },
-    defaultVariants: {
-      status: "active",
-    },
-  }
-);
-
-interface StatusBadgeProps extends VariantProps<typeof badgeVariants> {
-  className?: string;
-}
-
-export function StatusBadge({ status, className }: StatusBadgeProps) {
-  return <span className={cn(badgeVariants({ status }), className)} />;
-}
-```
-
----
-
-## Lucide Icons
-
-```typescript
-// Always set size via className — not the size prop
-import { ShoppingCart, Trash2 } from "lucide-react";
-
-<ShoppingCart className="h-5 w-5" />
-<Trash2 className="h-4 w-4 text-destructive" />
-```
-
----
-
-## Composability — Accept `className`
-
-Every reusable component should accept and forward a `className` prop:
-
-```typescript
-interface SectionProps extends React.HTMLAttributes<HTMLElement> {
-  title: string;
-}
-
-export function Section({ title, className, children, ...props }: SectionProps) {
-  return (
-    <section className={cn("py-12", className)} {...props}>
-      <h2 className="text-2xl font-bold">{title}</h2>
-      {children}
-    </section>
-  );
-}
-```
-
----
-
-## Rules Summary
-
-- ✅ UI must be pixel-perfect — match the Figma design exactly at all breakpoints
-- ✅ Use `cn()` for all conditional/merged classNames
-- ✅ Use Tailwind utility scale — no arbitrary static values
-- ✅ Use CSS text casing (`uppercase`, `capitalize`) — not hardcoded content
-- ✅ Use shadcn CSS variable tokens for all colors
-- ✅ Use `container` class for page-width layouts
-- ✅ Accept and forward `className` prop in reusable components
-- ❌ Never edit `components/ui/` files
-- ❌ Never use string concatenation for class names
-- ❌ Never use hardcoded color values like `text-gray-500`
-<!--  -->
-
----
-
-description: next-intl v4 — flat translations, navigation imports, RTL support for Arabic, routing config
-globs: ["i18n/**", "messages/**", "**/*.tsx", "**/*.ts", "middleware.ts"]
-alwaysApply: false
-
----
-
-# Internationalization — next-intl v4
-
-## Supported Locales
-
-```typescript
-// i18n/routing.ts
-import { defineRouting } from "next-intl/routing";
-
-export const routing = defineRouting({
-  locales: ["ar", "en"],
-  defaultLocale: "ar",
-});
-
-export type Locale = (typeof routing.locales)[number];
-```
-
----
-
-## Flat Translations — No Nesting
-
-Translation keys must be one-level flat. Never use nested objects inside translation files.
-
-```json
-// ✅ messages/ar.json — flat, one level
-{
-  "login-title": "تسجيل الدخول",
-  "login-email-label": "البريد الإلكتروني",
-  "login-email-placeholder": "example@email.com",
-  "login-password-label": "كلمة المرور",
-  "login-submit": "دخول",
-  "register-title": "إنشاء حساب",
-  "register-firstname-label": "الاسم الأول"
-}
-
-// ❌ Bad — nested translations
-{
-  "login": {
-    "title": "تسجيل الدخول",
-    "email": { "label": "البريد الإلكتروني" }
-  }
-}
-```
-
----
-
-## Navigation Imports
-
-Always import navigation utilities from `next-intl` or the project's `i18n/navigation.ts` — never from `next/navigation`. This ensures locale handling works correctly.
-
-```typescript
-// i18n/navigation.ts
-import { createNavigation } from "next-intl/navigation";
-
-import { routing } from "./routing";
-
-export const { Link, redirect, usePathname, useRouter } =
-  createNavigation(routing);
-```
-
-```typescript
-// ✅ Good — locale-aware navigation
-import { useRouter, usePathname, Link } from "@/i18n/navigation";
-
-// ✅ Good — next-intl hooks
-import { useTranslations, useLocale } from "next-intl";
-
-// ❌ Bad — bypasses locale handling
-import { useRouter, usePathname, Link } from "next/navigation";
-```
-
----
-
-## Using Translations in Server Components
-
-```typescript
-// app/products/page.tsx
-import { getTranslations } from "next-intl/server";
-
-export default async function ProductsPage() {
-  const t = await getTranslations();
-
-  return <h1>{t("products-title")}</h1>;
-}
-```
-
----
-
-## Using Translations in Client Components
-
-```typescript
-"use client";
-
-import { useTranslations } from "next-intl";
-
-export function AddToCartButton() {
-  // Translation
-  const t = useTranslations();
-
-  return <button>{t("product-add-to-cart")}</button>;
-}
-```
-
----
-
-## RTL Support
-
-Set `dir` on the root `<html>` element based on locale:
-
-```typescript
-// app/[locale]/layout.tsx
-import { routing } from "@/i18n/routing";
-
-const rtlLocales = ["ar"];
-
-export default async function LocaleLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  const dir = rtlLocales.includes(locale) ? "rtl" : "ltr";
-
-  return (
-    <html lang={locale} dir={dir}>
-      <body>{children}</body>
-    </html>
-  );
-}
-```
-
----
-
-## RTL-aware Tailwind Classes
-
-Use logical CSS properties (`ms-*`, `me-*`, `ps-*`, `pe-*`, `text-start`, `text-end`) in shared components instead of directional properties. This ensures layout works correctly in both LTR and RTL.
-
-```typescript
-// ✅ Good — works in Arabic (RTL) and English (LTR)
-<div className="ms-4 pe-6 text-start">
-<ul className="ps-4">
-
-// ❌ Bad — breaks in RTL
-<div className="ml-4 pr-6 text-left">
-<ul className="pl-4">
-```
-
----
-
-## Number & Date Formatting
-
-Always use locale-aware formatting with `Intl`:
-
-```typescript
-// ✅ Good
-const formatted = new Intl.NumberFormat(locale, {
-  style: "currency",
-  currency: "EGP",
-}).format(price);
-
-const date = new Intl.DateTimeFormat(locale, {
-  dateStyle: "long",
-}).format(new Date(createdAt));
-```
-
----
-
-## next-intl Middleware
-
-```typescript
-// middleware.ts
-import createMiddleware from "next-intl/middleware";
-
-import { routing } from "./i18n/routing";
-
-export default createMiddleware(routing);
-
-export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
-};
-```
-
----
-
-## Rules Summary
-
-- ✅ Flat (one-level) translation keys only — never nested
-- ✅ Import `useRouter`, `usePathname`, `Link` from `@/i18n/navigation` — not `next/navigation`
-- ✅ Use logical Tailwind classes (`ms-*`, `ps-*`, `text-start`) in shared components
-- ✅ Set `dir` on `<html>` from locale
-- ✅ Pass `locale` to all `Intl` number/date formatters
-- ❌ Never use `text-left` / `text-right` in shared/reusable components
-<!--  -->
-
----
-
-description: NextAuth v4 — auth.ts config, session types, route protection via middleware
-globs: ["auth.ts", "middleware.ts", "lib/actions/auth.action.ts", "hooks/auth/**"]
-alwaysApply: false
-
----
-
-# Authentication — NextAuth v4
-
-## Config (`auth.ts`)
-
-NextAuth config lives at `auth.ts` in the project root (next to `middleware.ts`).
-
-```typescript
-// auth.ts
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-
-import { loginSchema } from "@/lib/schemes/auth.schema";
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/auth/login",
-    error: "/auth/login",
-  },
-  providers: [
-    CredentialsProvider({
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const res = await fetch(`${process.env.API}/auth/login`, {
-          method: "POST",
-          body: JSON.stringify(parsed.data),
-          headers: { "Content-Type": "application/json" },
-        });
-
-        if (!res.ok) return null;
-
-        const user = await res.json();
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          token: user.token,
-        };
-      },
-    }),
-  ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.accessToken = user.token;
-      }
-      return token;
-    },
-    session({ session, token }) {
-      session.user.id = token.id as string;
-      session.user.role = token.role as string;
-      session.user.accessToken = token.accessToken as string;
-      return session;
-    },
-  },
-});
-```
-
----
-
-## Route Handler for NextAuth
-
-```typescript
-// app/api/auth/[...nextauth]/route.ts
-import { handlers } from "@/auth";
-
-export const { GET, POST } = handlers;
-```
-
----
-
-## Type Augmentation
-
-```typescript
-// lib/types/next-auth.d.ts
-import type { DefaultSession } from "next-auth";
-
-declare module "next-auth" {
-  interface Session {
-    user: DefaultSession["user"] & {
-      id: string;
-      role: string;
-      accessToken: string;
-    };
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: string;
-    accessToken: string;
-  }
-}
-```
-
----
-
-## Getting Session
-
-```typescript
-// Server Components / Route Handlers
-import { auth } from "@/auth";
-import { redirect } from "@/i18n/navigation";
-
-export default async function ProtectedPage() {
-  const session = await auth();
-  if (!session) redirect("/auth/login");
-
-  return <div>Hello, {session.user.name}</div>;
-}
-
-// Client Components
-"use client";
-
-import { useSession } from "next-auth/react";
-
-export function UserMenu() {
-  // Hooks
-  const { data: session, status } = useSession();
-
-  if (status === "loading") return <UserMenuSkeleton />;
-  if (!session) return null;
-
-  return <div>{session.user.name}</div>;
-}
-```
-
----
-
-## Middleware — Auth + i18n Combined
-
-```typescript
-// middleware.ts
-import { auth } from "@/auth";
-import createIntlMiddleware from "next-intl/middleware";
-import type { NextRequest } from "next/server";
-
-import { routing } from "./i18n/routing";
-
-const intlMiddleware = createIntlMiddleware(routing);
-
-const protectedRoutes = ["/dashboard", "/profile", "/checkout"];
-
-export default auth(function middleware(req: NextRequest) {
-  const { nextUrl, auth: session } = req as NextRequest & {
-    auth: unknown;
-  };
-  const isProtected = protectedRoutes.some((route) =>
-    nextUrl.pathname.includes(route),
-  );
-
-  if (isProtected && !session) {
-    return Response.redirect(new URL("/auth/login", req.url));
-  }
-
-  return intlMiddleware(req);
-});
-
-export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
-};
-```
-
----
-
-## Rules Summary
-
-- ✅ Auth config lives in `auth.ts` at project root
-- ✅ Augment `Session` and `JWT` types in `lib/types/next-auth.d.ts`
-- ✅ Protect routes in `middleware.ts` — not inside pages
-- ✅ Use `auth()` in Server Components for session
-- ✅ Use `useSession()` in Client Components for session
-- ❌ Never expose raw tokens in session without type augmentation
-<!--  -->
-
----
-
-description: Error handling, Sonner toasts, performance patterns, providers setup
-globs: ["**/*.ts", "**/*.tsx", "providers/**"]
-alwaysApply: false
-
----
-
-# Error Handling, Toasts & Performance
-
-## Sonner Toast Patterns
-
-Import `toast` from `sonner`. Use it inside mutation `onSuccess`/`onError` callbacks or event handlers — never inside render.
-
-```typescript
-import { toast } from "sonner";
-
-// Success
-toast.success("Product created successfully");
-
-// Error
-toast.error("Failed to delete product");
-
-// With description
-toast.error("Upload failed", {
-  description: "File size must be under 5MB",
-});
-
-// Promise — best for async operations with loading state
-toast.promise(saveProduct(data), {
-  loading: "Saving...",
-  success: "Saved!",
-  error: "Failed to save",
-});
-```
-
----
-
-## API Error Handling
-
-```typescript
-// lib/utils/error.util.ts
-
-export function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return "An unexpected error occurred";
-}
-```
-
-Always handle errors in mutation hooks — not in components:
-
-```typescript
-// hooks/products/use-delete-product.ts
-const { mutate } = useMutation({
-  mutationFn: (id: string) => deleteProductAction(id),
-  onSuccess: () => {
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.products.all,
-    });
-    toast.success("Product deleted");
-  },
-  onError: (error) => {
-    toast.error(getErrorMessage(error));
-  },
-});
-```
-
----
-
-## Providers Setup
-
-Group all global providers in `providers/app/index.tsx`. Never scatter provider wrappers across different layout files.
-
-```typescript
-// providers/app/components/query-provider.provider.tsx
-"use client";
-
-import { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-export function QueryProvider({ children }: { children: React.ReactNode }) {
-  // State
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 1000 * 60 * 5,
-            retry: 1,
-          },
-        },
-      })
-  );
-
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-}
-
-// providers/app/index.tsx
-import { SessionProvider } from "next-auth/react";
-import { ThemeProvider } from "next-themes";
-import { Toaster } from "sonner";
-
-import { QueryProvider } from "./components/query-provider.provider";
-
-export function AppProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <SessionProvider>
-      <QueryProvider>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-          <Toaster richColors position="top-center" />
-        </ThemeProvider>
-      </QueryProvider>
-    </SessionProvider>
-  );
-}
-```
-
-```typescript
-// app/layout.tsx
-import { AppProviders } from "@/providers/app";
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html>
-      <body>
-        <AppProviders>{children}</AppProviders>
-      </body>
-    </html>
-  );
-}
-```
-
----
-
-## Performance — Dynamic Imports
-
-Use `next/dynamic` to lazy-load heavy components that are not needed on initial render:
-
-```typescript
-import dynamic from "next/dynamic";
-
-import { CarouselSkeleton } from "@/components/skeletons/shared/carousel.skeleton";
-
-const HeroCarousel = dynamic(
-  () => import("@/components/features/home/hero-carousel"),
-  {
-    ssr: false,
-    loading: () => <CarouselSkeleton />,
-  }
-);
-```
-
----
-
-## Constants File Structure
-
-```typescript
-// lib/constants/api.constant.ts
-export const JSON_HEADER = {
-  "Content-Type": "application/json",
-} as const;
-
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-```
-
----
-
-## Stale Time Guidelines
-
-```typescript
-// lib/constants/query.constant.ts
-export const STALE_TIMES = {
-  REAL_TIME: 0, // Live data (prices, stock)
-  SHORT: 1000 * 30, // 30 seconds
-  STANDARD: 1000 * 60 * 5, // 5 minutes (default)
-  LONG: 1000 * 60 * 30, // 30 minutes (static lists)
-  PERMANENT: Infinity, // User preferences, config
-} as const;
-```
-
----
-
-## Rules Summary
-
-- ✅ All global providers go in `providers/app/index.tsx`
-- ✅ Toast calls go in mutation callbacks — never in render
-- ✅ Always handle `onError` in mutations with `toast.error`
-- ✅ Use `next/dynamic` for heavy client-only components
-- ✅ Set `staleTime` explicitly on all queries
-- ✅ Centralize API headers in `lib/constants/api.constant.ts`
-- ❌ Never leave `console.log` in committed code
-  # <!--  -->
-  # CLEAN CODE - QUICK REFERENCE
-  Keep this open while you work.
-  If you only remember three things:
-
-1. Write names the next person can read.
-2. Keep functions small.
-3. Don't repeat yourself.
-   Priority when rules clash:
-   Make it work -> Make it readable -> Make it well-structured.
-   ================================================================
-4. # NAMES
-   A good name tells you WHAT and WHY without a comment.
-   BAD:
-   const [data, setData] = useState(null);
-   const [flag, setFlag] = useState(false);
-   GOOD:
-   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-   const [isCheckoutDisabled, setIsCheckoutDisabled] = useState(false);
-   Rules:
-
-- Functions are verbs: getProducts, submitOrder, isLoading.
-- Booleans start with: is / has / should.
-- No magic numbers. Give them a name:
-  BAD: if (day > 5)
-  GOOD: if (day > WORK_DAYS_PER_WEEK)
-- Pick one word per concept. Don't mix get / fetch / retrieve
-  for the same thing across the codebase.
-- # No types inside names (strName, IProduct). The IDE shows the type.
-
-2. # FUNCTIONS
-   Small. One job. Few arguments.
-
-- Aim for ~20 lines or less.
-- A function should do ONE thing. If it does several,
-  those are separate functions it calls.
-  BAD - does everything:
-  async function submitOrder(form) {
-  // validate... format... call API... toast... redirect... log...
-  }
-  GOOD - each step has a name:
-  async function submitOrder(form: OrderForm) {
-  const data = validateOrder(form);
-  const payload = formatOrder(data);
-  await createOrder(payload);
-  notifyOrderPlaced();
-  redirectToConfirmation();
-  }
-  No boolean flag arguments. A flag means the function does two things - split it.
-  BAD: renderItem(item, true)
-  GOOD: renderActiveItem(item);
-  renderInactiveItem(item);
-  More rules:
-- Prefer one object argument over many positional ones.
-- A function either ANSWERS a question or DOES an action. Never both.
-- # No hidden side effects. addProduct only adds a product.
-
-3. # DRY (DON'T REPEAT YOURSELF)
-   Copy-paste is the #1 source of bugs. If you're copying:
-
-- Repeated JSX -> reusable component
-- Repeated logic -> utility function
-- Repeated useEffect /
-  state logic -> custom hook
-  Workflow: make it work first, then refactor.
-  ================================================================
-
-4. # COMMENTS
-   Default: don't write one. A good name is better.
-   AVOID:
-
-- Comments that just restate the code.
-- Commented-out code (git has the history).
-- "Fixed a bug here" diary entries.
-- JSDoc on every function.
-  OK TO USE:
-- Section headers over a GROUP of lines (// State, // Effects).
-- // WARNING: or // TODO: with real context.
-- # Explaining a non-obvious WHY, not WHAT.
-
-5.  # COMPONENT STRUCTURE
-
-    Declare things in this order inside a component, with section
-    comments above each group.
-    Order:
-    Translation -> Navigation -> State -> Ref -> Context -> Query
-    -> Mutation -> Custom hooks -> Form -> Variables -> Functions
-    -> Effects
-    Example:
-    function ProductCard({ id }: { id: string }) {
-    // Translation
-    const t = useTranslations("ProductCard");
-    // Navigation
-    const router = useRouter();
-
-        // State
-        const [isOpen, setIsOpen] = useState(false);
-
-        // Ref
-        const cardRef = useRef<HTMLDivElement>(null);
-
-        // Context
-        const { currency } = useContext(StoreContext);
-
-        // Query
-        const { data: product } = useSuspenseQuery(productQuery(id));
-
-        // Mutation
-        const { mutate: addToCart } = useMutation({ mutationFn: addToCartAction });
-
-        // Custom hooks
-        const { isFavorite, toggleFavorite } = useFavorite(id);
-
-        // Form
-        const form = useForm({ resolver: zodResolver(reviewSchema) });
-
-        // Variables (derived)
-        const formattedPrice = formatPrice(product.price, currency);
-
-        // Functions (handlers)
-        const handleAddToCart = () => addToCart(id);
-
-        // Effects (rare, last)
-        useEffect(() => { /* ... */ }, []);
-        return /* ... */;
-
-    # }
-
-6.  # REACT RULES OF THUMB
-    DERIVE, DON'T DUPLICATE.
-    If you can compute it, don't store it.
-    BAD:
-    const [items, setItems] = useState([]);
-    const [itemCount, setItemCount] = useState(0);
-    GOOD:
-    const [items, setItems] = useState([]);
-    const itemCount = items.length;
-    DON'T PUT PROPS IN STATE.
-    Use the prop directly, or derive from it.
-    useEffect SHOULD BE RARE.
-    If it just syncs derived state, compute it in render instead.
-    USE THE RIGHT TOOL:
-
-- Multiple state pieces change together -> useReducer
-- useMemo / useCallback / memo -> only when needed,
-  not by reflex
-- Values not depending on props/state -> declare OUTSIDE
-  the component
-  OTHER:
-- Use <>...</> instead of a wrapper <div> when no element is needed.
-- # Don't reach for context when local state works.
-
-7. # ERRORS & TYPES
-
-- Use async/await, not .then() chains.
-- Handle errors in ONE shared place, not a try/catch in
-  every component.
-- Show the user a message they understand. Never a raw error.
-- Use optional chaining (a?.b?.c) for possibly-missing values.
-- Never use `any`. Type from the API response, or use `unknown`
-  and narrow.
-  ================================================================
-
-8. # CSS & HTML
-
-- One styling approach per project (Tailwind OR CSS modules,
-  not both).
-- Flexbox vs Grid:
-  Flexbox -> when content shapes the layout
-  (navbar, row of items)
-  Grid -> when layout shapes the content
-  (page templates, card grids)
-- Avoid !important. Fix the specificity instead.
-- Use semantic HTML: <button>, <nav>, <section>.
-  Not <div> for everything.
-- Prefer min() / max() / clamp() / auto-fit over piles of
-  media queries.
-  ================================================================
-
-9. # PROJECT STACK RULES
-   NEXT.JS (App Router, v16):
-
-- Middleware file is `proxy.ts` (not middleware.ts).
-- Server components by default. Push 'use client' down to the
-  smallest interactive leaf. Never on a whole page.
-  TYPESCRIPT:
-- Strict mode. No `any`.
-  TAILWIND v4:
-- Use semantic tokens: bg-primary, text-destructive, border-ring.
-  Never raw hex.
-- Reusable components are w-full, sized by the parent.
-  No baked-in widths like w-82.
-  SHADCN/UI:
-- Use it for primitives.
-  NEXT-INTL (i18n):
-- Locales: /en and /ar. Flat message keys.
-- Never hardcode user-facing strings.
-- For RTL, use logical properties: ps-, pe-, ms-, me-,
-  inset-s-0. Not left / right.
-  FORMS:
-- React Hook Form + Zod. One schema, shared resolver,
-  no manual validation state.
-  SERVER STATE:
-- React Query. Gate devtools behind
-- process.env.NODE_ENV === "development".
-  STRUCTURE:
-- Feature-based folders under src/shared/.
-- Kebab-case route folders.
-- One alias: @/ -> src/.
-  ACCESSIBILITY:
-- <label> linked to each input.
-- aria-label on icon-only buttons.
-- Visible focus-visible states.
-- # aria-invalid + aria-describedby on error fields.
-  # SELF-CHECK BEFORE YOU PUSH
-  [ ] Can someone read my names and know what they do?
-  [ ] Is each function doing ONE thing?
-  [ ] Did I copy-paste anything that should be a
-  component / hook / util?
-  [ ] Any `any` in my types?
-  [ ] Any hardcoded strings that should be in the i18n messages?
-  [ ] Any raw colors instead of semantic tokens?
-  [ ] Any useEffect I could replace with a derived value?
-  [ ] Did I leave commented-out code or console.logs?
-  ================================================================
-  Code is read ~10x more than it's written.
-  Write it for the next person.
-
-# Project Rules
-
-## Framework & Language
-
-- This project uses Next.js 16.
-- Use the current Next.js 16 APIs, conventions, and recommended patterns.
-- Always use TypeScript.
-- Write strongly typed code.
-- Avoid `any` completely unless there is a truly unavoidable technical reason.
-- Prefer type inference where it keeps the code clear.
-- Define explicit types for component props, API responses, form data, server actions, and important data structures.
-- Do not use outdated Next.js patterns when a Next.js 16 approach is available.
-
----
-
-## Server-First Architecture
-
-- The default architecture is Server Components.
-- When fetching data, ALWAYS prefer fetching from Server Components first.
-- Do NOT use Client Components for data fetching unless there is a real client-side requirement.
-- Do not add `"use client"` unnecessarily.
-- Keep the Client Component boundary as small as possible.
-- Prefer passing server-fetched data to Client Components as props.
-- Avoid fetching the same data again on the client when it can already be fetched on the server.
-- Before creating a Client Component, ask whether the component actually needs:
-  - React state
-  - browser APIs
-  - event handlers
-  - client-only libraries
-  - React Query client-side behavior
-- If none of these are required, keep it as a Server Component.
-
----
-
-## Sensitive Data & Authentication
-
-- NEVER expose sensitive credentials, access tokens, refresh tokens, API secrets, or private authentication data to the client.
-- If a request requires sending a token or other sensitive authentication data and a client-side request is genuinely required:
-  - Create a Next.js Route Handler.
-  - Keep the token handling on the server.
-  - The Client Component must communicate with the Route Handler instead of directly accessing sensitive credentials.
-- Never put secrets or private tokens in client-side code.
-- Never expose server-only environment variables to the browser.
-- Prefer server-side authentication and authorization checks.
-- Keep all sensitive authentication logic on the server.
-- Never store sensitive tokens in localStorage or sessionStorage.
-- Prefer secure, HttpOnly cookies for session management.
-- Always validate authentication and authorization on the server
-
----
-
-## Data Fetching
-
-- Prefer Server Components for initial data fetching.
-- Always fetch data on the server first, preferably using React Server Components. Only use client-side data fetching when there is a genuine client-side requirement that cannot be efficiently handled on the server.
-- Fetch data as close to the server boundary as possible.
-- Avoid unnecessary client-side requests.
-- Avoid waterfalls when fetching independent data.
-- Parallelize independent server requests when possible.
-- Reuse existing server-side fetching utilities instead of duplicating API logic.
-- Keep API communication and data transformation logic separated from UI components.
-- Always consider caching behavior before implementing a fetch.
-- Choose an appropriate caching/revalidation strategy based on the nature of the data.
-- Do not disable caching by default.
-- Do not use aggressive revalidation or `no-store` unless there is a specific reason.
-- For frequently changing or user-specific data, carefully evaluate whether caching is safe.
-- Never cache private or user-specific data in a way that could expose it to another user.
-
----
-
-## Mutations
-
-- All mutations should be implemented as Server Actions by default.
-- Do NOT implement mutations as normal client-side API requests when a Server Action is appropriate.
-- Server Actions are responsible for:
-  - authentication/authorization checks
-  - validation
-  - business logic
-  - database/API mutation
-  - error handling
-- Validate all incoming mutation data with Zod on the server.
-- Never trust client-side validation alone.
-- After a mutation, properly invalidate/revalidate affected cached data when necessary.
-- Keep Server Actions focused and reusable.
-
-### React Query + Mutations
-
-- React Query should be used when client-side mutation state or query management is actually needed.
-- When using React Query for mutations:
-  - The mutation should call the Server Action.
-  - React Query manages the client-side mutation lifecycle.
-  - Do not move the actual business logic into the Client Component.
-- Keep the Server Action as the source of truth for the mutation.
-- Properly invalidate or update affected React Query caches after successful mutations.
-
----
-
-## React Query
-
-- Do not use React Query automatically for every query.
-- Prefer Server Components for initial/SSR data fetching.
-- Use React Query when client-side caching, refetching, polling, optimistic updates, or interactive query state provides real value.
-- Avoid fetching the same data with both Server Components and React Query unless hydration/dehydration or a clear client-side requirement justifies it.
-- Configure stale times and cache behavior intentionally.
-- Avoid unnecessary refetches.
-- Avoid duplicate requests.
-- Use query keys that are stable, predictable, and properly scoped.
-- Keep query logic in dedicated hooks/utilities rather than scattering it throughout components.
-
----
-
-## State Management
+# Frontend Agent Engineering Rules
+
+> **Purpose:** Build production-ready frontend features that are secure,
+> accessible, responsive, maintainable, and performant. Prefer the
+> simplest correct solution that fits the existing project. These rules
+> guide decisions; they are not a reason to add unnecessary complexity.
+
+------------------------------------------------------------------------
+
+## 1. Core Principles
+
+1.  Understand the requirement and existing code before changing
+    anything.
+2.  Prefer correctness, clarity, security, and maintainability over
+    speed or cleverness.
+3.  Follow the project's established conventions unless there is a clear
+    technical reason to improve them.
+4.  Make the smallest focused change that fully solves the task.
+5.  Do not refactor unrelated code without a good reason.
+6.  Do not invent requirements, APIs, files, dependencies, or project
+    conventions.
+7.  When requirements are ambiguous and the ambiguity materially affects
+    implementation, ask one concise clarifying question. Otherwise, make
+    a reasonable, low-risk assumption and state it.
+8.  Do not claim that code works, tests pass, or a task is complete
+    unless the relevant checks were actually performed.
+9.  Think through likely user behavior, edge cases, failure states, and
+    the impact of changes before implementation.
+10. Prefer well-supported platform features over adding a dependency.
+
+## 2. Framework, Language, and Version Awareness
+
+-   This project uses **Next.js 16** and **TypeScript**.
+-   Use APIs and conventions compatible with the versions installed in
+    the project.
+-   Check `package.json`, lockfiles, and existing implementation before
+    assuming a library or framework version.
+-   For unfamiliar or version-sensitive behavior, consult the official
+    documentation when available.
+-   Never invent API methods, configuration options, or framework
+    behavior.
+-   Do not use outdated Next.js patterns when a supported Next.js 16
+    approach is available.
+-   Use strongly typed code.
+-   Avoid `any` completely unless there is a genuinely unavoidable
+    technical reason. If unavoidable, isolate it, explain why, and
+    narrow the value immediately.
+-   Prefer type inference when it improves readability; define explicit
+    types for component props, API responses, form data, Server Actions,
+    and important domain structures.
+-   Avoid unsafe type assertions and non-null assertions. Validate or
+    narrow values instead.
+-   Never silence errors with `@ts-ignore`. Use `@ts-expect-error` only
+    for a documented, intentional, verified case.
+
+## 3. Required Agent Workflow
+
+Follow this workflow for every meaningful task.
+
+### 3.1 Understand
+
+-   Identify the requested outcome and acceptance criteria.
+-   Understand the user flow and expected behavior.
+-   Identify constraints, edge cases, and affected areas.
+
+### 3.2 Inspect
+
+-   Inspect the relevant files and existing architecture before editing.
+-   Check for reusable components, hooks, utilities, schemas, services,
+    and established patterns.
+-   Inspect installed dependencies and their versions before using them.
+-   Do not assume a file's contents from its name.
+
+### 3.3 Plan
+
+-   Decide which files need to change and why.
+-   Decide whether the work belongs on the server or client.
+-   Decide whether React Query, Zustand, React Hook Form, or another
+    library is actually needed.
+-   Consider caching, validation, security, accessibility, responsive
+    behavior, and performance.
+-   Keep the plan proportional to the task. Do not create a lengthy plan
+    for a trivial change.
+
+### 3.4 Implement
+
+-   Make focused, incremental changes.
+-   Reuse existing project patterns and design-system components.
+-   Keep business logic separate from presentation where practical.
+-   Avoid unrelated formatting churn and broad rewrites.
+
+### 3.5 Verify
+
+-   Run the most relevant checks available, such as TypeScript, linting,
+    tests, and production build.
+-   Test the changed behavior and important edge cases when practical.
+-   Inspect the final diff for regressions, accidental changes, debug
+    code, and incomplete work.
+-   If a check cannot be run, say so clearly. Never report an unrun
+    check as passing.
+
+### 3.6 Report
+
+At completion, briefly report: - What changed. - Important
+implementation decisions. - Which checks were actually run and their
+results. - Any known limitations, assumptions, or remaining work.
+
+------------------------------------------------------------------------
+
+## 4. Server-First Architecture
+
+-   The default architecture is **React Server Components**.
+-   Prefer fetching initial data in Server Components.
+-   Do not use Client Components for data fetching unless there is a
+    real client-side requirement.
+-   Do not add `"use client"` unnecessarily.
+-   Keep Client Component boundaries as small as possible.
+-   Prefer passing server-fetched data to Client Components as
+    serializable props.
+-   Avoid fetching the same data again on the client when it is already
+    available from the server.
+-   Before creating a Client Component, determine whether it needs React
+    state, browser APIs, event handlers, client-only libraries, or
+    client-side query behavior.
+-   If none are needed, keep it as a Server Component.
+-   Keep server-only modules, secrets, database clients, and privileged
+    operations out of the client bundle.
+-   Do not import server-only modules into Client Components.
+-   Use the project's existing server/client separation conventions.
+
+## 5. Sensitive Data, Authentication, and Authorization
+
+-   Never expose credentials, API secrets, access tokens, refresh
+    tokens, private keys, or private authentication data to the browser.
+-   Never expose server-only environment variables through client-side
+    code or public environment variable prefixes.
+-   Prefer server-side authentication and authorization checks.
+-   Authentication is not authorization: verify that the current user is
+    allowed to perform the requested action on the requested resource.
+-   Never trust client-provided user IDs, roles, permissions, prices,
+    ownership, or other security-sensitive values.
+-   When a client-side request genuinely needs privileged credentials,
+    route it through a server-side endpoint or Server Action; keep
+    credential handling on the server.
+-   Apply authorization checks to every protected Server Action and
+    Route Handler, not only to the page that calls it.
+-   Avoid leaking whether protected resources exist when that
+    information is sensitive.
+-   Never weaken security to make implementation easier.
+
+## 6. Data Fetching and API Boundaries
+
+-   Prefer Server Components for initial and server-rendered data
+    fetching.
+-   Fetch data as close to the server boundary as practical.
+-   Avoid unnecessary client-side requests and duplicate requests.
+-   Avoid waterfalls by running independent server requests in parallel
+    when possible.
+-   Reuse existing server-side fetching utilities instead of duplicating
+    API logic.
+-   Keep API communication, response validation, and data transformation
+    separate from UI components.
+-   Validate external API responses at runtime when their shape is not
+    guaranteed.
+-   Handle network failures, timeouts, missing data, and unexpected
+    response shapes intentionally.
+-   Do not expose internal service details or sensitive upstream error
+    messages to users.
+-   Use Route Handlers for HTTP interfaces such as public APIs,
+    webhooks, and integrations that need an HTTP endpoint.
+-   Do not create a Route Handler solely to proxy an internal server
+    call when a direct server-side function or Server Action is more
+    appropriate.
+
+## 7. Caching and Revalidation
+
+Caching must be considered for every data-fetching implementation.
+
+Before writing a fetch, determine: 1. Is the data public, shared, or
+user-specific? 2. Can it be cached safely? 3. How long should it remain
+fresh? 4. What event should invalidate or revalidate it? 5. Could
+caching return stale, incorrect, or another user's data?
+
+Rules: - Prefer caching when data can safely be shared. - Never cache
+private or user-specific data in a way that can leak between users. -
+Use the caching and revalidation APIs supported by the installed Next.js
+16 version. - Do not assume caching defaults; verify the current
+framework behavior and configure intentionally. - Avoid `no-store` as a
+blanket default. Use it when the data's sensitivity or freshness
+requirements justify it. - After mutations, invalidate or revalidate the
+relevant data rather than disabling caching globally. - Avoid duplicate
+cache layers unless each layer has a clear responsibility. - Define
+clear responsibilities between Next.js server caching and React Query
+caching. - Document non-obvious caching decisions when they affect
+correctness or security.
+
+## 8. Mutations and Server Actions
+
+-   Prefer Server Actions for mutations initiated by the Next.js
+    application when they fit the use case.
+-   Use Route Handlers when an HTTP endpoint is required, such as for
+    webhooks, public APIs, or external integrations.
+-   Server Actions must perform, as appropriate:
+    -   Authentication and authorization.
+    -   Runtime input validation.
+    -   Business logic.
+    -   Database or upstream API mutation.
+    -   Intentional error handling.
+    -   Cache invalidation or revalidation.
+-   Validate all untrusted mutation input on the server, preferably with
+    Zod.
+-   Never rely on client-side validation alone.
+-   Never trust hidden form fields or client-provided ownership and
+    permission values.
+-   Keep Server Actions focused and reusable.
+-   Return safe, predictable result shapes for expected validation or
+    business errors.
+-   Do not expose stack traces, secrets, or internal server details.
+-   Revalidate only the affected paths, tags, or data.
+
+### React Query and Mutations
+
+-   Use React Query for mutation lifecycle management only when it
+    provides real value, such as optimistic updates, client-side cache
+    coordination, or complex interactive mutation state.
+-   When React Query manages a mutation, the mutation function should
+    call the Server Action or appropriate server endpoint.
+-   Keep business logic and authorization on the server.
+-   Update or invalidate relevant React Query caches after successful
+    mutations.
+-   Avoid maintaining conflicting copies of the same server data.
+
+## 9. React Query
+
+-   Do not use React Query automatically for every query.
+-   Prefer Server Components for initial and server-rendered data.
+-   Use React Query when client-side caching, refetching, polling,
+    optimistic updates, infinite loading, or interactive query state
+    provides real value.
+-   Avoid fetching the same data through both Server Components and
+    React Query unless hydration/dehydration or a clear client-side
+    requirement justifies it.
+-   Configure query keys, stale times, garbage collection, retries, and
+    refetch behavior intentionally.
+-   Use stable, predictable, correctly scoped query keys.
+-   Include relevant user, tenant, filter, and pagination scope in keys
+    when needed; never let one user's data appear in another user's
+    cache.
+-   Keep query logic in dedicated hooks or utilities rather than
+    scattering it throughout components.
+-   Avoid unnecessary refetches, duplicate requests, and aggressive
+    polling.
+-   Handle loading, error, empty, and success states.
+
+## 10. State Management
+
+### Local React State
+
+-   Keep state local to the smallest component subtree that needs it.
+-   Do not create state for values that can be derived from props or
+    existing state.
+-   Avoid duplicating server data in local state.
+-   Avoid unnecessary state and effects.
+-   Use `useReducer` when several related state values transition
+    together or when state transitions are complex; do not use it merely
+    for style.
 
 ### Zustand
 
-- Use Zustand for global client-side state only when the state genuinely needs to be shared across Client Components.
-- Do not use Zustand for server data that belongs in Server Components or React Query.
-- Do not duplicate server state in Zustand.
-- Keep Zustand stores small and focused.
-- Avoid unnecessary global state.
-
-### React Hook Form
-
-- Use React Hook Form for complex or interactive forms.
-- Keep form state local to the form whenever possible.
-- Avoid unnecessary controlled inputs when React Hook Form can manage them efficiently.
-
-### Zod
-
-- Use Zod as the source of truth for runtime validation.
-- Validate form input with Zod.
-- Validate Server Action input on the server.
-- Do not rely only on TypeScript for runtime validation.
-- Reuse schemas when appropriate instead of duplicating validation rules.
-- Infer TypeScript types from Zod schemas when possible.
-
----
-
-## UI
-
-- Use shadcn/ui as the primary UI component system.
-- Prefer existing shadcn/ui components before creating custom equivalents.
-- Do not recreate a component that already exists in shadcn/ui unless there is a strong reason.
-- Follow the existing project's shadcn/ui conventions.
-- Keep UI components reusable and composable.
-- Keep business logic out of presentational components whenever possible.
-
-### Design System
-
-- If the project contains an existing Design System, ALWAYS follow it.
-- Reuse existing design tokens, colors, typography, spacing, radius, shadows, and component patterns.
-- Do not introduce arbitrary colors when a Design System token already exists.
-- Use the Design System's colors and visual language consistently.
-- Do not invent new UI patterns unnecessarily.
-- When adding a new component, make it visually consistent with the existing Design System.
-
-### Responsive Design
-
-- All UI must be responsive.
-- Design mobile-first when appropriate.
-- Consider mobile, tablet, and desktop layouts.
-- Avoid fixed dimensions when they can cause overflow or broken layouts.
-- Test components across different viewport sizes.
-
-### Accessibility
-
-- Consider accessibility in every UI implementation.
-- Use semantic HTML where possible.
-- Use proper labels for form controls.
-- Ensure interactive elements are keyboard accessible.
-- Use appropriate ARIA attributes when necessary.
-- Maintain reasonable focus states.
-- Do not sacrifice accessibility for visual appearance.
-
----
-
-## Performance
-
-- Performance is a first-class requirement.
-- Always look for opportunities to improve performance without unnecessarily complicating the code.
-- Minimize Client Components.
-- Minimize JavaScript sent to the browser.
-- Prefer Server Components whenever possible.
-- Avoid unnecessary re-renders.
-- Avoid unnecessary state.
-- Avoid unnecessary `useEffect`.
-- Avoid unnecessary memoization; use `memo`, `useMemo`, and `useCallback` only when they provide a meaningful benefit.
-- Avoid unnecessary network requests.
-- Avoid duplicate data fetching.
-- Lazy-load heavy client-side components when appropriate.
-- Optimize images using Next.js image optimization.
-- Avoid importing large libraries when a smaller or native solution is sufficient.
-- Prefer server-side computation when it reduces client-side work.
-
----
-
-## Caching
-
-Caching must always be considered when implementing data fetching.
-
-Before writing a fetch, determine:
-
-1. Is the data public or user-specific?
-2. Can it be cached safely?
-3. How long should it remain fresh?
-4. What event should invalidate/revalidate it?
-5. Could caching cause stale or incorrect data?
-
-Rules:
-
-- Prefer caching when data can safely be cached.
-- Never cache private/user-specific data in a way that can leak between users.
-- Use appropriate Next.js caching and revalidation mechanisms.
-- Avoid `no-store` as a default solution.
-- After mutations, invalidate or revalidate the relevant data instead of unnecessarily disabling caching globally.
-- Avoid duplicate cache layers unless there is a clear reason.
-- React Query caching and Next.js server caching should have clearly defined responsibilities.
-
----
-
-## Code Quality
-
-- Always improve the code when making changes.
-- Prefer clean, simple, maintainable solutions.
-- Do not over-engineer.
-- Avoid premature abstractions.
-- Avoid duplicated logic.
-- Extract reusable logic when duplication becomes meaningful.
-- Keep functions and components focused.
-- Prefer composition over complicated conditional logic.
-- Follow existing project conventions before introducing new patterns.
-- Do not refactor unrelated code unless necessary for the requested change.
-- Remove dead code when you encounter it and it is safe to do so.
-- Do not leave temporary debugging code such as `console.log` in production code.
-
----
-
-## Comments & Documentation
-
-- Write useful comments.
-- Comments should explain WHY something is done, not simply WHAT the code does.
-- Add comments for:
-  - complex business logic
-  - non-obvious architectural decisions
-  - caching decisions
-  - performance optimizations
-  - workarounds
-  - security considerations
-  - complex algorithms
-- Do not add meaningless comments to obvious code.
-- Keep comments accurate when modifying code.
-- If existing code has confusing logic, improve the comment while improving the implementation.
-
----
-
-## Error Handling
-
-- Handle errors intentionally.
-- Do not silently swallow errors.
-- Provide meaningful error messages.
-- Never expose sensitive server errors to the client.
-- Validate all external/user input.
-- Handle loading, error, and empty states where appropriate.
-- Keep error handling consistent with the project's existing patterns.
-
----
-
-## Security
-
-- Never expose secrets, tokens, credentials, or private environment variables to the client.
-- Never trust client-provided data.
-- Always validate and authorize Server Actions.
-- Validate Route Handler input.
-- Validate external API responses when appropriate.
-- Avoid unsafe HTML rendering.
-- Do not bypass authentication or authorization checks.
-- Do not weaken security to make an implementation easier.
-
----
-
-## File & Architecture Rules
-
-- Follow the existing project folder structure.
-- Reuse existing utilities, hooks, components, schemas, and services before creating new ones.
-- Keep related code close together when the project's architecture follows feature-based organization.
-- Do not move files or change architecture without a good reason.
-- Do not create unnecessary abstraction layers.
-- Keep server-only code server-only.
-- Keep client-only code isolated behind Client Component boundaries.
-
----
-
-## Before Making Changes
-
-Before implementing a feature:
-
-1. Inspect the existing architecture.
-2. Look for existing components/utilities/hooks that can be reused.
-3. Determine whether the implementation belongs on the server or client.
-4. Determine the appropriate caching strategy.
-5. Determine whether React Query is actually necessary.
-6. Check whether shadcn/ui already provides the required component.
-7. Check the existing Design System.
-8. Consider performance and accessibility.
-9. Implement the smallest clean solution.
-10. Verify TypeScript correctness and avoid introducing unnecessary dependencies.
-
----
-
-## React Compiler & Re-render Optimization
-
-- Prefer React Compiler for automatic memoization when enabled and compatible with the project.
-- Do not manually add `memo`, `useMemo`, or `useCallback` everywhere.
-- Use manual memoization only when profiling proves a meaningful benefit or a stable reference is required.
-- Follow the Rules of React to maintain React Compiler compatibility.
-- Keep state as close as possible to the components that use it.
-- Avoid lifting state unnecessarily.
-- Split large Client Components when unrelated state updates cause excessive re-renders.
-- Do not store values in state when they can be derived during rendering.
-- Avoid using `useEffect` to synchronize derived state.
-- Avoid unnecessary effects that trigger additional render cycles.
-- Prefer event handlers over effects for user-triggered logic.
-- Use `useRef` for mutable values that do not need to trigger renders.
-- Avoid passing unstable object or function references when referential stability is necessary.
-- Do not optimize components based on assumptions. Use React DevTools Profiler to identify actual rendering problems.
-- Avoid unnecessary Context Provider updates affecting large component trees.
-
-## Zustand Performance
-
-- Subscribe to the smallest possible state slice.
-- Prefer selectors instead of subscribing to the entire store.
-- Use shallow equality when selecting multiple values and it provides a benefit.
-- Avoid creating new objects or arrays inside selectors without appropriate equality handling.
-- Keep state updates immutable.
-- Do not duplicate state already managed by React Query.
-- Separate frequently changing state from unrelated global state.
-- Do not persist sensitive authentication information in Zustand or browser storage.
-- Avoid unnecessary store subscriptions and side effects.
-
-## Advanced Next.js 16 Caching
-
-- Inspect the existing Next.js cache configuration before implementing caching.
-- Determine whether `cacheComponents` is enabled.
-- When Cache Components are enabled, use `use cache` selectively for safely cacheable data and components.
-- Use `cacheLife` to define appropriate cache lifetimes.
-- Use `cacheTag` to associate cache entries with logical resources.
-- Use `updateTag` inside Server Actions when users must immediately see their own changes.
-- Use `revalidateTag` with an appropriate cache profile for stale-while-revalidate behavior.
-- Use `revalidatePath` only when path-level invalidation is necessary.
-- Do not invalidate an entire route when specific cache tags are sufficient.
-- When Cache Components are disabled, follow the supported fetch caching and revalidation model instead.
-- Never blindly enable caching for authenticated or request-specific data.
-- Prefer uncached access for sessions, permissions, checkout, payments, and other security-critical operations.
-- Never share personalized cache entries across users or tenants.
-- Always consider CDN and browser caching in addition to server caching.
-- Ensure private responses cannot be stored in shared HTTP caches.
-- Document cache lifetime, scope, and invalidation behavior for important resources.
-
-## Request Deduplication
-
-- Avoid making identical backend requests repeatedly during a single server render.
-- Reuse the same server-side data access functions.
-- Use built-in fetch request memoization where applicable.
-- Consider React `cache()` for request-scoped deduplication of server-side functions.
-- Do not confuse request-scoped memoization with persistent caching.
-- Never implement global request caches that accidentally share private user data.
-- Parallelize independent requests using `Promise.all` when appropriate.
-- Avoid sequential awaits when operations do not depend on each other.
-
-## Streaming & Suspense
-
-- Use React Suspense to stream independent server-rendered UI sections.
-- Avoid blocking an entire page on slow secondary data.
-- Use route-level `loading.tsx` and localized Suspense boundaries where appropriate.
-- Prefer meaningful loading skeletons over full-page spinners.
-- Place Suspense boundaries around genuinely independent async sections.
-- Avoid creating excessive Suspense boundaries with no measurable benefit.
-- Keep critical content prioritized during server rendering.
-- Preserve authentication and authorization checks before rendering protected content.
-
-## Client Bundle Optimization
-
-- Keep heavy libraries out of the client bundle whenever possible.
-- Import server-only libraries exclusively from server code.
-- Use dynamic imports for expensive client-only features that are not initially required.
-- Do not lazy-load small components without a meaningful benefit.
-- Analyze production bundle sizes before introducing major dependencies.
-- Prefer tree-shakeable imports.
-- Avoid importing entire utility or icon libraries unnecessarily.
-- Avoid unnecessary global Client Providers.
-- Keep third-party scripts to a minimum.
-- Load noncritical third-party scripts using appropriate Next.js Script strategies.
-- Avoid sending large API payloads to Client Components when only a few fields are needed.
-
-## Image, Font & Rendering Performance
-
-- Prefer `next/image` for supported image assets.
-- Provide correctly sized and responsive images.
-- Use the `sizes` attribute where appropriate.
-- Prioritize only genuinely critical above-the-fold images.
-- Lazy-load noncritical images.
-- Avoid oversized source images and unnecessary image downloads.
-- Prefer modern image formats when supported.
-- Use `next/font` for optimized fonts.
-- Avoid unnecessary font families and font weights.
-- Prevent layout shifts by reserving space for images and dynamic content.
-- Avoid excessive animations that cause layout recalculation.
-- Virtualize large interactive lists when profiling shows a meaningful benefit.
-
-## React Query Advanced Rules
-
-- Configure `staleTime` based on how frequently data changes.
-- Configure `gcTime` intentionally when defaults are unsuitable.
-- Avoid globally disabling refetching without a clear reason.
-- Use stable and serializable query keys.
-- Include relevant filters, pagination, locale, and user scope in query keys.
-- Never include access tokens or other secrets in query keys.
-- Invalidate only affected queries after mutations.
-- Avoid invalidating the entire Query Cache unnecessarily.
-- Use optimistic updates only when rollback and error handling are implemented.
-- Use server prefetching and hydration when client-side query management is genuinely needed.
-- Avoid immediate duplicate client refetches after hydration.
-- Prevent stale authenticated data from remaining visible after logout or account switching.
-- Use pagination or infinite queries instead of downloading unnecessarily large datasets.
-- Configure polling only for features that genuinely require it.
-- Clean up unnecessary polling and subscriptions.
-- Never use React Query as a replacement for secure server-side authorization.
-
-## Authentication & Authorization Hardening
-
-- Treat every Server Action and Route Handler as a potentially public entry point.
-- Authenticate and authorize every protected operation on the server.
-- Use a centralized server-only Data Access Layer for sensitive resources.
-- Verify permissions at the data access boundary, not only in page layouts.
-- Enforce role-based access control for admin and user functionality.
-- Never rely on hidden UI elements or route protection alone for authorization.
-- Prevent IDOR vulnerabilities by validating resource ownership and access permissions.
-- Never trust client-provided roles, user IDs, prices, or permissions.
-- Use secure, HttpOnly, appropriately configured SameSite cookies for sensitive sessions.
-- Enable Secure cookies in HTTPS production environments.
-- Never store access tokens or refresh tokens in localStorage or sessionStorage.
-- Implement secure session expiration, rotation, and revocation when applicable.
-- Invalidate server-side sessions during logout.
-- Never expose session secrets in serialized Server Component props.
-- Protect authenticated mutations against CSRF according to the chosen transport and authentication mechanism.
-- Validate redirect destinations to prevent open redirect vulnerabilities.
-
-## API & Backend Security
-
-- Validate all untrusted API inputs on the server.
-- Apply authorization before performing protected operations.
-- Use an allowlist of supported fields for sensitive updates.
-- Never trust client-provided product prices, order totals, or payment statuses.
-- Calculate authoritative order totals on the backend.
-- Apply rate limiting to authentication and abuse-sensitive endpoints.
-- Restrict CORS to explicitly trusted origins when cross-origin access is required.
-- Never use wildcard credentialed CORS policies.
-- Add appropriate security headers, including a carefully configured Content Security Policy.
-- Avoid unsafe HTML insertion and sanitize untrusted HTML when rendering is required.
-- Avoid logging tokens, credentials, cookies, payment data, or sensitive personal information.
-- Validate uploaded file types, actual content, and size limits.
-- Verify webhook signatures on the backend and protect against replay attacks.
-- Make payment and other retry-sensitive operations idempotent.
-- Do not retry non-idempotent mutations automatically without appropriate safeguards.
-- Keep secrets exclusively in server-side configuration.
-- Handle external API failures and timeouts intentionally.
-- Avoid exposing raw backend errors or stack traces to end users.
-
-## Navigation & Route Performance
-
-- Use Next.js Link for internal navigation where appropriate.
-- Avoid unnecessary full-page reloads.
-- Let Next.js handle route prefetching by default.
-- Disable prefetching selectively when it causes unnecessary traffic or sensitive-data concerns.
-- Avoid fetching full datasets when server-side pagination is available.
-- Keep URL search parameters as the source of truth for shareable filters, sorting, and pagination.
-- Debounce expensive search operations when appropriate.
-- Avoid unnecessary router.refresh() calls.
-- Prefer targeted cache invalidation over refreshing an entire application unnecessarily.
-
-## Performance Monitoring
-
-- Measure performance using production builds.
-- Track Core Web Vitals: LCP, INP, and CLS.
-- Use Lighthouse and browser Performance tools to investigate bottlenecks.
-- Use React DevTools Profiler for unnecessary re-renders.
-- Analyze client JavaScript bundle size.
-- Monitor slow backend requests and server response times.
-- Compare measurements before and after performance optimizations.
-- Do not introduce complex optimizations without evidence.
-- Prefer improvements that reduce real network, rendering, or hydration costs.
-
-## Server Actions First
-
-- ALWAYS prefer Server Actions for application mutations.
-- Use Server Actions for CREATE, UPDATE, DELETE, and form submissions.
-- Server Actions must communicate directly with the backend when appropriate.
-- NEVER create unnecessary Route Handlers for mutations already handled securely by Server Actions.
-
-## Route Handlers for Secure Client-Side Requests
-
-- If a Client Component genuinely needs to make an HTTP request that requires a sensitive access token, ALWAYS use a Next.js Route Handler as a secure proxy.
-- This includes client-side fetching with React Query when the backend requires a private authentication token.
-- The Client Component must communicate with the Route Handler instead of directly accessing the protected backend.
-- The Route Handler must retrieve the authentication token securely on the server.
-- NEVER return access tokens or refresh tokens to the client.
-- Validate authentication and authorization inside protected Route Handlers.
-- Use Route Handlers for webhooks, authentication callbacks, and external HTTP integrations when required.
-
-## Testing & Quality Gates
-
-- Run TypeScript checks before considering a task complete.
-- Run ESLint independently; do not assume `next build` runs linting in Next.js 16.
-- Run a production build to detect build-time issues.
-- Test authenticated and unauthorized access to protected resources.
-- Test cache invalidation after mutations.
-- Test that private data cannot leak between users.
-- Test loading, error, empty, and retry states.
-- Test responsive layouts and keyboard accessibility.
-- Avoid introducing hydration mismatches.
-- Do not introduce new dependencies without verifying compatibility.
-- Never disable TypeScript, ESLint, or security checks merely to make a build pass.
-
-## Architecture Decision Rules
-
-1. Initial data fetching:
-   - Use Server Components.
-
-2. Application mutations:
-   - Use Server Actions by default.
-
-3. Client-side fetching requiring private tokens:
-   - Use Route Handlers as secure proxies.
-
-4. Public client-side fetching:
-   - Direct client requests are allowed when appropriate and no private credentials are required.
-
-5. External integrations requiring dedicated HTTP endpoints:
-   - Use Route Handlers only when necessary.
-
-## Test Cleanup Rules
-
-- Keep meaningful Vitest test files after execution.
-- Remove temporary test files created only for debugging.
-- Remove obsolete or duplicate tests after verifying coverage.
-- Clean generated coverage reports when no longer needed.
-- Never delete important regression tests.
-- Do not remove tests just because they passed.
-
-## Final Principle
-
-When there are multiple valid implementations, prefer the solution that:
-
-1. Keeps more code on the server.
-2. Sends less JavaScript to the client.
-3. Protects sensitive data.
-4. Uses proper caching.
-5. Minimizes network requests.
-6. Reuses existing project patterns.
-7. Uses shadcn/ui and the existing Design System.
-8. Is strongly typed with TypeScript.
-9. Is accessible and responsive.
-10. Is simple, maintainable, and performant.
-11. Server Components for initial data fetching.
-12. Server Actions for mutations.
-13. Route Handlers for secure client-side HTTP requests requiring private tokens.
-14. Client Components only when interactivity is necessary.
-15. Never expose sensitive credentials to the browser.
-16. Never create unnecessary API layers.
+-   Use Zustand only when client-side state genuinely needs to be shared
+    across Client Components.
+-   Do not use Zustand for server data that belongs in Server Components
+    or React Query.
+-   Do not duplicate server state in Zustand.
+-   Keep stores small, focused, and appropriately scoped.
+-   Avoid unnecessary global state.
+
+### Context
+
+-   Use Context for values that need to be shared through a component
+    subtree and change infrequently or have a clear provider boundary.
+-   Avoid putting frequently changing, unrelated state into one broad
+    context.
+-   Split contexts or use a suitable state solution when context updates
+    cause avoidable re-renders.
+-   Do not introduce a state-management library for simple local state.
+
+## 11. Forms and Validation
+
+-   Use React Hook Form for complex or interactive forms where it
+    meaningfully simplifies form state and validation.
+-   Keep form state local whenever possible.
+-   Avoid unnecessary controlled inputs when React Hook Form can manage
+    them efficiently.
+-   Use Zod as the runtime validation source of truth where appropriate.
+-   Validate form input on the client for user experience and again on
+    the server for security.
+-   Reuse schemas when appropriate instead of duplicating rules.
+-   Infer TypeScript types from Zod schemas when possible.
+-   Provide accessible labels, descriptions, and clear validation
+    messages.
+-   Preserve user input when recoverable errors occur.
+-   Prevent duplicate submissions and communicate pending, success, and
+    failure states.
+-   Do not treat client-side validation as a security boundary.
+
+## 12. UI Components and Design System
+
+-   Use **shadcn/ui** as the primary UI component system when it is part
+    of the project.
+-   Prefer existing project components and shadcn/ui components before
+    creating custom equivalents.
+-   Do not recreate an existing component without a strong reason.
+-   Follow the project's existing shadcn/ui conventions and component
+    variants.
+-   Keep components reusable, composable, and focused.
+-   Keep business logic out of presentational components whenever
+    practical.
+-   If the project contains a Design System, follow it consistently.
+-   Reuse design tokens for colors, typography, spacing, radius,
+    shadows, and component states.
+-   Do not introduce arbitrary colors or one-off design values when
+    suitable tokens exist.
+-   Do not invent new UI patterns unnecessarily.
+-   New components must look and behave consistently with the existing
+    product.
+-   Avoid generic, visually outdated, or unpolished interfaces.
+-   Establish clear visual hierarchy and information architecture.
+-   Use typography, spacing, and contrast intentionally.
+-   Avoid unnecessary borders, shadows, gradients, animations, and
+    decorative elements.
+-   Do not sacrifice clarity for visual effects.
+-   Every interactive control must have a clear purpose and visible
+    interaction states.
+-   Use consistent hover, focus, active, disabled, pending, success, and
+    error states as appropriate.
+
+## 13. Responsive Design
+
+-   All user-facing UI must be responsive.
+-   Use mobile-first design when appropriate.
+-   Consider mobile, tablet, laptop, and desktop layouts.
+-   Test relevant breakpoints rather than assuming a desktop layout will
+    shrink correctly.
+-   Prevent unintended horizontal overflow.
+-   Avoid fixed dimensions when they cause clipping or broken layouts.
+-   Prefer flexible layouts using Grid, Flexbox, intrinsic sizing, and
+    design tokens.
+-   Ensure touch targets are comfortable on touch devices.
+-   Handle long text, translated content, dynamic data, and empty states
+    gracefully.
+-   Check dialogs, dropdowns, tables, navigation, and forms on small
+    screens.
+-   Do not hide essential functionality on mobile without a valid
+    product reason.
+
+## 14. Accessibility
+
+-   Use semantic HTML elements whenever possible.
+-   Use native controls before custom interactive implementations.
+-   Associate form controls with accessible labels and descriptions.
+-   Ensure keyboard accessibility for all interactive elements.
+-   Maintain visible and consistent focus indicators.
+-   Use ARIA only when needed; do not add incorrect or redundant ARIA
+    attributes.
+-   Provide meaningful alternative text for informative images and empty
+    alt text for decorative images.
+-   Do not communicate status using color alone.
+-   Respect reduced-motion preferences.
+-   Ensure reasonable text contrast and readable typography.
+-   Manage focus correctly in dialogs, menus, and other overlays.
+-   Use correct heading hierarchy and landmark elements.
+-   Test important flows using keyboard navigation.
+
+## 15. Performance
+
+-   Treat performance as a first-class requirement, but do not optimize
+    prematurely.
+-   Minimize Client Components and JavaScript sent to the browser.
+-   Prefer server-side computation when it reduces client work without
+    creating server bottlenecks.
+-   Avoid unnecessary re-renders and state updates.
+-   Avoid unnecessary `useEffect`.
+-   Use `memo`, `useMemo`, and `useCallback` only when they provide a
+    measurable or meaningful benefit.
+-   Avoid unnecessary network requests and duplicate data fetching.
+-   Lazy-load heavy client-side components when appropriate.
+-   Use Next.js image optimization and appropriate image sizes, formats,
+    and loading priorities.
+-   Avoid importing large libraries when native browser or framework
+    features are sufficient.
+-   Debounce or throttle expensive event-driven work when appropriate.
+-   Clean up event listeners, subscriptions, observers, and timers when
+    their lifecycle ends.
+-   Avoid memory leaks and stale asynchronous updates.
+-   Consider time and space complexity for data-heavy operations.
+-   Prefer `Set` or `Map` when their lookup characteristics fit the
+    problem; do not choose data structures by slogan.
+-   Store repeated expensive calculations only when doing so improves
+    clarity or performance.
+-   Keep non-component-dependent constants and pure helpers outside
+    component bodies when appropriate.
+-   Avoid unnecessary wrapper elements; use fragments when no DOM
+    element is needed.
+-   Use virtualization for genuinely large lists when it improves
+    real-world performance.
+-   Measure or profile before applying complex optimizations.
+
+## 16. Clean Code and Maintainability
+
+-   Prefer clean, simple, maintainable solutions.
+-   Do not over-engineer or create premature abstractions.
+-   Avoid duplicated logic; extract shared code when duplication is
+    meaningful.
+-   Keep functions and components focused on a single responsibility.
+-   Prefer composition over deeply nested conditionals or components
+    with many unrelated boolean props.
+-   Separate concerns into small, understandable modules.
+-   Avoid deep nesting when early returns or clearer decomposition
+    improve readability.
+-   Avoid unnecessary variables, wrappers, and one-use abstractions that
+    make code harder to follow.
+-   Avoid side effects in pure transformation functions.
+-   Make side effects explicit and keep them at appropriate boundaries.
+-   Read the code after writing it; check spelling, naming, logic, and
+    consistency.
+-   Remove dead code when safe and relevant.
+-   Do not leave temporary debugging code such as `console.log` in
+    production code.
+-   Do not modify unrelated files just to apply personal style
+    preferences.
+
+## 17. Formatting and Naming Conventions
+
+-   Follow the repository's established formatting and linting
+    configuration.
+-   Use ESLint and Prettier when configured; do not introduce
+    conflicting formatting rules.
+-   Do not reformat unrelated files.
+-   Keep indentation, spacing, imports, and code layout consistent.
+-   Separate logical scopes and related code clearly.
+-   Use meaningful names for variables, functions, types, and files.
+-   Prefer `camelCase` for variables and functions.
+-   Prefer `PascalCase` for React components, classes, and
+    types/interfaces.
+-   Use the project's convention for constants; use uppercase names for
+    true global constants when appropriate.
+-   Follow the repository's existing file and folder naming conventions.
+    Use kebab-case when that is the established convention.
+-   Use short names only for obvious, small scopes such as simple array
+    callbacks.
+-   Name files by their responsibility when it improves discoverability,
+    for example `user.api.ts`, `user.schema.ts`, or `user.types.ts`.
+-   Avoid cryptic abbreviations and misleading names.
+
+## 18. JavaScript and TypeScript Practices
+
+-   Prefer `async/await` for readable asynchronous control flow, while
+    following existing conventions where chaining is clearer.
+-   Use template literals when interpolation or multiline strings
+    benefit from them; ordinary short strings do not need them.
+-   Use `structuredClone` for supported structured-cloneable data when a
+    deep clone is genuinely needed; do not use it blindly or for values
+    it cannot clone.
+-   Prefer built-in platform APIs over dependencies when they are
+    suitable and supported.
+-   Choose loops and collection methods based on readability and
+    semantics, not blanket rules. For example, `for...of`, `forEach`,
+    `map`, `filter`, and `reduce` serve different purposes.
+-   Use `for...in` only when enumerating object keys intentionally, and
+    guard against inherited properties when necessary; prefer
+    `Object.keys`, `Object.entries`, or `Object.hasOwn` when they make
+    intent safer or clearer.
+-   Avoid repeatedly performing expensive property access or
+    calculations when a clear local variable improves readability.
+-   Do not mutate data unexpectedly. Prefer immutable transformations
+    when they make state changes predictable.
+-   Use `Map` and `Set` when their semantics and lookup behavior suit
+    the task.
+-   Handle nullable and optional values explicitly.
+-   Use discriminated unions and narrowing for complex state and result
+    types.
+-   Avoid broad casts that conceal incorrect assumptions.
+
+## 19. React Best Practices
+
+-   Use state-driven derived values instead of maintaining duplicate
+    state.
+-   Minimize `useEffect`; do not use it to derive values, respond to
+    user events, or synchronize state that can be handled directly.
+-   Use effects only to synchronize with external systems such as
+    browser APIs, subscriptions, or imperative libraries.
+-   Clean up effects when they create subscriptions, listeners, timers,
+    or other ongoing resources.
+-   Avoid unnecessary `useState`; props and state updates can cause
+    re-renders.
+-   Use `useReducer` for coordinated or complex state transitions when
+    it improves clarity.
+-   Use `useMemo` and `memo` for expensive computations or demonstrably
+    useful render optimization, not by default.
+-   Keep hooks at the top level and follow the Rules of Hooks.
+-   Keep component props focused and stable where useful.
+-   Avoid prop drilling when a clear composition or context boundary is
+    better, but do not introduce global state prematurely.
+-   Apply DRY to meaningful repetition without making components
+    excessively generic.
+-   Do not use array indexes as keys when list items can be inserted,
+    removed, or reordered; prefer stable identifiers.
+-   Avoid defining components inside other components unless there is a
+    clear reason, as this can reset state or cause remounting.
+-   Do not use effects as a substitute for proper event handlers or
+    server-side data loading.
+
+## 20. CSS and Styling
+
+-   Follow the project's styling approach, whether Tailwind CSS, CSS
+    Modules, or another established system.
+-   Keep styling conventions consistent.
+-   Prefer design tokens and relative or fluid sizing where appropriate.
+-   Use `rem`, `em`, `clamp()`, Grid, and Flexbox when they improve
+    adaptability; fixed pixel values are acceptable for borders, icons,
+    and deliberate constraints.
+-   Do not treat percentages as universally bad; use them when they
+    express the intended relationship to a parent.
+-   Choose Grid or Flexbox based on the content and layout requirements.
+-   Use flexible sizing properties such as `minmax()`, `min-width: 0`,
+    `flex`, `grow`, and `shrink` when they prevent overflow or improve
+    layout behavior.
+-   Be deliberate with `z-index`; define a consistent stacking strategy
+    for overlays and layered UI.
+-   Avoid `!important` unless a documented integration or specificity
+    constraint makes it necessary.
+-   Avoid repetitive styles; reuse tokens, utilities, and shared
+    patterns when appropriate.
+-   Prefer component-scoped styles where that matches the project
+    architecture.
+-   Use global styles only for genuinely global concerns such as resets,
+    tokens, and base typography.
+-   Keep style declarations logically grouped and easy to scan.
+-   Use modern CSS features only when supported by the project's browser
+    targets.
+-   Avoid unnecessary animation and respect reduced-motion preferences.
+
+## 21. Error Handling and User Feedback
+
+-   Handle errors intentionally; do not silently swallow them.
+-   Use concise, meaningful, consistent error messages.
+-   Catch errors at the boundary where they can be handled meaningfully.
+-   Do not add broad `try/catch` blocks that hide programming errors or
+    convert every failure into success-shaped data.
+-   Throw or propagate errors when a required invariant is violated and
+    no safe recovery exists.
+-   Use the framework's error boundaries and route-level error handling
+    where appropriate.
+-   Distinguish expected validation/business errors from unexpected
+    system failures.
+-   Never expose stack traces, SQL errors, internal URLs, credentials,
+    or sensitive server details to users.
+-   Validate all external and user input.
+-   Handle loading, error, empty, success, and pending states where
+    appropriate.
+-   Provide actionable feedback without overwhelming the user.
+-   Log server errors safely when the project has an established logging
+    system; do not log secrets or sensitive personal data.
+-   Do not create a global async error handler that obscures local error
+    ownership or framework behavior.
+
+## 22. Comments and Documentation
+
+-   Write comments that explain **why**, not merely what obvious code is
+    doing.
+-   Keep comments clear, concise, accurate, and grammatically correct.
+-   Add comments for complex business logic, non-obvious architecture,
+    caching decisions, performance optimizations, workarounds, security
+    considerations, and complex algorithms.
+-   Do not add meaningless comments to self-explanatory code.
+-   Update or remove comments when implementation changes.
+-   Use JSDoc for public or complex utilities when it clarifies
+    parameters, return values, constraints, or side effects.
+-   Do not document every trivial function.
+-   Use short section comments to organize long components only when
+    they genuinely improve navigation.
+-   A suggested component organization, when it fits the component, is:
+    1.  Imports and types.
+    2.  Translation and localization.
+    3.  Navigation and routing.
+    4.  State and refs.
+    5.  Context.
+    6.  Queries.
+    7.  Mutations.
+    8.  Other hooks.
+    9.  Form and validation.
+    10. Derived variables.
+    11. Event handlers and functions.
+    12. Effects. This order is a flexible convention, not a rigid
+        requirement. Keep code organized according to the actual use
+        case.
+
+## 23. File and Project Architecture
+
+-   Follow the existing project folder structure.
+-   Reuse existing utilities, hooks, components, schemas, and services
+    before creating new ones.
+-   Keep related code close together when the project uses feature-based
+    organization.
+-   Do not move files or change architecture without a clear benefit.
+-   Do not create unnecessary abstraction layers.
+-   Keep server-only code server-only and client-only code isolated
+    behind Client Component boundaries.
+-   Separate API clients, schemas, types, business logic, and UI when
+    that separation improves clarity and maintainability.
+-   Avoid circular dependencies.
+-   Avoid creating a new dependency for functionality already available
+    in the project or platform.
+-   If adding a dependency is necessary, explain why and consider bundle
+    size, maintenance, security, and compatibility.
+
+## 24. Testing and Verification
+
+-   Inspect available scripts and test setup before choosing commands.
+-   Run the narrowest relevant checks first, then broader checks when
+    appropriate.
+-   Run TypeScript checks using the project's configured command.
+-   Run ESLint or the configured lint command.
+-   Run relevant unit, integration, or end-to-end tests when available.
+-   Run a production build when the scope or risk justifies it.
+-   Test success paths, validation failures, empty data, loading states,
+    authorization failures, and important edge cases as applicable.
+-   Verify responsive layouts and keyboard interactions for UI changes
+    when practical.
+-   Do not change tests merely to make an incorrect implementation pass.
+-   Do not disable lint rules, tests, or type checking to hide a defect.
+-   If the repository has no tests or a check cannot run, state that
+    limitation rather than implying verification.
+-   Review the final diff and remove accidental changes, debug
+    statements, unused imports, and temporary code.
+
+## 25. Before Making Changes: Checklist
+
+Before implementing a feature, consider:
+
+1.  Have I understood the requirement and acceptance criteria?
+2.  Have I inspected the existing architecture and relevant files?
+3.  Can I reuse an existing component, utility, hook, schema, or
+    service?
+4.  Does this belong on the server or client?
+5.  Is React Query actually necessary?
+6.  Is Zustand actually necessary?
+7.  Is the caching strategy safe and appropriate?
+8.  Are authentication and authorization enforced on the server?
+9.  Is runtime validation needed?
+10. Does shadcn/ui or the existing Design System already provide the
+    required UI?
+11. Is the design responsive and accessible?
+12. Could this introduce unnecessary JavaScript, requests, re-renders,
+    or dependencies?
+13. What errors and edge cases should be handled?
+14. How will I verify the implementation?
+
+Do not mechanically write out this checklist for every task. Use it as a
+decision guide.
+
+## 26. Final Decision Principles
+
+When multiple implementations are valid, prefer the one that:
+
+1.  Keeps more code on the server when appropriate.
+2.  Sends less unnecessary JavaScript to the client.
+3.  Protects sensitive data and enforces authorization.
+4.  Uses safe, intentional caching and revalidation.
+5.  Minimizes duplicate requests and unnecessary rendering.
+6.  Reuses existing project patterns and components.
+7.  Follows shadcn/ui and the existing Design System.
+8.  Uses strong TypeScript types and runtime validation.
+9.  Is accessible and responsive.
+10. Is easy to understand, test, debug, and maintain.
+11. Solves the actual requirement without over-engineering.
+12. Can be verified honestly.
+
+------------------------------------------------------------------------
+
+## 27. Final Principle
+
+A good implementation is not the one with the most abstractions, the
+newest library, or the fewest lines. It is the simplest reliable
+implementation that satisfies the user's needs, fits the project,
+handles realistic failure cases, and remains understandable to the next
+developer.

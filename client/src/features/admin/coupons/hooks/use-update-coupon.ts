@@ -4,13 +4,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { updateCouponAction } from "../server/actions";
 import { couponQueryKeys } from "./use-coupons";
-import type { CouponRecord } from "@/lib/coupons-store";
+import type { CouponItem } from "../components/coupons-manager";
 
-export function useUpdateCoupon(onSuccessCallback?: (coupon?: CouponRecord | null) => void) {
+export function useUpdateCoupon(onSuccessCallback?: (coupon?: CouponItem | null) => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<CouponRecord> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<CouponItem> }) =>
       updateCouponAction(id, updates),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });

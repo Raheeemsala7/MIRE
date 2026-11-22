@@ -26,6 +26,7 @@ import {
 import { useCartStore } from "@/src/shared/stores/cart-store";
 import { OrderTrackingTimeline } from "@/shared/components/order-tracking-timeline";
 import { toast } from "sonner";
+import { trackPublicOrderAction } from "../server/actions";
 
 interface OrderItem {
   id?: string;
@@ -99,15 +100,23 @@ function getStepIndex(status: string): number {
   }
 }
 
-export function OrdersView({ userName }: { userName?: string }) {
+export function OrdersView({
+  userName,
+  initialOrders = [],
+}: {
+  userName?: string;
+  initialOrders?: OrderDisplay[];
+}) {
   const locale = useLocale();
   const isAr = locale === "ar";
   const { addItem, setIsOpen: setCartOpen } = useCartStore();
 
-  const [orders, setOrders] = useState<OrderDisplay[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<OrderDisplay[]>(initialOrders);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "history" | "search">("active");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(
+    initialOrders.length > 0 ? initialOrders[0].orderNumber : null
+  );
 
   // Search by orderNumber
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,46 +126,25 @@ export function OrdersView({ userName }: { userName?: string }) {
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Merge client guest orders from localStorage once mounted
   useEffect(() => {
-    async function fetchOrders() {
-      try {
-        let serverOrders: OrderDisplay[] = [];
-        try {
-          const res = await fetch("/api/customer/orders");
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data.data)) {
-              serverOrders = data.data;
+    try {
+      const stored = localStorage.getItem("mire-recent-orders");
+      if (stored) {
+        const localOrders: OrderDisplay[] = JSON.parse(stored);
+        if (localOrders.length > 0) {
+          setOrders((prev) => {
+            const combined = [...localOrders];
+            for (const so of prev) {
+              if (!combined.some((o) => o.orderNumber === so.orderNumber)) {
+                combined.push(so);
+              }
             }
-          }
-        } catch {}
-
-        let localOrders: OrderDisplay[] = [];
-        try {
-          const stored = localStorage.getItem("mire-recent-orders");
-          if (stored) {
-            localOrders = JSON.parse(stored);
-          }
-        } catch {}
-
-        // Combine and deduplicate
-        const combined = [...localOrders];
-        for (const so of serverOrders) {
-          if (!combined.some((o) => o.orderNumber === so.orderNumber)) {
-            combined.push(so);
-          }
+            return combined;
+          });
         }
-
-        setOrders(combined);
-        if (combined.length > 0) {
-          setExpandedId(combined[0].orderNumber);
-        }
-      } finally {
-        setLoading(false);
       }
-    }
-
-    fetchOrders();
+    } catch {}
   }, []);
 
   const handleCopyOrderNumber = (num: string, e: React.MouseEvent) => {
@@ -208,17 +196,17 @@ export function OrdersView({ userName }: { userName?: string }) {
       return;
     }
 
-    // Otherwise query tracking API
+    // Otherwise query tracking via Server Action
     try {
-      const res = await fetch(`/api/customer/orders/track/${encodeURIComponent(query)}`);
-      const data = await res.json();
-      if (res.ok && data.data) {
-        setSearchedOrder(data.data);
+      const res = await trackPublicOrderAction(query);
+      if (res.success && res.data) {
+        setSearchedOrder(res.data as any);
       } else {
         setSearchError(
-          isAr
-            ? "لم نتمكن من العثور على طلب بهذا الرقم، يرجى التأكد والمحاولة مجدداً"
-            : "No order found with this tracking number"
+          res.error ||
+            (isAr
+              ? "لم نتمكن من العثور على طلب بهذا الرقم، يرجى التأكد والمحاولة مجدداً"
+              : "No order found with this tracking number")
         );
       }
     } catch {

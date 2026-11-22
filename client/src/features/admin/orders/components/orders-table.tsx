@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import {
@@ -9,22 +9,13 @@ import {
   Clock,
   Truck,
   CheckCircle2,
-  XCircle,
-  Eye,
   Phone,
-  RefreshCw,
   Filter,
-  DollarSign,
-  ArrowUpDown,
   ChevronRight,
-  ExternalLink,
-  MapPin,
-  Sparkles,
 } from "lucide-react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
@@ -46,12 +37,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
-import { toast } from "sonner";
 import {
   type OrderDoc,
   type OrderStatus,
   ORDER_STATUS_CONFIG,
 } from "../types/order-admin.types";
+import { useUpdateOrderStatus } from "../hooks/use-update-order-status";
 
 interface OrdersTableProps {
   initialOrders: OrderDoc[];
@@ -103,40 +94,31 @@ export function OrdersTable({ initialOrders, totalCount }: OrdersTableProps) {
     return { total, processing, shipped, delivered, totalRevenue };
   }, [orders]);
 
+  const updateStatusMutation = useUpdateOrderStatus();
+
   // Handle Quick Status Change
-  const handleQuickStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+  const handleQuickStatusChange = (orderId: string, newStatus: OrderStatus) => {
     setUpdatingOrderId(orderId);
-    try {
-      const res = await fetch(`/api/admin/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: newStatus,
-          reason: isAr
-            ? `تحديث سريع للحالة إلى ${ORDER_STATUS_CONFIG[newStatus]?.labelAr}`
-            : `Quick status update to ${newStatus}`,
-        }),
-      });
-
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(result.error || "Failed to update status");
+    updateStatusMutation.mutate(
+      {
+        orderId,
+        status: newStatus as any,
+        reason: isAr
+          ? `تحديث سريع للحالة إلى ${ORDER_STATUS_CONFIG[newStatus]?.labelAr}`
+          : `Quick status update to ${newStatus}`,
+      },
+      {
+        onSuccess: () => {
+          setOrders((prev) =>
+            prev.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o))
+          );
+          setUpdatingOrderId(null);
+        },
+        onError: () => {
+          setUpdatingOrderId(null);
+        },
       }
-
-      setOrders((prev) =>
-        prev.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o))
-      );
-
-      toast.success(
-        isAr
-          ? `تم تحديث حالة الطلب إلى: ${ORDER_STATUS_CONFIG[newStatus]?.labelAr}`
-          : `Order status updated to ${newStatus}`
-      );
-    } catch (err: any) {
-      toast.error(err.message || (isAr ? "فشل تحديث الحالة" : "Failed to update status"));
-    } finally {
-      setUpdatingOrderId(null);
-    }
+    );
   };
 
   const getStatusBadge = (status: OrderStatus) => {

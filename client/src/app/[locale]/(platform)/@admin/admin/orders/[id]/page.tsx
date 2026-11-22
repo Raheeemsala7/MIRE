@@ -9,7 +9,6 @@ import {
   OrderDetailsView,
   type OrderDoc,
 } from "@/features/admin/orders";
-import { REAL_DATABASE_ORDERS } from "@/app/api/admin/orders/route";
 
 interface AdminOrderDetailsPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -42,23 +41,13 @@ async function getOrderDetails(id: string, locale: string): Promise<OrderDoc> {
     if (error instanceof BackendApiError && error.status === 403) {
       redirect(`/${locale}/403`);
     }
+    if (error instanceof BackendApiError && error.status === 404) {
+      notFound();
+    }
+    console.error("getOrderDetails backend error:", error);
   }
 
-  // Look up in database orders
-  const foundOrder = REAL_DATABASE_ORDERS.find(
-    (o) => o._id === id || o.orderNumber === id
-  );
-
-  if (foundOrder) {
-    return foundOrder as unknown as OrderDoc;
-  }
-
-  // Graceful fallback for offline demo / decoupled mode
-  return {
-    ...REAL_DATABASE_ORDERS[0],
-    _id: id,
-    orderNumber: id.startsWith("ord-") ? `MIRE-2026-${id.slice(-5)}` : id,
-  } as unknown as OrderDoc;
+  notFound();
 }
 
 export default async function AdminOrderDetailsPage(

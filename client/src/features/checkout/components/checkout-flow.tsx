@@ -18,6 +18,7 @@ import {
   Sparkles,
   ChevronRight,
   Phone,
+  Tag,
 } from "lucide-react";
 import { useCartStore } from "@/src/shared/stores/cart-store";
 import { useAddressStore, AddressList } from "@/src/features/address";
@@ -480,6 +481,17 @@ export function CheckoutFlow() {
               </button>
             </div>
 
+            {/* Promo Code Section in Step 3 */}
+            <div className="rounded-2xl border border-ds-border-muted bg-ds-plain p-4 space-y-2.5">
+              <div className="flex items-center gap-2">
+                <Tag className="size-4 text-ds-primary" />
+                <span className="font-semibold text-xs text-ds-text-plain">
+                  {isAr ? "هل لديكِ كود خصم أو قسيمة شراء؟" : "Have a promo code or voucher?"}
+                </span>
+              </div>
+              <CouponInput />
+            </div>
+
             {/* Order Notes */}
             <div>
               <label className="block text-xs font-medium text-ds-text-plain mb-1.5">
@@ -550,11 +562,17 @@ export function CheckoutFlow() {
         </div>
 
         {/* Financial Breakdown */}
-        <div className="space-y-3 border-t border-ds-border-muted pt-4 text-xs">
+        <div className="space-y-4 border-t border-ds-border-muted pt-4 text-xs">
           {/* Coupon Input */}
-          <CouponInput />
+          <div className="space-y-2 rounded-2xl bg-ds-plain border border-ds-border-muted p-3.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-ds-text-plain">
+              <Tag className="size-3.5 text-ds-primary" />
+              <span>{isAr ? "كود الخصم أو القسيمة" : "Promo Code or Voucher"}</span>
+            </div>
+            <CouponInput />
+          </div>
 
-          <div className="space-y-2 pt-2">
+          <div className="space-y-2 pt-1">
             <div className="flex justify-between text-ds-text-muted">
               <span>{isAr ? "المجموع الفرعي" : "Subtotal"}</span>
               <span className="font-mono">{subtotal} {isAr ? "ج.م" : "EGP"}</span>

@@ -18,6 +18,7 @@ import {
   Activity,
   Package,
   BadgePercent,
+  ShoppingBag,
 } from "lucide-react";
 import { LogoutButton } from "@/features/auth/components/login/logout-button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -104,6 +105,12 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
     currentUser?.permissions
   );
 
+  const canViewOrders = can(
+    currentUser?.role,
+    PERMISSIONS.ORDERS_VIEW,
+    currentUser?.permissions
+  );
+
   const navLinks = [
     {
       href: "/admin/dashboard",
@@ -111,6 +118,13 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
       icon: LayoutDashboard,
       active: pathname.startsWith("/admin/dashboard"),
       visible: hasPermission(currentUser, "dashboard:read"),
+    },
+    {
+      href: "/admin/orders",
+      label: t("admin-nav-orders") || (isAr ? "إدارة الطلبات" : "Orders Management"),
+      icon: ShoppingBag,
+      active: pathname.startsWith("/admin/orders"),
+      visible: canViewOrders,
     },
     {
       href: "/admin/products",
@@ -163,7 +177,15 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
   const breadcrumbSegments: BreadcrumbSegment[] = React.useMemo(() => {
     const segments: BreadcrumbSegment[] = [];
 
-    if (pathname.startsWith("/admin/bundles")) {
+    if (pathname.startsWith("/admin/orders")) {
+      const ordersLabel = t("admin-nav-orders") || (isAr ? "إدارة الطلبات" : "Orders Management");
+      if (pathname === "/admin/orders" || pathname === "/admin/orders/") {
+        segments.push({ label: ordersLabel });
+      } else {
+        segments.push({ label: ordersLabel, href: "/admin/orders" });
+        segments.push({ label: t("admin-nav-order-details") || (isAr ? "تفاصيل الطلب" : "Order Details") });
+      }
+    } else if (pathname.startsWith("/admin/bundles")) {
       const bundlesLabel = t("admin-nav-bundles") || (isAr ? "الباقات والعروض" : "Bundles & Offers");
       if (pathname === "/admin/bundles" || pathname === "/admin/bundles/") {
         segments.push({ label: bundlesLabel });

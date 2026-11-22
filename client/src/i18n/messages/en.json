@@ -337,6 +337,8 @@
   "analytics-method-paymob": "Paymob / Fawry",
   "analytics-not-tracked": "Not tracked by backend",
   "admin-nav-dashboard": "Analytics Dashboard",
+  "admin-nav-orders": "Orders Management",
+  "admin-nav-order-details": "Order Details",
   "admin-nav-view-website": "View Website",
   "admin-nav-section-storefront": "Storefront",
   "admin-nav-employees": "Employees Management",

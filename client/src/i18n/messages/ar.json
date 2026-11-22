@@ -337,6 +337,8 @@
   "analytics-method-paymob": "باي موب / فوري",
   "analytics-not-tracked": "غير مسجل بواسطة النظام",
   "admin-nav-dashboard": "لوحة مؤشرات الأداء",
+  "admin-nav-orders": "إدارة الطلبات",
+  "admin-nav-order-details": "تفاصيل الطلب",
   "admin-nav-view-website": "عرض الموقع",
   "admin-nav-section-storefront": "المتجر",
   "admin-nav-employees": "إدارة الموظفين والصلاحيات",

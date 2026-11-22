@@ -1,7 +1,8 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-import { ShoppingBag } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { ShoppingBag, ChevronRight } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
@@ -85,6 +87,17 @@ export function RecentOrders({ orders = [], isLoading }: RecentOrdersProps) {
             {t("analytics-recent-orders-desc")}
           </CardDescription>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="h-8 text-xs text-primary hover:text-primary gap-1"
+        >
+          <Link href="/admin/orders">
+            <span>{isAr ? "عرض كل الطلبات" : "View All"}</span>
+            <ChevronRight className="size-3 rtl:rotate-180" />
+          </Link>
+        </Button>
       </CardHeader>
 
       <CardContent className="px-6 pb-6 pt-2">
@@ -150,9 +163,12 @@ export function RecentOrders({ orders = [], isLoading }: RecentOrdersProps) {
                         <p className="font-medium text-foreground truncate max-w-[140px] sm:max-w-[200px]">
                           {customerName}
                         </p>
-                        <span className="font-mono text-[10px] text-muted-foreground">
+                        <Link
+                          href={`/admin/orders/${order._id}`}
+                          className="font-mono text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                        >
                           #{order.orderNumber}
-                        </span>
+                        </Link>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                         <span className="truncate max-w-[130px] sm:max-w-[180px]">

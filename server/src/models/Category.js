@@ -47,6 +47,19 @@ const categorySchema = new mongoose.Schema(
 
 categorySchema.index({ slug: 1, isActive: 1 });
 
+categorySchema.pre('validate', function (next) {
+  if (!this.slug || !this.slug.trim()) {
+    const nameSlug = (this.name || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[\s_-]+/g, '-')
+      .replace(/[^\p{L}\p{N}-]/gu, '')
+      .replace(/^-+|-+$/g, '');
+    this.slug = nameSlug || `category-${Date.now()}`;
+  }
+  next();
+});
+
 const Category = mongoose.model('Category', categorySchema);
 
 module.exports = Category;

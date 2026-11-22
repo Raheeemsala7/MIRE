@@ -7,12 +7,14 @@ class CategoryService {
    * Helper slug generator
    */
   generateSlug(name) {
-    return name
+    if (!name || typeof name !== 'string') return `category-${Date.now()}`;
+    const slug = name
       .toLowerCase()
       .trim()
-      .replace(/[^\w\s-]/g, '')
       .replace(/[\s_-]+/g, '-')
+      .replace(/[^\p{L}\p{N}-]/gu, '')
       .replace(/^-+|-+$/g, '');
+    return slug || `category-${Date.now()}`;
   }
 
   async getAllCategories(query = {}) {
@@ -64,7 +66,9 @@ class CategoryService {
   }
 
   async createCategory(data, performedBy) {
-    const slug = this.generateSlug(data.name);
+    const slug = data.slug && data.slug.trim()
+      ? this.generateSlug(data.slug)
+      : this.generateSlug(data.name);
     const existing = await Category.findOne({ $or: [{ name: data.name }, { slug }] });
     if (existing) {
       throw ApiError.conflict('A category with this name or slug already exists');
@@ -96,7 +100,11 @@ class CategoryService {
 
     if (data.name && data.name !== category.name) {
       category.name = data.name;
-      category.slug = this.generateSlug(data.name);
+      category.slug = data.slug && data.slug.trim()
+        ? this.generateSlug(data.slug)
+        : this.generateSlug(data.name);
+    } else if (data.slug && data.slug.trim()) {
+      category.slug = this.generateSlug(data.slug);
     }
     if (data.description !== undefined) category.description = data.description;
     if (data.image) category.image = data.image;
@@ -128,6 +136,13 @@ class CategoryService {
     const childrenCount = await Category.countDocuments({ parentCategory: id });
     if (childrenCount > 0) {
       throw ApiError.badRequest('Cannot delete category with active subcategories');
+    }
+
+    // Check if category has assigned products
+    const { Product } = require('../models/Product');
+    const productsCount = await Product.countDocuments({ category: id });
+    if (productsCount > 0) {
+      throw ApiError.badRequest('Cannot delete category with assigned products');
     }
 
     await Category.findByIdAndDelete(id);

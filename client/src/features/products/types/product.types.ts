@@ -109,14 +109,23 @@ export interface ProductFilters {
   admin?: boolean;
 }
 
+export interface CategoryParentRef {
+  _id: string;
+  name: string;
+  slug: string;
+}
+
 export interface CategoryItem {
   _id: string;
   name: string;
   slug: string;
   description?: string;
-  parentCategory?: string | null;
+  image?: { url: string; publicId?: string };
+  parentCategory?: string | null | CategoryParentRef;
   isActive: boolean;
   sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CategoriesResponse {

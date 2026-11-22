@@ -21,6 +21,7 @@ import {
   ShoppingBag,
   TicketPercent,
   Warehouse,
+  FolderTree,
 } from "lucide-react";
 import { LogoutButton } from "@/features/auth/components/login/logout-button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -125,6 +126,12 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
     currentUser?.permissions
   );
 
+  const canViewCategories = can(
+    currentUser?.role,
+    PERMISSIONS.CATEGORIES_VIEW,
+    currentUser?.permissions
+  );
+
   const navLinks = [
     {
       href: "/admin/dashboard",
@@ -153,6 +160,13 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
       icon: Package,
       active: pathname.startsWith("/admin/products"),
       visible: canViewProducts,
+    },
+    {
+      href: "/admin/categories",
+      label: t("admin-nav-categories") || (isAr ? "الأقسام" : "Categories"),
+      icon: FolderTree,
+      active: pathname.startsWith("/admin/categories"),
+      visible: canViewCategories,
     },
     {
       href: "/admin/inventory",
@@ -242,6 +256,20 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
       } else {
         segments.push({ label: productsLabel, href: "/admin/products" });
         segments.push({ label: t("admin-nav-product-details") || (isAr ? "تفاصيل المنتج" : "Product Details") });
+      }
+    } else if (pathname.startsWith("/admin/categories")) {
+      const categoriesLabel = t("admin-nav-categories") || (isAr ? "الأقسام" : "Categories");
+      if (pathname === "/admin/categories" || pathname === "/admin/categories/") {
+        segments.push({ label: categoriesLabel });
+      } else if (pathname === "/admin/categories/new") {
+        segments.push({ label: categoriesLabel, href: "/admin/categories" });
+        segments.push({ label: t("categories-btn-add") || (isAr ? "إضافة قسم جديد" : "Add Category") });
+      } else if (pathname.endsWith("/edit")) {
+        segments.push({ label: categoriesLabel, href: "/admin/categories" });
+        segments.push({ label: t("category-form-edit-title") || (isAr ? "تعديل القسم" : "Edit Category") });
+      } else {
+        segments.push({ label: categoriesLabel, href: "/admin/categories" });
+        segments.push({ label: isAr ? "تفاصيل القسم" : "Category Details" });
       }
     } else if (pathname.startsWith("/admin/inventory")) {
       const inventoryLabel = t("admin-nav-inventory") || (isAr ? "المخزون" : "Inventory");

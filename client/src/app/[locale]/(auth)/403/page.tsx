@@ -1,6 +1,6 @@
 import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
 import { Suspense } from "react";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import Link from "next/link";
 import { Link as LocalizedLink } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
@@ -10,7 +10,7 @@ import { destination } from "@/lib/auth/session";
 async function ForbiddenPageContent() {
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
-  const user = (await auth())?.user;
+  const user = (await getServerSession())?.user;
   const target = user ? destination(user.role, locale, user.permissions) : `/${locale}/auth/login`;
 
   return (

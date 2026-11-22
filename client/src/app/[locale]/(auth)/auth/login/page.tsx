@@ -1,6 +1,6 @@
 import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
 import { Suspense } from "react";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
@@ -18,7 +18,7 @@ async function LoginPageContent({ searchParams }: { searchParams: Promise<{ call
   const { callbackUrl } = await searchParams;
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
-  const user = (await auth())?.user;
+  const user = (await getServerSession())?.user;
   if (user) redirect(destination(user.role, locale, user.permissions));
 return (
     <main className="auth-surface grid min-h-screen bg-ds-plain lg:grid-cols-[minmax(0,1fr)_minmax(440px,48%)]">

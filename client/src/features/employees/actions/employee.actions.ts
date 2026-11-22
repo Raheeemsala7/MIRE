@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { serverApiGet, serverApiPost, serverApiPatch } from "@/lib/auth/session";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import {
@@ -23,7 +23,7 @@ export async function createEmployeeAction(
   payload: CreateEmployeePayload
 ): Promise<SingleEmployeeResponse> {
   // Authorization
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.EMPLOYEES_CREATE
@@ -76,7 +76,7 @@ export async function updateEmployeeAction(
   payload: UpdateEmployeePayload
 ): Promise<SingleEmployeeResponse> {
   // Authorization
-  const session = await auth();
+  const session = await getServerSession();
   if (!session?.user) {
     throw new Error("Authentication required");
   }
@@ -193,7 +193,7 @@ export async function toggleEmployeeStatusAction(
   id: string
 ): Promise<SingleEmployeeResponse> {
   // Authorization
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.EMPLOYEES_TOGGLE_STATUS

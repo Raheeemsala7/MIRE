@@ -1,6 +1,6 @@
 import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
 import { Suspense } from "react";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
 async function ResetPasswordPageContent({ searchParams }: ResetPasswordPageProps) {
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
-  const user = (await auth())?.user;
+  const user = (await getServerSession())?.user;
   if (user) redirect(destination(user.role, locale, user.permissions));
 
   const resolvedParams = await searchParams;

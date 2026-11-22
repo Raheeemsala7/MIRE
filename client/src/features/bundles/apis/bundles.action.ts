@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { API_URL, HEADERS } from "@/shared/constant/api.constant";
 import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
@@ -39,7 +39,7 @@ function invalidateBundleCaches(bundleId?: string) {
 export async function createBundleAction(
   payload: CreateBundleInput
 ): Promise<SingleBundleResponse> {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.BUNDLES_CREATE
@@ -85,7 +85,7 @@ export async function updateBundleAction(
   id: string,
   payload: UpdateBundleInput
 ): Promise<SingleBundleResponse> {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.BUNDLES_UPDATE
@@ -130,7 +130,7 @@ export async function updateBundleAction(
 export async function deleteBundleAction(
   id: string
 ): Promise<{ success: boolean; message: string }> {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.BUNDLES_DELETE
@@ -170,7 +170,7 @@ export async function toggleBundleStatusAction(
   id: string,
   isActive: boolean
 ): Promise<SingleBundleResponse> {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.BUNDLES_UPDATE

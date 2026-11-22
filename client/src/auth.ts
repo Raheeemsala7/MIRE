@@ -91,7 +91,11 @@ const nextAuth = NextAuth({
 
 export const { handlers, signIn, signOut } = nextAuth;
 
-export const auth = cache(async () => {
+export const getServerSession = cache(async (..._args: any[]) => {
   await connection();
   return nextAuth.auth();
 });
+
+export const auth = getServerSession;
+export const authOptions = {};
+

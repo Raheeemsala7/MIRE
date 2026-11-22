@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { API_URL, HEADERS } from "@/shared/constant/api.constant";
 import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
@@ -43,7 +43,7 @@ function invalidateProductCaches(slug?: string, id?: string) {
 export async function createProductAction(
   payload: CreateProductInput
 ): Promise<SingleProductResponse> {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.PRODUCTS_CREATE
@@ -97,7 +97,7 @@ export async function updateProductAction(
   id: string,
   payload: UpdateProductInput
 ): Promise<SingleProductResponse> {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.PRODUCTS_UPDATE
@@ -159,7 +159,7 @@ export async function updateProductAction(
 export async function archiveProductAction(
   id: string
 ): Promise<{ success: boolean; message: string }> {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.PRODUCTS_ARCHIVE

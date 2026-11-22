@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { serverApiPatch } from "@/lib/auth/session";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
@@ -16,7 +16,7 @@ export async function updateCustomerAction(
   payload: UpdateCustomerPayload
 ): Promise<SingleCustomerResponse> {
   // Authorization
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.CUSTOMERS_UPDATE

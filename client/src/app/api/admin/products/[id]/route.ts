@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { serverApiGet } from "@/lib/auth/session";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
@@ -11,7 +11,7 @@ interface RouteParams {
 }
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.PRODUCTS_VIEW

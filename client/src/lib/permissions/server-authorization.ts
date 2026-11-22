@@ -1,7 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import type { SafeUser } from "@/lib/auth/types";
 import type { Session } from "next-auth";
 import { normalizeLocale } from "@/lib/auth/permissions";
@@ -28,7 +28,7 @@ export async function requirePermission(
   const normLocale = normalizeLocale(locale);
 
   // 1. Check NextAuth session
-  const session = await auth();
+  const session = await getServerSession();
   if (!session?.user) {
     redirect(`/${normLocale}/auth/login`);
   }

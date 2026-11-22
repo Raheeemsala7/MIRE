@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { serverApiPost, serverApiPatch } from "@/lib/auth/session";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
@@ -25,7 +25,7 @@ export async function submitReturnRequestAction(
   payload: RequestReturnPayload
 ): Promise<SingleReturnResponse> {
   // Authorization
-  const session = await auth();
+  const session = await getServerSession();
   if (!session?.user) {
     throw new Error("Authentication required");
   }
@@ -60,7 +60,7 @@ export async function updateReturnStatusAction(
   payload: UpdateReturnStatusPayload
 ): Promise<SingleReturnResponse> {
   // Authorization
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.RETURNS_UPDATE_STATUS
@@ -104,7 +104,7 @@ export async function inspectReturnAction(
   payload: InspectReturnPayload
 ): Promise<SingleReturnResponse> {
   // Authorization
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.RETURNS_INSPECT
@@ -148,7 +148,7 @@ export async function logCallAttemptAction(
   payload: LogCallAttemptPayload
 ): Promise<SingleReturnResponse> {
   // Authorization
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.RETURNS_LOG_CALL
@@ -192,7 +192,7 @@ export async function assignReturnAction(
   payload: AssignReturnPayload
 ): Promise<SingleReturnResponse> {
   // Authorization
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.RETURNS_ASSIGN

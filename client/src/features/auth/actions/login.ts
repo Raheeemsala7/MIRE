@@ -2,7 +2,7 @@
 
 import { AuthError } from "next-auth";
 import { cookies } from "next/headers";
-import { signIn, auth } from "@/auth";
+import { signIn, getServerSession } from "@/auth";
 import { loginSchema, type LoginFields } from "../schemas/login.schema";
 import { loginDestination, normalizeLocale } from "@/lib/auth/permissions";
 
@@ -24,7 +24,7 @@ export async function loginAction(
       redirect: false,
     });
 
-    const session = await auth();
+    const session = await getServerSession();
     if (!session?.user) {
       return { success: false, error: "invalid" };
     }

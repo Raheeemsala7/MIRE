@@ -1,6 +1,6 @@
 import { serverApiGet } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
@@ -12,7 +12,7 @@ interface RouteContext {
 
 export async function GET(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.CUSTOMERS_VIEW

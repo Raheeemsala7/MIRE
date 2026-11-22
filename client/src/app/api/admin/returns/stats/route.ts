@@ -1,6 +1,6 @@
 import { serverApiGet } from "@/lib/auth/session";
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
@@ -10,7 +10,7 @@ import type {
 } from "@/features/returns/types/return.types";
 
 export async function GET() {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.RETURNS_VIEW

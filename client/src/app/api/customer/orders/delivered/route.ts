@@ -1,10 +1,10 @@
 import { serverApiGet } from "@/lib/auth/session";
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { BackendApiError } from "@/lib/auth/backend-client";
 
 export async function GET() {
-  const session = await auth();
+  const session = await getServerSession();
 
   if (!session?.user) {
     return NextResponse.json(

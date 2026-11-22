@@ -1,7 +1,7 @@
 import { hasPermission, isAdminRole } from "@/lib/auth/roles";
 import { serverApiGet } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import type { RecentOrderItem } from "@/features/analytics/types/analytics.types";
 
@@ -20,7 +20,7 @@ interface RawOrderResponse {
 }
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
+  const session = await getServerSession();
   if (!session?.user || !isAdminRole(session.user.role) || !hasPermission(session.user, "orders:read")) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: session?.user ? 403 : 401 });
   }

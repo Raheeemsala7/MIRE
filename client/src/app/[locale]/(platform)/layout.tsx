@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { isAdminRole, isCustomerRole } from "@/lib/auth/roles";
 import { normalizeLocale } from "@/lib/auth/permissions";
 import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
@@ -14,7 +14,7 @@ type PlatformProps = {
 
 async function AuthorizedPlatform({ admin, user, params }: PlatformProps) {
   const locale = normalizeLocale((await params).locale);
-  const session = await auth();
+  const session = await getServerSession();
 
   // Guest → Public Storefront
   if (!session?.user) {

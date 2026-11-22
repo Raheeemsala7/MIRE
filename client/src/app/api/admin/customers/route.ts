@@ -1,13 +1,13 @@
 import { serverApiGet } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import type { CustomersPaginatedResponse } from "@/features/customers/types/customer.types";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
+  const session = await getServerSession();
   const authorization = assertSessionPermission(
     session,
     PERMISSIONS.CUSTOMERS_VIEW

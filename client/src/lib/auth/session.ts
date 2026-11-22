@@ -1,7 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getServerSession } from "@/auth";
 import type { AppRole, SafeUser } from "./types";
 import { hasRole } from "./roles";
 import { normalizeLocale } from "./permissions";
@@ -10,13 +10,13 @@ import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 export { destination } from "./permissions";
 
 /** Identity accessors delegating to Auth.js */
-export const currentSession = auth;
+export const currentSession = getServerSession;
 export async function currentUser(): Promise<SafeUser | null> {
-  return (await auth())?.user ?? null;
+  return (await getServerSession())?.user ?? null;
 }
 
 export async function requireRole(roles: readonly AppRole[], locale: string = "ar") {
-  const session = await auth();
+  const session = await getServerSession();
   const language = normalizeLocale(locale);
   if (!session?.user) redirect(`/${language}/auth/login`);
   if (!hasRole(session.user.role, roles)) redirect(`/${language}/403`);

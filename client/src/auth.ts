@@ -4,79 +4,93 @@ import { cache } from "react";
 import { connection } from "next/server";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { authorizeCredentials } from "@/lib/auth/credentials";
-import { getSession } from "@/lib/auth/session-store";
-import { validatedBackendSession, revokeBackendSession } from "@/lib/auth/backend-session";
-import { SESSION_COOKIE, REMEMBER_ME_SECONDS, sessionCookieOptions } from "@/lib/auth/policy";
+import { backendLogin } from "@/lib/auth/backend-client";
+import type { SafeUser } from "@/lib/auth/types";
 
 const nextAuth = NextAuth({
   trustHost: true,
   secret: process.env.AUTH_SECRET || "tD+4cODqaNMJnlZAki/dDOqjC4QldbtyckSBmMin/58=",
-  pages: { signIn: "/auth/login" },
-  session: { strategy: "jwt", maxAge: REMEMBER_ME_SECONDS },
-  cookies: {
-    sessionToken: {
-      name: SESSION_COOKIE,
-      options: sessionCookieOptions(false, process.env.NODE_ENV === "production"),
-    },
+  pages: {
+    signIn: "/auth/login",
   },
-  providers: [Credentials({
-    credentials: {
-      email: { label: "Email", type: "email" },
-      password: { label: "Password", type: "password" },
-      rememberMe: { label: "Remember me", type: "checkbox" },
-      proof: { label: "Proof", type: "hidden" },
-    },
-    authorize: authorizeCredentials,
-  })],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  providers: [
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        try {
+          const res = await backendLogin(
+            String(credentials.email),
+            String(credentials.password)
+          );
+
+          if (!res?.user || !res?.accessToken) {
+            return null;
+          }
+
+          return {
+            id: res.user._id,
+            name: res.user.name,
+            email: res.user.email,
+            role: res.user.role,
+            permissions: res.user.permissions || [],
+            accessToken: res.accessToken,
+            refreshToken: res.refreshToken,
+          };
+        } catch {
+          return null;
+        }
+      },
+    }),
+  ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        if (!user.id || !user.role || !user.sessionId) return null;
-        // The backend ID and the private session-store reference are distinct.
-        return {
-          sub: user.id, sessionId: user.sessionId,
-          user: { id: user.id, name: user.name ?? "", email: user.email ?? "",
-            role: user.role, permissions: user.permissions },
+        token.id = user.id;
+        token.user = {
+          id: (user.id ?? "") as string,
+          name: user.name ?? "",
+          email: user.email ?? "",
+          role: (user as any).role,
+          permissions: (user as any).permissions || [],
+        };
+        token.accessToken = (user as any).accessToken;
+        token.refreshToken = (user as any).refreshToken;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token.user) {
+        session.user = {
+          ...session.user,
+          id: (token.user as SafeUser).id,
+          name: (token.user as SafeUser).name,
+          email: (token.user as SafeUser).email,
+          role: (token.user as SafeUser).role,
+          permissions: (token.user as SafeUser).permissions,
         };
       }
-      if (!token.sessionId) return null;
-      const record = await validatedBackendSession(token.sessionId);
-      if (!record) return null;
-      // Ignore client-supplied session updates; role metadata is always backend-owned.
-      return { sub: record.user.id, sessionId: token.sessionId,
-        user: record.user, sessionExpires: record.expiresAt.toISOString() };
-    },
-    async session({ token }) {
-      if (!token.user || !token.sessionExpires) throw new Error("Invalid authentication session");
-      return { user: {
-        id: token.user.id, name: token.user.name, email: token.user.email,
-        role: token.user.role,
-        ...(token.user.permissions ? { permissions: token.user.permissions } : {}),
-      }, expires: token.sessionExpires };
-    },
-  },
-  events: {
-    async signOut(message) {
-      if ("token" in message && message.token?.sessionId) {
-        await revokeBackendSession(message.token.sessionId);
+      if (token.accessToken) {
+        session.accessToken = token.accessToken as string;
       }
-    },
-  },
-  // Preserve existing opaque cookies and revocable, encrypted token storage.
-  // Auth.js owns identity; this codec never puts backend credentials in its cookie.
-  jwt: {
-    async encode({ token }) { return token?.sessionId ?? ""; },
-    async decode({ token }) {
-      if (!token) return null;
-      const record = await getSession(token);
-      return record ? { sessionId: token, sub: record.user.id } : null;
+      return session;
     },
   },
 });
 
 export const { handlers, signIn, signOut } = nextAuth;
-// React cache deduplicates within a render, never across requests or users.
+
 export const auth = cache(async () => {
   await connection();
   return nextAuth.auth();

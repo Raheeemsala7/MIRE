@@ -1,7 +1,6 @@
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
-import { SESSION_COOKIE } from "./lib/auth/policy";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -53,7 +52,13 @@ export default function proxy(request: NextRequest) {
 
   // Admin route protection at the edge (server-side requireRole also enforces this)
   const isAdminRoute = /^\/(ar|en)\/admin(?:\/|$)/.test(path);
-  if (isAdminRoute && !request.cookies.has(SESSION_COOKIE)) {
+  const hasSession =
+    request.cookies.has("authjs.session-token") ||
+    request.cookies.has("__Secure-authjs.session-token") ||
+    request.cookies.has("next-auth.session-token") ||
+    request.cookies.has("__Secure-next-auth.session-token");
+
+  if (isAdminRoute && !hasSession) {
     const loginUrl = new URL(`/${locale}/auth/login`, request.url);
     loginUrl.searchParams.set("callbackUrl", path + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);

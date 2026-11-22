@@ -1,19 +1,14 @@
 import "server-only";
-import { cookies } from "next/headers";
+
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { backendGet, backendPost, backendPatch, backendDelete, BackendApiError } from "./backend-client";
-import { validatedBackendSession, isUnauthorized } from "./backend-session";
-import { freshSession } from "./refresh-token";
-import { deleteSession } from "./session-store";
 import type { AppRole, SafeUser } from "./types";
-import { SESSION_COOKIE } from "./policy";
 import { hasRole } from "./roles";
 import { normalizeLocale } from "./permissions";
 export { destination } from "./permissions";
-export { SESSION_COOKIE } from "./policy";
 
-/** Compatibility accessors delegate identity entirely to Auth.js. No tokens returned. */
+/** Compatibility accessors delegate identity entirely to Auth.js. */
 export const currentSession = auth;
 export async function currentUser(): Promise<SafeUser | null> {
   return (await auth())?.user ?? null;
@@ -27,36 +22,29 @@ export async function requireRole(roles: readonly AppRole[], locale: string = "a
   return session.user;
 }
 
-/** Transport only: Auth.js authorizes identity, the backend authorizes the operation. */
-async function backendRequest<T>(operation: (accessToken: string) => Promise<T>): Promise<T> {
-  const identity = await auth();
-  if (!identity?.user) throw new BackendApiError(401);
-  const id = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!id) throw new BackendApiError(401);
-  let record = await validatedBackendSession(id);
-  if (!record || record.user.id !== identity.user.id) throw new BackendApiError(401);
-  try { return await operation(record.accessToken); }
-  catch (error) {
-    if (!isUnauthorized(error)) throw error;
-    record = await freshSession(id, true, record.version);
-    if (!record) throw new BackendApiError(401);
-    try { return await operation(record.accessToken); }
-    catch (retryError) {
-      if (isUnauthorized(retryError)) await deleteSession(id);
-      throw retryError;
-    }
-  }
+async function getAccessToken(): Promise<string> {
+  const session = await auth();
+  const token = (session as any)?.accessToken;
+  if (!token) throw new BackendApiError(401);
+  return token;
 }
 
 export async function serverApiGet<T>(path: `/${string}`): Promise<T> {
-  return backendRequest((token) => backendGet<T>(path, token));
+  const token = await getAccessToken();
+  return backendGet<T>(path, token);
 }
+
 export async function serverApiPost<T>(path: `/${string}`, body: unknown): Promise<T> {
-  return backendRequest((token) => backendPost<T>(path, body, token));
+  const token = await getAccessToken();
+  return backendPost<T>(path, body, token);
 }
+
 export async function serverApiPatch<T>(path: `/${string}`, body: unknown): Promise<T> {
-  return backendRequest((token) => backendPatch<T>(path, body, token));
+  const token = await getAccessToken();
+  return backendPatch<T>(path, body, token);
 }
+
 export async function serverApiDelete<T>(path: `/${string}`): Promise<T> {
-  return backendRequest((token) => backendDelete<T>(path, token));
+  const token = await getAccessToken();
+  return backendDelete<T>(path, token);
 }

@@ -118,6 +118,26 @@ class DaftarCashProvider extends PaymentProviderInterface {
    */
   async handleWebhookEvent(event) {
     const data = event.data || event;
+
+    // Check for test ping notification (sent when merchant clicks "اتأكد إن متجري بيستلم الـ Webhook")
+    const isTestPing =
+      event.event === 'test' ||
+      data.event === 'test' ||
+      event.type === 'test' ||
+      data.type === 'test' ||
+      (!data.merchant_order_id && !data.payment_id);
+
+    if (isTestPing) {
+      logger.info('[DaftarCash Webhook] Verified test ping notification successfully');
+      return {
+        isTestPing: true,
+        orderNumber: null,
+        status: null,
+        transactionId: 'test_ping',
+        raw: event
+      };
+    }
+
     const orderNumber = data.merchant_order_id || data.order_id || event.merchant_order_id;
     const paymentId = data.payment_id || event.payment_id || `dc_${Date.now()}`;
     const statusRaw = (data.status || event.status || '').toLowerCase();

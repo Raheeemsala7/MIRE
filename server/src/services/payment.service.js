@@ -80,7 +80,10 @@ class PaymentService {
       if (!isValid) {
         throw ApiError.badRequest('Invalid DaftarCash signature');
       }
-      const { orderNumber, status, transactionId, raw } = await provider.handleWebhookEvent(body);
+      const { orderNumber, status, transactionId, raw, isTestPing } = await provider.handleWebhookEvent(body);
+      if (isTestPing) {
+        return { received: true, message: 'DaftarCash test webhook verified successfully' };
+      }
       if (orderNumber) {
         const order = await Order.findOne({ orderNumber });
         if (order) {

@@ -11,6 +11,7 @@ export function buildProductQueryParams(filters: ProductFilters = {}): string {
   if (filters.search && filters.search.trim()) params.set("search", filters.search.trim());
   if (filters.category) params.set("category", filters.category);
   if (filters.status) params.set("status", filters.status);
+  if (filters.stockStatus && filters.stockStatus !== "ALL") params.set("stockStatus", filters.stockStatus);
   if (filters.minPrice !== undefined && filters.minPrice !== "") params.set("minPrice", String(filters.minPrice));
   if (filters.maxPrice !== undefined && filters.maxPrice !== "") params.set("maxPrice", String(filters.maxPrice));
   if (filters.isFeatured !== undefined && filters.isFeatured !== "") params.set("isFeatured", String(filters.isFeatured));

@@ -97,6 +97,7 @@ export interface ProductFilters {
   search?: string;
   category?: string;
   status?: ProductStatus | "";
+  stockStatus?: "ALL" | "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" | "";
   minPrice?: number | string;
   maxPrice?: number | string;
   isFeatured?: boolean | string;

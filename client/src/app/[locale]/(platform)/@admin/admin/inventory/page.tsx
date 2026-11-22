@@ -13,6 +13,8 @@ import {
   type InventoryMovementsPaginatedResponse,
   type LowStockItem,
 } from "@/features/inventory";
+import { getAdminProducts } from "@/features/products/apis/products.api";
+import type { ProductsPaginatedResponse } from "@/features/products/types/product.types";
 
 interface AdminInventoryPageProps {
   params: Promise<{ locale: string }>;
@@ -101,6 +103,20 @@ async function getAllLowStockItems(): Promise<LowStockItem[]> {
   }
 }
 
+async function getInitialWarehouseProducts(): Promise<
+  ProductsPaginatedResponse | undefined
+> {
+  try {
+    const response = await getAdminProducts({ page: 1, limit: 20 });
+    if (response?.success && Array.isArray(response.data)) {
+      return response;
+    }
+  } catch (error) {
+    console.error("Failed to fetch initial warehouse products:", error);
+  }
+  return undefined;
+}
+
 async function AdminInventoryPageContent({
   params,
   searchParams,
@@ -109,12 +125,17 @@ async function AdminInventoryPageContent({
   const search = searchParams ? await searchParams : undefined;
   const user = await requirePermission(PERMISSIONS.INVENTORY_VIEW, locale);
 
-  const [initialLowStock, initialMovements, allLowStockItems] =
-    await Promise.all([
-      getInitialLowStock(locale),
-      getInitialMovements(locale, search),
-      getAllLowStockItems(),
-    ]);
+  const [
+    initialLowStock,
+    initialMovements,
+    allLowStockItems,
+    initialProducts,
+  ] = await Promise.all([
+    getInitialLowStock(locale),
+    getInitialMovements(locale, search),
+    getAllLowStockItems(),
+    getInitialWarehouseProducts(),
+  ]);
 
   const overviewStats = calculateOverviewStats(
     allLowStockItems,
@@ -127,6 +148,7 @@ async function AdminInventoryPageContent({
         <InventoryDashboard
           initialLowStock={initialLowStock}
           initialMovements={initialMovements}
+          initialProducts={initialProducts}
           overviewStats={overviewStats}
           currentUser={user}
           locale={locale}

@@ -58,6 +58,22 @@ class ProductService {
       filter.sizes = query.size;
     }
 
+    // Filter by stock status
+    if (query.stockStatus === 'OUT_OF_STOCK') {
+      filter.totalStock = { $lte: 0 };
+    } else if (query.stockStatus === 'LOW_STOCK') {
+      filter.$expr = {
+        $and: [
+          { $gt: ['$totalStock', 0] },
+          { $lte: ['$totalStock', { $ifNull: ['$lowStockThreshold', 10] }] }
+        ]
+      };
+    } else if (query.stockStatus === 'IN_STOCK') {
+      filter.$expr = {
+        $gt: ['$totalStock', { $ifNull: ['$lowStockThreshold', 10] }]
+      };
+    }
+
     // Search query
     if (query.search) {
       filter.$or = [

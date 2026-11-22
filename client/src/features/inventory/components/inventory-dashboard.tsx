@@ -17,11 +17,13 @@ import type {
   InventoryMovementsPaginatedResponse,
   InventoryOverviewStats,
 } from "../types/inventory.types";
+import type { ProductsPaginatedResponse } from "@/features/products/types/product.types";
 import type { SafeUser } from "@/lib/auth/types";
 
 interface InventoryDashboardProps {
   initialLowStock?: LowStockPaginatedResponse;
   initialMovements?: InventoryMovementsPaginatedResponse;
+  initialProducts?: ProductsPaginatedResponse;
   overviewStats: InventoryOverviewStats;
   currentUser: SafeUser | null;
   locale: string;
@@ -30,6 +32,7 @@ interface InventoryDashboardProps {
 export function InventoryDashboard({
   initialLowStock,
   initialMovements,
+  initialProducts,
   overviewStats,
   currentUser,
 }: InventoryDashboardProps) {
@@ -106,10 +109,11 @@ export function InventoryDashboard({
       {/* Summary Cards */}
       <InventoryOverview stats={overviewStats} />
 
-      {/* Main Tabs (Alerts & Audit Trail with URL synchronization) */}
+      {/* Main Tabs (Alerts, All Warehouse Products & Audit Trail with URL synchronization) */}
       <InventoryTabs
         initialLowStock={initialLowStock}
         initialMovements={initialMovements}
+        initialProducts={initialProducts}
         activeTab={activeTab}
         onTabChange={handleTabChange}
         onAdjustStock={(item) => handleOpenAdjust(item)}

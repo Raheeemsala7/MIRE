@@ -10,16 +10,19 @@ import {
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
 import { LowStockAlerts } from "./low-stock-alerts";
+import { AllProductsStockTable } from "./all-products-stock-table";
 import { InventoryMovementsTable } from "./inventory-movements-table";
 import type {
   LowStockItem,
   LowStockPaginatedResponse,
   InventoryMovementsPaginatedResponse,
 } from "../types/inventory.types";
+import type { ProductsPaginatedResponse } from "@/features/products/types/product.types";
 
 interface InventoryTabsProps {
   initialLowStock?: LowStockPaginatedResponse;
   initialMovements?: InventoryMovementsPaginatedResponse;
+  initialProducts?: ProductsPaginatedResponse;
   activeTab: string;
   onTabChange: (tab: string) => void;
   onAdjustStock: (item: LowStockItem) => void;
@@ -29,6 +32,7 @@ interface InventoryTabsProps {
 export function InventoryTabs({
   initialLowStock,
   initialMovements,
+  initialProducts,
   activeTab,
   onTabChange,
   onAdjustStock,
@@ -56,9 +60,16 @@ export function InventoryTabs({
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="alerts" className="focus-visible:outline-none">
+      <TabsContent value="alerts" className="focus-visible:outline-none space-y-6">
         <LowStockAlerts
           initialData={initialLowStock}
+          onAdjustStock={onAdjustStock}
+          canAdjust={canAdjust}
+        />
+
+        {/* All warehouse products and their inventory stock breakdown */}
+        <AllProductsStockTable
+          initialData={initialProducts}
           onAdjustStock={onAdjustStock}
           canAdjust={canAdjust}
         />

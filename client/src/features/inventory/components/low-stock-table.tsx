@@ -167,7 +167,7 @@ export function LowStockTable({
                               : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
                           }`}
                         >
-                          +{numberFormatter.format(unitsNeeded)} units
+                          +{numberFormatter.format(unitsNeeded)} {t("inventory-units") || "units"}
                         </span>
                       );
                     })()}

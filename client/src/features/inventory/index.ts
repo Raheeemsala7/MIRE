@@ -24,6 +24,7 @@ export * from "./components/inventory-skeleton";
 export * from "./components/inventory-overview";
 export * from "./components/low-stock-table";
 export * from "./components/low-stock-alerts";
+export * from "./components/all-products-stock-table";
 export * from "./components/inventory-movements-filters";
 export * from "./components/inventory-movements-table";
 export * from "./components/stock-adjustment-form";

@@ -253,7 +253,7 @@ export function StockAdjustmentForm({
                 disabled={isPending}
                 className="h-7 text-xs text-muted-foreground hover:text-foreground"
               >
-                Change
+                {t("inventory-btn-change") || "Change"}
               </Button>
             </div>
           ) : (
@@ -346,7 +346,9 @@ export function StockAdjustmentForm({
         {/* Preselected variant display */}
         {selectedFromPreselect && (
           <div className="rounded-lg border border-border/80 bg-muted/20 p-2.5 flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Target Variant:</span>
+            <span className="text-muted-foreground">
+              {t("inventory-target-variant") || "Target Variant:"}
+            </span>
             <span className="font-semibold font-mono text-foreground">
               {activeVariantSku} ({activeVariantLabel})
             </span>
@@ -639,7 +641,7 @@ export function StockAdjustmentForm({
             >
               {isPending ? (
                 <>
-                  <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                  <Loader2 className="size-3.5 animate-spin me-1.5" />
                   <span>{t("inventory-adjust-submitting") || "Applying..."}</span>
                 </>
               ) : (

@@ -57,9 +57,9 @@ const addressSchema = z.object({
   building: z.string().optional(),
   apartment: z.string().optional(),
   landmark: z.string().optional(),
-  latitude: z.number().default(30.0444),
-  longitude: z.number().default(31.2357),
-  isDefault: z.boolean().default(false),
+  latitude: z.number(),
+  longitude: z.number(),
+  isDefault: z.boolean(),
 });
 
 type AddressFormData = z.infer<typeof addressSchema>;

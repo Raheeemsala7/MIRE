@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Check, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/src/shared/stores/cart-store";
+import { WishlistToggle } from "@/src/features/wishlist";
 import { ProductDetail } from "../types/product";
 import { ProductAccordion } from "./product-accordion";
 
@@ -187,15 +188,27 @@ export function ProductView({ product }: ProductViewProps) {
           </div>
         </div>
 
-        {/* CTA Button: Add to Bag */}
-        <div className="pt-3">
+        {/* CTA Button: Add to Bag & Wishlist Toggle */}
+        <div className="pt-3 flex items-center gap-3">
           <button
             onClick={handleAddToBag}
-            className="w-full py-4 px-6 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-widest uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+            className="flex-1 py-4 px-6 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-widest uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>{t("addToBag")}</span>
           </button>
+          <WishlistToggle
+            variant="button"
+            product={{
+              id: product.id,
+              slug: product.slug,
+              titleEn: product.titleEn,
+              titleAr: product.titleAr,
+              price: product.price,
+              image: selectedImage,
+              color: isRTL ? selectedColor.nameAr : selectedColor.nameEn,
+            }}
+          />
         </div>
 
         {/* Accordions */}

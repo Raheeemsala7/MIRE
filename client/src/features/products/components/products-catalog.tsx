@@ -6,6 +6,7 @@ import { Link } from "@/src/i18n/navigation";
 import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/src/shared/stores/cart-store";
+import { WishlistToggle } from "@/src/features/wishlist";
 
 export interface CatalogProduct {
   id: string;
@@ -192,21 +193,26 @@ export function ProductsCatalog() {
             className="group bg-white rounded-lg overflow-hidden border border-ds-border-subtle hover:border-ds-primary/40 transition-all duration-300 shadow-2xs hover:shadow-md flex flex-col justify-between"
           >
             {/* Image Container with Link */}
-            <Link
-              href={`/products/${product.slug}`}
-              className="relative aspect-3/4 overflow-hidden bg-ds-secondary/20 block"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={product.image}
-                alt={isRTL ? product.titleAr : product.titleEn}
-                className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700"
-              />
+            <div className="relative aspect-3/4 overflow-hidden bg-ds-secondary/20 block">
+              <Link
+                href={`/products/${product.slug}`}
+                className="w-full h-full block"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={product.image}
+                  alt={isRTL ? product.titleAr : product.titleEn}
+                  className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700"
+                />
+              </Link>
+              <div className="absolute top-3 start-3 z-10">
+                <WishlistToggle product={product} />
+              </div>
               <span
-                className="absolute top-3 end-3 w-4 h-4 rounded-full border border-black/10 shadow-xs"
+                className="absolute top-3 end-3 w-4 h-4 rounded-full border border-black/10 shadow-xs pointer-events-none"
                 style={{ backgroundColor: product.swatchHex }}
               />
-            </Link>
+            </div>
 
             {/* Information & Action */}
             <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">

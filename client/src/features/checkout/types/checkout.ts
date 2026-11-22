@@ -26,6 +26,8 @@ export interface CheckoutPayload {
   paymentMethod: PaymentMethod;
   orderNotes?: string;
   guestId?: string;
+  origin?: string;
+  returnUrl?: string;
   items?: Array<{
     id?: string;
     productId?: string;

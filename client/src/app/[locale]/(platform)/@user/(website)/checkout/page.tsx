@@ -1,5 +1,6 @@
+import React, { Suspense } from "react";
 import type { Metadata } from "next";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Loader2 } from "lucide-react";
 import { CheckoutFlow } from "@/src/features/checkout";
 
 interface CheckoutPageProps {
@@ -36,7 +37,18 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
         </div>
       </div>
 
-      <CheckoutFlow />
+      <Suspense
+        fallback={
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <Loader2 className="size-8 animate-spin text-ds-primary" />
+            <p className="mt-3 text-xs text-ds-text-muted">
+              {isAr ? "جاري تحميل بيانات الشراء..." : "Loading checkout..."}
+            </p>
+          </div>
+        }
+      >
+        <CheckoutFlow />
+      </Suspense>
     </main>
   );
 }

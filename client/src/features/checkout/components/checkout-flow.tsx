@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { toast } from "sonner";
 import {
@@ -21,6 +22,7 @@ import {
   Tag,
   Smartphone,
   Wallet,
+  CheckCircle2,
 } from "lucide-react";
 import { useCartStore } from "@/src/shared/stores/cart-store";
 import { useAddressStore, AddressList } from "@/src/features/address";
@@ -32,12 +34,15 @@ import type { PaymentMethod, PlacedOrder } from "../types/checkout";
 export function CheckoutFlow() {
   const locale = useLocale();
   const isAr = locale === "ar";
+  const searchParams = useSearchParams();
+  const orderNumberParam = searchParams?.get("orderNumber");
+  const paymentParam = searchParams?.get("payment");
 
-  const { items, getTotalPrice, getDiscountAmount, coupon, clearCart } = useCartStore();
+  const { items, getTotalPrice, getDiscountAmount, coupon, clearCart, addItem } = useCartStore();
   const { getSelectedAddress } = useAddressStore();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("DAFTAR_CASH");
   const [orderNotes, setOrderNotes] = useState("");
   const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
 
@@ -87,6 +92,33 @@ export function CheckoutFlow() {
     }
   }, [items.length]);
 
+  // Handle return from external payment gateway (e.g. DaftarCash)
+  useEffect(() => {
+    if (orderNumberParam && items.length === 0) {
+      try {
+        const stored = localStorage.getItem("mire-recent-orders");
+        const list = stored ? JSON.parse(stored) : [];
+        const found = list.find((o: PlacedOrder) => o.orderNumber === orderNumberParam);
+        if (found) {
+          setPlacedOrder(found);
+        } else {
+          setPlacedOrder({
+            orderNumber: orderNumberParam,
+            customerInfo: { fullName: "عميل ميري", phone: "" },
+            shippingAddress: { street: "", city: "", governorate: "مصر" },
+            paymentInfo: {
+              method: "DAFTAR_CASH",
+              status: paymentParam === "success" ? "PAID" : "PENDING",
+            },
+            pricing: { subtotal: 0, shippingFee: 0, totalAmount: 0 },
+            items: [],
+            status: paymentParam === "success" ? "CONFIRMED" : "NEW",
+          });
+        }
+      } catch {}
+    }
+  }, [orderNumberParam, paymentParam, items.length]);
+
   const selectedAddress = getSelectedAddress();
   const subtotal = getTotalPrice();
   const discountAmount = getDiscountAmount();
@@ -111,6 +143,17 @@ export function CheckoutFlow() {
           <h1 className="font-brand-serif text-2xl sm:text-3xl font-semibold text-ds-text-plain">
             {isAr ? "شكراً لتسوقكِ مع ميري" : "Thank you for shopping with MIRÉ"}
           </h1>
+
+          {paymentParam === "success" && (
+            <div className="mt-3 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-500/30 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 text-xs font-medium flex items-center justify-center gap-2">
+              <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+              <span>
+                {isAr
+                  ? "تم تأكيد عملية التحويل عبر دفتر كاش بنجاح! طلبك مؤكد وقيد التجهيز."
+                  : "Payment verified via DaftarCash! Your order is confirmed."}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Live Order Tracking Timeline */}
@@ -194,6 +237,36 @@ export function CheckoutFlow() {
           <span>{isAr ? "تصفح التشكيلة" : "Browse Collections"}</span>
           <ArrowRight className="size-4 rtl:rotate-180" />
         </Link>
+
+        {/* Quick test item helper */}
+        <div className="mt-6 pt-6 border-t border-dashed border-ds-border-muted/80 max-w-sm mx-auto">
+          <button
+            type="button"
+            onClick={() => {
+              addItem({
+                id: "pleated-skirt-test",
+                title: isAr ? "جيبة بليسيه ماكسي (قطعة تجربة)" : "Pleated Maxi Skirt (Test Item)",
+                price: 850,
+                color: isAr ? "سماوي" : "Sky Blue",
+                size: "M",
+                image: "/products/skirt/sky-blue.png",
+              });
+              toast.success(
+                isAr
+                  ? "تمت إضافة قطعة تجريبية للسلة! يمكنكِ الآن اختبار الدفع مباشرة"
+                  : "Added test item to bag! You can now test checkout"
+              );
+            }}
+            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl border border-emerald-500/30 bg-emerald-50/70 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-800 dark:text-emerald-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+          >
+            <Sparkles className="size-4 text-emerald-600 shrink-0" />
+            <span>
+              {isAr
+                ? "+ إضافة قطعة تجريبية إلى السلة لتجربة الدفع السريع"
+                : "+ Add test item for quick payment test"}
+            </span>
+          </button>
+        </div>
       </div>
     );
   }
@@ -204,6 +277,9 @@ export function CheckoutFlow() {
       setStep(1);
       return;
     }
+
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const returnUrl = `${origin}/${locale}/checkout`;
 
     createOrderMutation.mutate({
       customerInfo: {
@@ -224,6 +300,8 @@ export function CheckoutFlow() {
       },
       paymentMethod,
       orderNotes,
+      origin,
+      returnUrl,
       couponCode: coupon?.code,
       couponDiscount: discountAmount,
       pricing: {
@@ -598,14 +676,43 @@ export function CheckoutFlow() {
                 type="button"
                 disabled={createOrderMutation.isPending}
                 onClick={handlePlaceOrder}
-                className="px-8 py-3.5 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-wider transition-all shadow-sm hover:shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                className={`px-8 py-3.5 rounded-full text-white text-xs font-semibold tracking-wider transition-all shadow-sm hover:shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-60 ${
+                  paymentMethod === "DAFTAR_CASH"
+                    ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20"
+                    : "bg-ds-primary hover:bg-ds-primary-saturated"
+                }`}
               >
                 {createOrderMutation.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    <span>
+                      {paymentMethod === "DAFTAR_CASH"
+                        ? isAr
+                          ? "جاري تجهيز الفاتورة وتحويلك لدفتر كاش..."
+                          : "Redirecting to DaftarCash..."
+                        : isAr
+                        ? "جاري إنشاء الطلب..."
+                        : "Placing order..."}
+                    </span>
+                  </>
                 ) : (
-                  <Check className="size-4" />
+                  <>
+                    {paymentMethod === "DAFTAR_CASH" ? (
+                      <Smartphone className="size-4" />
+                    ) : (
+                      <Check className="size-4" />
+                    )}
+                    <span>
+                      {paymentMethod === "DAFTAR_CASH"
+                        ? isAr
+                          ? "تأكيد الطلب وسداد الفاتورة عبر دفتر كاش"
+                          : "Confirm & Pay via DaftarCash"
+                        : isAr
+                        ? "تأكيد وإتمام الطلب"
+                        : "Confirm & Place Order"}
+                    </span>
+                  </>
                 )}
-                <span>{isAr ? "تأكيد وإتمام الطلب" : "Confirm & Place Order"}</span>
               </button>
             </div>
           </div>

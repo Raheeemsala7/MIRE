@@ -7,20 +7,34 @@ import { getTranslations } from "next-intl/server";
 import { getAuthLocale } from "@/features/auth/lib/locale";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/features/auth/components/login/login-form";
-import { destination } from "@/lib/auth/session";
+import { destination, clearAuthCookies } from "@/lib/auth/session";
+import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
   return { title: t("login-meta-title") };
 }
-async function LoginPageContent({ searchParams }: { searchParams: Promise<{ callbackUrl?: string }> }) {
-  const { callbackUrl } = await searchParams;
+
+async function LoginPageContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string; expired?: string }>;
+}) {
+  const { callbackUrl, expired } = await searchParams;
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
+  const token = await getNextAuthToken();
   const user = (await getServerSession())?.user;
-  if (user) redirect(destination(user.role, locale, user.permissions));
-return (
+
+  // If token is missing, expired, or user explicitly arrived with expired=1, wipe stale cookies
+  if (expired === "1" || !token?.token) {
+    await clearAuthCookies();
+  } else if (user) {
+    redirect(destination(user.role, locale, user.permissions));
+  }
+
+  return (
     <main className="auth-surface grid min-h-screen bg-ds-plain lg:grid-cols-[minmax(0,1fr)_minmax(440px,48%)]">
       <section className="relative hidden overflow-hidden bg-ds-primary-saturated text-white lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
         <div
@@ -32,7 +46,8 @@ return (
           aria-hidden="true"
         />
         <Link
-          href="/" locale={locale}
+          href="/"
+          locale={locale}
           className="relative z-10 w-fit font-serif text-3xl tracking-[.16em] text-white"
         >
           MIRÉ
@@ -52,19 +67,31 @@ return (
       <section className="flex min-h-screen flex-col px-5 py-7 sm:px-10 lg:px-16 xl:px-24">
         <div className="flex items-center justify-between">
           <Link
-            href="/" locale={locale}
+            href="/"
+            locale={locale}
             className="font-serif text-2xl tracking-[.16em] text-ds-text-primary lg:hidden"
           >
             MIRÉ
           </Link>
           <Link
-            href="/" locale={locale}
+            href="/"
+            locale={locale}
             className="ms-auto text-sm text-ds-text-muted underline-offset-4 hover:text-ds-text-primary hover:underline"
           >
             {t("login-back")}
           </Link>
         </div>
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-14">
+          {expired === "1" && (
+            <div
+              role="status"
+              className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300"
+            >
+              {locale === "ar"
+                ? "انتهت صلاحية الجلسة، يُرجى تسجيل الدخول مجددًا للمتابعة."
+                : "Your session has expired. Please log in again to continue."}
+            </div>
+          )}
           <h1 className="font-serif text-4xl tracking-tight text-ds-text-plain sm:text-5xl">
             {t("login-title")}
           </h1>
@@ -80,5 +107,9 @@ return (
 }
 
 export default function LoginPage(props: Parameters<typeof LoginPageContent>[0]) {
-  return <Suspense fallback={<AuthSkeleton />}><LoginPageContent {...props} /></Suspense>;
+  return (
+    <Suspense fallback={<AuthSkeleton />}>
+      <LoginPageContent {...props} />
+    </Suspense>
+  );
 }

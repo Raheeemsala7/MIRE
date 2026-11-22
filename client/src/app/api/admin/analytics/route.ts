@@ -1,8 +1,7 @@
 import { hasPermission, isAdminRole } from "@/lib/auth/roles";
-import { serverApiGet } from "@/lib/auth/session";
+import { serverApiGet, handleApiError } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/auth";
-import { BackendApiError } from "@/lib/auth/backend-client";
 import type { AnalyticsDashboardData } from "@/features/analytics/types/analytics.types";
 
 interface BackendResponse<T> {
@@ -33,16 +32,6 @@ export async function GET(request: NextRequest) {
     );
     return NextResponse.json(response);
   } catch (error) {
-    if (error instanceof BackendApiError) {
-      return NextResponse.json(
-        { success: false, error: "Backend service error" },
-        { status: error.status }
-      );
-    }
-    console.error("Failed to fetch admin analytics:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch analytics from backend service" },
-      { status: 502 }
-    );
+    return handleApiError(error);
   }
 }

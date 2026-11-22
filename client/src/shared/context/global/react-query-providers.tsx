@@ -1,22 +1,54 @@
 // In Next.js, this file would be called: app/providers.tsx
 'use client';
 
-// Since QueryClientProvider relies on useContext under the hood, we have to put 'use client' on top
 import {
   isServer,
   QueryClient,
   QueryClientProvider,
+  QueryCache,
+  MutationCache,
 } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { handleClientSessionExpired } from '@/shared/lib/utils/client-auth.utils';
+
+function isAuthExpiredError(error: any): boolean {
+  if (!error) return false;
+  const msg = typeof error?.message === "string" ? error.message.toLowerCase() : "";
+  return (
+    error?.status === 401 ||
+    error?.code === "SESSION_EXPIRED" ||
+    msg.includes("token has expired") ||
+    msg.includes("authorization token") ||
+    msg.includes("unauthorized") ||
+    msg.includes("expired")
+  );
+}
 
 function makeQueryClient() {
   return new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error: any) => {
+        if (isAuthExpiredError(error)) {
+          handleClientSessionExpired();
+        }
+      },
+    }),
+    mutationCache: new MutationCache({
+      onError: (error: any) => {
+        if (isAuthExpiredError(error)) {
+          handleClientSessionExpired();
+        }
+      },
+    }),
     defaultOptions: {
       queries: {
-        // With SSR, we usually want to set some default staleTime
-        // above 0 to avoid refetching immediately on the client
         staleTime: 60 * 1000,
-        retry: 2,
+        retry: (failureCount, error: any) => {
+          if (isAuthExpiredError(error)) {
+            return false;
+          }
+          return failureCount < 2;
+        },
       },
       mutations: { retry: 0 },
     },
@@ -31,9 +63,6 @@ function getQueryClient() {
     return makeQueryClient();
   } else {
     // Browser: make a new query client if we don't already have one
-    // This is very important, so we don't re-make a new client if React
-    // suspends during the initial render. This may not be needed if we
-    // have a suspense boundary BELOW the creation of the query client
     if (!browserQueryClient) {
       browserQueryClient = makeQueryClient();
     }
@@ -46,10 +75,6 @@ export default function ReactQueryProvider({
 }: {
   children: React.ReactNode;
 }) {
-  // NOTE: Avoid useState when initializing the query client if you don't
-  //       have a suspense boundary between this and the code that may
-  //       suspend because React will throw away the client on the initial
-  //       render if it suspends and there is no boundary
   const queryClient = getQueryClient();
 
   return (

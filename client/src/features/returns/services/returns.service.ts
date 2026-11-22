@@ -4,6 +4,7 @@ import type {
   SingleReturnResponse,
   ReturnsOverviewStats,
 } from "../types/return.types";
+import { handleClientSessionExpired } from "@/shared/lib/utils/client-auth.utils";
 
 export interface DeliveredOrderSummary {
   _id: string;
@@ -48,6 +49,7 @@ export async function fetchReturns(
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.message ||
@@ -66,6 +68,7 @@ export async function fetchReturnById(id: string): Promise<SingleReturnResponse>
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.message ||
@@ -87,6 +90,7 @@ export async function fetchCustomerDeliveredOrders(): Promise<{
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.message ||
@@ -111,6 +115,7 @@ export async function fetchReturnsStats(): Promise<{
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.message ||

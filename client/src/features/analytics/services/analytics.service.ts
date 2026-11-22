@@ -5,6 +5,7 @@ import type {
   LowStockItem,
 } from "../types/analytics.types";
 import { analyticsResponseSchema } from "../schemas/analytics.schema";
+import { handleClientSessionExpired } from "@/shared/lib/utils/client-auth.utils";
 
 export async function fetchAnalyticsDashboard(
   filter: AnalyticsFilter
@@ -15,6 +16,10 @@ export async function fetchAnalyticsDashboard(
   if (filter.endDate) params.set("endDate", filter.endDate);
 
   const res = await fetch(`/api/admin/analytics?${params.toString()}`);
+  if (res.status === 401) {
+    handleClientSessionExpired();
+    throw new Error("Authorization token has expired");
+  }
   if (!res.ok) {
     throw new Error(`Analytics API error: ${res.status}`);
   }
@@ -34,6 +39,10 @@ export async function fetchAnalyticsDashboard(
 
 export async function fetchRecentOrders(): Promise<RecentOrderItem[]> {
   const res = await fetch("/api/admin/orders/recent?limit=6");
+  if (res.status === 401) {
+    handleClientSessionExpired();
+    throw new Error("Authorization token has expired");
+  }
   if (!res.ok) {
     throw new Error(`Recent orders API error: ${res.status}`);
   }
@@ -43,6 +52,10 @@ export async function fetchRecentOrders(): Promise<RecentOrderItem[]> {
 
 export async function fetchLowStockAlerts(): Promise<LowStockItem[]> {
   const res = await fetch("/api/admin/inventory/low-stock");
+  if (res.status === 401) {
+    handleClientSessionExpired();
+    throw new Error("Authorization token has expired");
+  }
   if (!res.ok) {
     throw new Error(`Inventory API error: ${res.status}`);
   }

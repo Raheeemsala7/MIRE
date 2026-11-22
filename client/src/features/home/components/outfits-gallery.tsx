@@ -158,7 +158,7 @@ export async function OutfitsGallery() {
         </div>
 
         {/* 4 Bundle Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {bundlesData.map((item) => (
             <BundleCard key={item.id} bundle={item} />
           ))}

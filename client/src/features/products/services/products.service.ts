@@ -4,6 +4,7 @@ import type {
   SingleProductResponse,
 } from "../types/product.types";
 import { buildProductQueryParams } from "../utils/product.util";
+import { handleClientSessionExpired } from "@/shared/lib/utils/client-auth.utils";
 
 /**
  * Fetch products via client Route Handler /api/admin/products
@@ -20,6 +21,7 @@ export async function fetchAdminProducts(
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.error || errorBody?.message || `Failed to fetch products (${res.status})`
@@ -42,6 +44,7 @@ export async function fetchAdminProductById(
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.error || errorBody?.message || `Failed to fetch product (${res.status})`

@@ -1,8 +1,7 @@
 import { hasPermission, isAdminRole } from "@/lib/auth/roles";
-import { serverApiGet } from "@/lib/auth/session";
+import { serverApiGet, handleApiError } from "@/lib/auth/session";
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/auth";
-import { BackendApiError } from "@/lib/auth/backend-client";
 import type { LowStockItem } from "@/features/analytics/types/analytics.types";
 
 interface RawLowStockResponse {
@@ -22,16 +21,6 @@ export async function GET() {
     );
     return NextResponse.json({ success: true, data: response.data || [] });
   } catch (error) {
-    if (error instanceof BackendApiError) {
-      return NextResponse.json(
-        { success: false, error: "Backend service error" },
-        { status: error.status }
-      );
-    }
-    console.error("Failed to fetch low stock alerts:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch inventory from backend service" },
-      { status: 502 }
-    );
+    return handleApiError(error);
   }
 }

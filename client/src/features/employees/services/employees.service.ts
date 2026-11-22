@@ -3,6 +3,7 @@ import type {
   EmployeesPaginatedResponse,
   SingleEmployeeResponse,
 } from "../types/employee.types";
+import { handleClientSessionExpired } from "@/shared/lib/utils/client-auth.utils";
 
 export async function fetchEmployees(
   filters: EmployeeFilters = {}
@@ -27,6 +28,7 @@ export async function fetchEmployees(
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(errorBody?.message || errorBody?.error || `Failed to fetch employees (${res.status})`);
   }
@@ -41,6 +43,7 @@ export async function fetchEmployeeById(id: string): Promise<SingleEmployeeRespo
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(errorBody?.message || errorBody?.error || `Failed to fetch employee details (${res.status})`);
   }

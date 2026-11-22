@@ -17,16 +17,16 @@ export async function HeroSection() {
           <div className="md:col-span-6 space-y-6 text-start">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary shadow-2xs">
               <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-              <span>{isRTL ? "«الزهور فقط ترتدي ميري»" : "“Only flowers wear MIRÉ”"}</span>
+              <span>{isRTL ? "ميري للأزياء الراقية" : "MIRÉ Modest Couture"}</span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-brand-serif font-normal text-foreground tracking-tight leading-[1.15]">
-                {isRTL ? "أناقة محتشمة، بهدوء معاصر" : "Contemporary Modest Elegance"}
+                {isRTL ? "الزهور فقط ترتدي ميري" : "Only Flowers Wear MIRÉ"}
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground max-w-md leading-relaxed font-normal">
                 {isRTL
-                  ? "تصاميم منسدلة بأقمشة طبيعية وقصات مدروسة، تُجسد الوقار والراحة اليومية للمرأة المعاصرة."
+                  ? "أناقة محتشمة، بهدوء معاصر وتصاميم منسدلة تُجسد الوقار والراحة اليومية."
                   : "Refined fluid silhouettes and natural fabrics crafted for enduring comfort and quiet confidence."}
               </p>
             </div>

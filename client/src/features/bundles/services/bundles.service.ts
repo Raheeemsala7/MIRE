@@ -4,6 +4,7 @@ import type {
   SingleBundleResponse,
 } from "../types/bundle.types";
 import { buildBundleQueryParams } from "../utils/bundle.util";
+import { handleClientSessionExpired } from "@/shared/lib/utils/client-auth.utils";
 
 /**
  * Fetch bundles via client Route Handler /api/admin/bundles
@@ -20,6 +21,7 @@ export async function fetchAdminBundles(
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.error || errorBody?.message || `Failed to fetch bundles (${res.status})`
@@ -42,6 +44,7 @@ export async function fetchAdminBundleById(
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.error || errorBody?.message || `Failed to fetch bundle (${res.status})`

@@ -3,6 +3,7 @@ import type {
   CustomersPaginatedResponse,
   CustomerDetailsResponse,
 } from "../types/customer.types";
+import { handleClientSessionExpired } from "@/shared/lib/utils/client-auth.utils";
 
 export async function fetchCustomers(
   filters: CustomerFilters = {}
@@ -23,6 +24,7 @@ export async function fetchCustomers(
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.message ||
@@ -43,6 +45,7 @@ export async function fetchCustomerById(
   });
 
   if (!res.ok) {
+    if (res.status === 401) handleClientSessionExpired();
     const errorBody = await res.json().catch(() => null);
     throw new Error(
       errorBody?.message ||

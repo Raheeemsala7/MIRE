@@ -1,7 +1,6 @@
-import { serverApiGet } from "@/lib/auth/session";
+import { serverApiGet, handleApiError } from "@/lib/auth/session";
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/auth";
-import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import type {
@@ -61,18 +60,6 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: stats });
   } catch (error) {
-    if (error instanceof BackendApiError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: error.messageText || "Failed to fetch returns statistics",
-        },
-        { status: error.status }
-      );
-    }
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch returns statistics" },
-      { status: 502 }
-    );
+    return handleApiError(error);
   }
 }

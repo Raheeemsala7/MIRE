@@ -5,6 +5,7 @@ import { getServerSession } from "@/auth";
 import { isAdminRole, isCustomerRole } from "@/lib/auth/roles";
 import { normalizeLocale } from "@/lib/auth/permissions";
 import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
+import { getNextAuthToken, clearAuthCookies } from "@/shared/lib/utils/auth.utils";
 
 type PlatformProps = {
   admin: React.ReactNode;
@@ -18,6 +19,16 @@ async function AuthorizedPlatform({ admin, user, params }: PlatformProps) {
 
   // Guest → Public Storefront
   if (!session?.user) {
+    return user;
+  }
+
+  // Validate backend token isn't expired
+  const token = await getNextAuthToken();
+  if (!token?.token) {
+    await clearAuthCookies();
+    if (isAdminRole(session.user.role)) {
+      redirect(`/${locale}/auth/login?expired=1`);
+    }
     return user;
   }
 

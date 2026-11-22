@@ -1,7 +1,6 @@
-import { serverApiGet } from "@/lib/auth/session";
+import { serverApiGet, handleApiError } from "@/lib/auth/session";
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/auth";
-import { BackendApiError } from "@/lib/auth/backend-client";
 
 export async function GET() {
   const session = await getServerSession();
@@ -43,18 +42,6 @@ export async function GET() {
 
     return NextResponse.json(response);
   } catch (error) {
-    if (error instanceof BackendApiError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: error.messageText || "Failed to fetch delivered orders",
-        },
-        { status: error.status }
-      );
-    }
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch delivered orders" },
-      { status: 502 }
-    );
+    return handleApiError(error);
   }
 }

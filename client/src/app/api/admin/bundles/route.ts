@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/auth";
-import { serverApiGet } from "@/lib/auth/session";
-import { BackendApiError } from "@/lib/auth/backend-client";
+import { serverApiGet, handleApiError } from "@/lib/auth/session";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import type { BundlesPaginatedResponse } from "@/features/bundles/types/bundle.types";
@@ -45,19 +44,6 @@ export async function GET(request: NextRequest) {
     );
     return NextResponse.json(response);
   } catch (error) {
-    if (error instanceof BackendApiError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: error.messageText || "Backend error",
-          errors: error.errors,
-        },
-        { status: error.status }
-      );
-    }
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch bundles from backend service" },
-      { status: 502 }
-    );
+    return handleApiError(error);
   }
 }

@@ -1,7 +1,6 @@
-import { serverApiGet } from "@/lib/auth/session";
+import { serverApiGet, handleApiError } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/auth";
-import { BackendApiError } from "@/lib/auth/backend-client";
 import { assertSessionPermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import type { SingleEmployeeResponse } from "@/features/employees/types/employee.types";
@@ -25,15 +24,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
     return NextResponse.json(response);
   } catch (error) {
-    if (error instanceof BackendApiError) {
-      return NextResponse.json(
-        { success: false, error: error.messageText, message: error.messageText },
-        { status: error.status }
-      );
-    }
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch employee details" },
-      { status: 502 }
-    );
+    return handleApiError(error);
   }
 }

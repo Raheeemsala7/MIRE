@@ -9,7 +9,7 @@ import type { SafeUser } from "@/lib/auth/types";
 
 const nextAuth = NextAuth({
   trustHost: true,
-  secret: process.env.AUTH_SECRET || "tD+4cODqaNMJnlZAki/dDOqjC4QldbtyckSBmMin/58=",
+  secret: process.env.AUTH_SECRET,
   pages: {
     signIn: "/auth/login",
   },

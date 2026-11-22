@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import NextLink from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/src/i18n/navigation";
-import { Menu, X, ShoppingBag, UserRound, Heart, Package } from "lucide-react";
+import { Menu, X, ShoppingBag, UserRound, Heart, Package, Truck } from "lucide-react";
 import { useCartStore } from "../stores/cart-store";
 import { CartDrawer } from "./cart-drawer";
 import { WishlistButton } from "@/src/features/wishlist";
@@ -84,6 +84,16 @@ export function Header() {
 
               {/* Wishlist Button with Heart Icon & Real-time Badge */}
               <WishlistButton />
+
+              {/* Track Orders Link */}
+              <Link
+                href="/orders"
+                aria-label={isRTL ? "متابعة طلباتي" : "Track My Orders"}
+                title={isRTL ? "متابعة طلباتي" : "Track My Orders"}
+                className="flex size-9 sm:size-10 items-center justify-center rounded-full text-ds-text-plain hover:text-ds-primary border border-ds-border-muted/70 hover:border-ds-primary bg-white/70 hover:bg-white shadow-2xs transition-all group cursor-pointer"
+              >
+                <Truck className="size-4 group-hover:scale-110 transition-transform" />
+              </Link>
 
               {/* User Account / Sign In */}
               <NextLink

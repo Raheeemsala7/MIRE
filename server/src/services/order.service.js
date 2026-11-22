@@ -391,6 +391,10 @@ class OrderService {
     return order;
   }
 
+  async trackOrder(orderNumber) {
+    return this.getOrderById(orderNumber);
+  }
+
   /**
    * Update order status with lifecycle checks & inventory release
    */

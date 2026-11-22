@@ -1,9 +1,8 @@
 import React from "react";
-import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
 import { getPublicRelatedProducts } from "../apis/products.api";
 import { getPrimaryImageUrl } from "../utils/product.util";
+import { ProductCard } from "./product-card";
 
 interface RelatedProductsProps {
   productId?: string;
@@ -90,43 +89,18 @@ export async function RelatedProducts({ productId }: RelatedProductsProps = {}) 
       {/* 3 Columns Grid with Real Modest Fashion Photos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
         {relatedItems.map((item) => (
-          <Link
+          <ProductCard
             key={item.id}
-            href={`/products/${item.slug}`}
-            className="group block"
-          >
-            <div className="relative aspect-3/4 overflow-hidden rounded-sm bg-ds-secondary/30 mb-4">
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-                unoptimized
-              />
-              <div className="absolute top-3 end-3">
-                <span
-                  className="size-3.5 rounded-full border border-white/60 shadow-xs block"
-                  style={{ backgroundColor: item.swatchHex }}
-                  aria-hidden="true"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="text-sm font-medium text-ds-text-plain group-hover:text-ds-primary transition-colors truncate">
-                  {item.title}
-                </h3>
-                <span className="text-xs font-mono font-semibold text-ds-text-plain shrink-0">
-                  {item.price} {t("common.currency")}
-                </span>
-              </div>
-              <p className="text-xs text-ds-text-soft font-light">
-                {item.subtitle}
-              </p>
-            </div>
-          </Link>
+            id={item.id}
+            slug={item.slug}
+            title={item.title}
+            titleAr={item.title}
+            category={item.subtitle}
+            categoryAr={item.subtitle}
+            price={item.price}
+            image={item.image}
+            colorHex={item.swatchHex}
+          />
         ))}
       </div>
     </section>

@@ -32,16 +32,19 @@ export async function CategoryGrid() {
   ];
 
   return (
-    <section id="collections" className="py-16 md:py-24 border-b border-ds-border-subtle">
+    <section id="collections" className="py-12 md:py-20 border-b border-border/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex items-baseline justify-between mb-10 pb-4 border-b border-ds-border-muted/40">
-          <h2 className="text-2xl sm:text-3xl font-brand-serif text-ds-text-plain">
-            {isRTL ? t("categories.titleAr") : t("categories.title")}
+        <div className="flex items-baseline justify-between mb-8 pb-3 border-b border-border/40">
+          <h2 className="text-2xl sm:text-3xl font-brand-serif text-foreground font-normal">
+            {isRTL ? "التصنيفات المختارة" : "Curated Silhouettes"}
           </h2>
-          <span className="text-xs uppercase tracking-widest text-ds-text-soft font-semibold">
-            {isRTL ? "تشكيلة الموسم" : "Season Collection"}
-          </span>
+          <Link
+            href="/products"
+            className="text-xs uppercase tracking-widest text-muted-foreground hover:text-primary font-medium transition-colors"
+          >
+            {isRTL ? "عرض الكل" : "View All"}
+          </Link>
         </div>
 
         {/* 4 Category Cards Grid */}
@@ -49,23 +52,22 @@ export async function CategoryGrid() {
           {categories.map((cat) => (
             <Link
               key={cat.slug}
-              href="/products/pleated-skirt"
+              href="/products"
               className="group block"
             >
-              <div className="relative aspect-3/4 rounded-md overflow-hidden bg-ds-secondary/20 border border-transparent group-hover:border-ds-primary/30 transition-all duration-300 shadow-2xs group-hover:shadow-md">
+              <div className="relative aspect-3/4 rounded-2xl overflow-hidden bg-muted/30 border border-border/40 group-hover:border-primary/40 transition-all duration-500 shadow-2xs group-hover:shadow-md">
                 <Image
                   src={cat.image}
                   alt={cat.name}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="object-cover group-hover:scale-104 transition-transform duration-700 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
               </div>
 
               {/* Category Name Below */}
-              <div className="mt-3 px-1 text-center sm:text-start">
-                <span className="text-sm sm:text-base font-medium text-ds-text-plain group-hover:text-ds-primary transition-colors">
+              <div className="mt-3 px-1 text-start">
+                <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
                   {cat.name}
                 </span>
               </div>

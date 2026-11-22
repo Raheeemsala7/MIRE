@@ -3,9 +3,8 @@ import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { HeroSection } from "@/features/home/components/hero-section";
 import { CategoryGrid } from "@/features/home/components/category-grid";
-import { BrandStory } from "@/features/home/components/brand-story";
 import { NewArrivals } from "@/features/home/components/new-arrivals";
-import { OutfitsGallery } from "@/features/home/components/outfits-gallery";
+import { BrandStory } from "@/features/home/components/brand-story";
 import { ValuePillars } from "@/features/home/components/value-pillars";
 
 interface HomePageProps {
@@ -26,9 +25,8 @@ async function HomeContent({ params }: HomePageProps) {
     <div className="w-full flex flex-col">
       <HeroSection />
       <CategoryGrid />
-      <OutfitsGallery />
-      <BrandStory />
       <NewArrivals />
+      <BrandStory />
       <ValuePillars />
     </div>
   );

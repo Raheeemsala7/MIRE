@@ -5,53 +5,35 @@ import { Link } from "@/i18n/navigation";
 import { BotanicalIcon } from "@/shared/components/botanical-icon";
 
 export async function BrandStory() {
-  const t = await getTranslations();
   const locale = await getLocale();
   const isRTL = locale === "ar";
 
   return (
-    <section id="about" className="py-20 md:py-28 bg-ds-secondary/35 relative overflow-hidden border-b border-ds-border-subtle">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-14 items-center">
-          {/* Visual Column with Real Modest Outfit Photo & Botanical Icon */}
-          <div className="md:col-span-5 flex items-center justify-center relative">
-            <div className="relative w-full max-w-sm aspect-4/5 rounded-lg overflow-hidden shadow-md border border-white/60 bg-white">
-              <Image
-                src="/products/outfits/tapioca-brown.jpg"
-                alt="MIRÉ Modest Philosophy"
-                fill
-                sizes="(max-width: 768px) 100vw, 384px"
-                className="object-cover"
-              />
-              <div className="absolute top-4 end-4 text-white drop-shadow-md">
-                <BotanicalIcon size={48} />
-              </div>
-            </div>
-          </div>
+    <section id="about" className="py-20 md:py-28 bg-muted/20 border-b border-border/40">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+        <span className="inline-block text-[11px] tracking-[0.25em] uppercase font-semibold text-primary">
+          {isRTL ? "فلسفة ميري" : "THE MIRÉ PHILOSOPHY"}
+        </span>
 
-          {/* Story Narrative Column */}
-          <div className="md:col-span-7 space-y-6 text-start">
-            <span className="inline-block text-[11px] md:text-xs tracking-[0.25em] uppercase font-semibold text-ds-primary">
-              {t("approach.kicker")}
-            </span>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-brand-serif font-normal text-foreground leading-relaxed">
+          {isRTL
+            ? "«نبتكر أزياء محتشمة تُصاغ بعناية، لتمنحكِ حضوراً راقياً وانسيابية تدوم طوال اليوم.»"
+            : "“Understated silhouettes crafted with deliberate precision, offering quiet grace and enduring ease.”"}
+        </h2>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-brand-serif text-ds-text-plain tracking-tight leading-snug">
-              {isRTL ? t("approach.titleAr") : t("approach.title")}
-            </h2>
+        <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+          {isRTL
+            ? "أقمشة طبيعية منسدلة، وقصات محتشمة تمنحكِ الراحة والوقار في كل حركة."
+            : "Natural fluid textiles, mindful drape, and calming palettes designed for timeless modest elegance."}
+        </p>
 
-            <p className="text-sm sm:text-base text-ds-text-plain/85 leading-relaxed max-w-xl">
-              {t("approach.story")}
-            </p>
-
-            <div className="pt-2">
-              <Link
-                href="/products"
-                className="inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-widest uppercase transition-all shadow-sm hover:shadow cursor-pointer"
-              >
-                {t("approach.cta")}
-              </Link>
-            </div>
-          </div>
+        <div className="pt-2">
+          <Link
+            href="/products"
+            className="inline-flex items-center text-xs font-semibold uppercase tracking-widest text-primary hover:underline underline-offset-8"
+          >
+            {isRTL ? "استكشفي التصاميم ←" : "Discover the Atelier →"}
+          </Link>
         </div>
       </div>
     </section>

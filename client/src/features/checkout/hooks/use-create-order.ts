@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createOrderAction } from "../server/actions";
+import { checkoutAction } from "../apis/checkout.action";
 import type { CheckoutPayload, PlacedOrder } from "../types/checkout";
 
 export const orderQueryKeys = {
@@ -28,10 +28,14 @@ export function useCreateOrder(
           totalAmount: number;
         };
       }
-    ) => createOrderAction(payload),
+    ) => checkoutAction(payload),
     onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: orderQueryKeys.all });
-      onSuccessCallback?.(res.data);
+      if (res.success && res.data) {
+        queryClient.invalidateQueries({ queryKey: orderQueryKeys.all });
+        onSuccessCallback?.(res.data);
+      } else {
+        onErrorCallback?.(new Error(res.message || "Failed to place order"));
+      }
     },
     onError: (error: Error) => {
       onErrorCallback?.(error);

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { requirePermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import { CouponsManager } from "@/features/admin/coupons";
-import { getAdminCoupons } from "@/features/admin/coupons/server/queries";
+import { getAdminCouponsApi } from "@/features/admin/coupons/apis/coupons.api";
 
 interface AdminCouponsPageProps {
   params: Promise<{ locale: string }>;
@@ -33,8 +33,8 @@ export default async function AdminCouponsPage({
   // Require coupons permissions on the server
   await requirePermission(PERMISSIONS.COUPONS_VIEW, locale);
 
-  // Fetch real coupons directly from backend database
-  const initialCoupons = await getAdminCoupons();
+  // Fetch real coupons directly from backend database using getAdminCouponsApi
+  const initialCoupons = await getAdminCouponsApi();
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">

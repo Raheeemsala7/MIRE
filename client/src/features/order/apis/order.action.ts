@@ -1,13 +1,13 @@
 "use server";
 
-import { trackPublicOrder } from "./queries";
+import { trackOrderApi } from "./order.api";
 import type { OrderDisplay } from "../types/order";
 
 export async function trackPublicOrderAction(
   orderNumber: string
 ): Promise<{ success: boolean; data?: OrderDisplay; error?: string }> {
   try {
-    const order = await trackPublicOrder(orderNumber);
+    const order = await trackOrderApi(orderNumber);
     if (!order) {
       return {
         success: false,

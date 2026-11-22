@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { updateOrderStatusAction } from "../server/actions";
+import { updateOrderStatusAction } from "../apis/orders.action";
 import type { OrderDoc, OrderStatus } from "../types/order-admin.types";
 
 export function useUpdateOrderStatus(

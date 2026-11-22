@@ -1,14 +1,13 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/permissions/server-authorization";
-import { serverApiGet } from "@/lib/auth/session";
-import { BackendApiError } from "@/lib/auth/backend-client";
 import { PERMISSIONS } from "@/config/rbac.config";
 import {
   OrderDetailsView,
   type OrderDoc,
 } from "@/features/admin/orders";
+import { getAdminOrderByIdApi } from "@/features/admin/orders/apis/orders.api";
 
 interface AdminOrderDetailsPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -29,25 +28,12 @@ export async function generateMetadata({
   };
 }
 
-async function getOrderDetails(id: string, locale: string): Promise<OrderDoc> {
-  try {
-    const response = await serverApiGet<{ success: boolean; data: OrderDoc }>(
-      `/orders/${encodeURIComponent(id)}` as `/${string}`
-    );
-    if (response?.success && response.data) {
-      return response.data;
-    }
-  } catch (error) {
-    if (error instanceof BackendApiError && error.status === 403) {
-      redirect(`/${locale}/403`);
-    }
-    if (error instanceof BackendApiError && error.status === 404) {
-      notFound();
-    }
-    console.error("getOrderDetails backend error:", error);
+async function getOrderDetails(id: string): Promise<OrderDoc> {
+  const order = await getAdminOrderByIdApi(id);
+  if (!order) {
+    notFound();
   }
-
-  notFound();
+  return order;
 }
 
 export default async function AdminOrderDetailsPage(
@@ -57,7 +43,7 @@ export default async function AdminOrderDetailsPage(
 
   await requirePermission(PERMISSIONS.ORDERS_VIEW, locale);
 
-  const order = await getOrderDetails(id, locale);
+  const order = await getOrderDetails(id);
 
   return (
     <Suspense fallback={<OrderDetailsLoadingSkeleton />}>

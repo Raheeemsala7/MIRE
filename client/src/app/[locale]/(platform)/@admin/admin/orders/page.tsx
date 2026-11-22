@@ -1,15 +1,12 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/permissions/server-authorization";
-import { serverApiGet } from "@/lib/auth/session";
-import { BackendApiError } from "@/lib/auth/backend-client";
 import { PERMISSIONS } from "@/config/rbac.config";
 import {
   OrdersTable,
   type OrderDoc,
-  type OrdersPaginatedResponse,
 } from "@/features/admin/orders";
+import { getAdminOrdersApi } from "@/features/admin/orders/apis/orders.api";
 
 interface AdminOrdersPageProps {
   params: Promise<{ locale: string }>;
@@ -32,7 +29,6 @@ export async function generateMetadata({
 }
 
 async function getInitialOrdersData(
-  locale: string,
   searchParams?: { [key: string]: string | string[] | undefined }
 ): Promise<{ orders: OrderDoc[]; total: number }> {
   const query = new URLSearchParams();
@@ -46,21 +42,7 @@ async function getInitialOrdersData(
   if (status && status !== "ALL") query.set("status", status);
   if (search) query.set("search", search);
 
-  try {
-    const response = await serverApiGet<OrdersPaginatedResponse>(
-      `/orders?${query.toString()}` as `/${string}`
-    );
-    if (response?.success && Array.isArray(response.data)) {
-      return { orders: response.data, total: response.total ?? response.data.length };
-    }
-  } catch (error) {
-    if (error instanceof BackendApiError && error.status === 403) {
-      redirect(`/${locale}/403`);
-    }
-    console.error("getInitialOrdersData backend error:", error);
-  }
-
-  return { orders: [], total: 0 };
+  return await getAdminOrdersApi(query.toString());
 }
 
 export default async function AdminOrdersPage(props: AdminOrdersPageProps) {
@@ -69,7 +51,7 @@ export default async function AdminOrdersPage(props: AdminOrdersPageProps) {
 
   await requirePermission(PERMISSIONS.ORDERS_VIEW, locale);
 
-  const { orders, total } = await getInitialOrdersData(locale, rawSearchParams);
+  const { orders, total } = await getInitialOrdersData(rawSearchParams);
 
   return (
     <Suspense fallback={<OrdersLoadingSkeleton />}>

@@ -2,11 +2,11 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { createCouponAction } from "../server/actions";
+import { createCouponAction } from "../apis/coupons.action";
 import { couponQueryKeys } from "./use-coupons";
-import type { CouponItem } from "../components/coupons-manager";
+import type { CouponItem } from "../types/coupon.types";
 
-export function useCreateCoupon(onSuccessCallback?: (coupon: CouponItem) => void) {
+export function useCreateCoupon(onSuccessCallback?: (coupon?: CouponItem) => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -23,11 +23,15 @@ export function useCreateCoupon(onSuccessCallback?: (coupon: CouponItem) => void
       isActive?: boolean;
     }) => createCouponAction(payload),
     onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
-      toast.success(res.message || "تم إنشاء الكوبون بنجاح", {
-        description: res.data.code,
-      });
-      onSuccessCallback?.(res.data);
+      if (res.success && res.data) {
+        queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
+        toast.success(res.message || "تم إنشاء الكوبون بنجاح", {
+          description: res.data.code,
+        });
+        onSuccessCallback?.(res.data);
+      } else {
+        toast.error(res.message || "فشل إنشاء الكوبون");
+      }
     },
     onError: (error: Error) => {
       toast.error("فشل إنشاء الكوبون", {

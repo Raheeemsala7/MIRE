@@ -1,0 +1,55 @@
+import { API_URL, HEADERS } from "@/shared/constant/api.constant";
+import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
+import type { OrderDisplay } from "../types/order";
+
+export async function getOrdersApi({
+  page = 1,
+  limit = 50,
+}: { page?: number; limit?: number } = {}): Promise<OrderDisplay[]> {
+  const token = await getNextAuthToken();
+  if (!token?.token) return [];
+
+  try {
+    const res = await fetch(`${API_URL}/orders?page=${page}&limit=${limit}`, {
+      method: "GET",
+      headers: {
+        ...HEADERS.JsonBody,
+        ...HEADERS.authorize(token.token),
+      },
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+    if (res.ok && data?.success && Array.isArray(data.data)) {
+      return data.data;
+    }
+    return [];
+  } catch (error) {
+    console.error("getOrdersApi error:", error);
+    return [];
+  }
+}
+
+export async function trackOrderApi(orderNumber: string): Promise<OrderDisplay | null> {
+  const cleanNumber = orderNumber.trim();
+  if (!cleanNumber) return null;
+
+  try {
+    const res = await fetch(`${API_URL}/orders/track/${encodeURIComponent(cleanNumber)}`, {
+      method: "GET",
+      headers: {
+        ...HEADERS.JsonBody,
+      },
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+    if (res.ok && data?.success && data?.data) {
+      return data.data;
+    }
+    return null;
+  } catch (error) {
+    console.error("trackOrderApi error:", error);
+    return null;
+  }
+}

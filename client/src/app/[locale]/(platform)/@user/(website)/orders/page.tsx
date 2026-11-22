@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { currentUser } from "@/lib/auth/session";
 import { Package, Truck } from "lucide-react";
 import { OrdersView } from "@/src/features/order";
-import { getCustomerOrders } from "@/src/features/order/server/queries";
+import { getOrdersApi } from "@/src/features/order/apis/order.api";
 import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
 
 interface OrdersPageProps {
@@ -23,8 +23,8 @@ async function OrdersPageContent({ params }: OrdersPageProps) {
   const isAr = locale === "ar";
   const user = await currentUser();
 
-  // Fetch real customer orders on the server (Server Component)
-  const initialOrders = await getCustomerOrders();
+  // Fetch real customer orders on the server (Server Component - Rose-App pattern)
+  const initialOrders = await getOrdersApi();
 
   return (
     <main className="mx-auto min-h-[65vh] max-w-5xl px-4 py-12 sm:px-6 lg:px-8">

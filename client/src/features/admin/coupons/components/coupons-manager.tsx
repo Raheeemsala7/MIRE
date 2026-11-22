@@ -3,23 +3,17 @@
 import React, { useState } from "react";
 import { useLocale } from "next-intl";
 import {
-  Tag,
   Plus,
   Copy,
   Check,
   Trash2,
   Calendar,
-  Sparkles,
   TicketPercent,
   Search,
   CheckCircle2,
-  Clock,
-  AlertCircle,
   TrendingUp,
-  Percent,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/shared/components/ui/dialog";
@@ -27,22 +21,7 @@ import { Switch } from "@/shared/components/ui/switch";
 import { useCreateCoupon } from "../hooks/use-create-coupon";
 import { useUpdateCoupon } from "../hooks/use-update-coupon";
 import { useDeleteCoupon } from "../hooks/use-delete-coupon";
-
-export interface CouponItem {
-  _id: string;
-  code: string;
-  discountType: "PERCENTAGE" | "FIXED_AMOUNT";
-  discountValue: number;
-  minOrderAmount: number;
-  maxDiscountAmount?: number | null;
-  startDate: string;
-  endDate: string;
-  usageLimit?: number | null;
-  usedCount: number;
-  maxUsesPerCustomer: number;
-  isActive: boolean;
-  createdAt?: string;
-}
+import type { CouponItem } from "../types/coupon.types";
 
 interface CouponsManagerProps {
   initialCoupons: CouponItem[];

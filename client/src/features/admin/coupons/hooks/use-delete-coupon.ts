@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { deleteCouponAction } from "../server/actions";
+import { deleteCouponAction } from "../apis/coupons.action";
 import { couponQueryKeys } from "./use-coupons";
 
 export function useDeleteCoupon(onSuccessCallback?: () => void) {

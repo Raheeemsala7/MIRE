@@ -26,7 +26,7 @@ import {
 import { useCartStore } from "@/src/shared/stores/cart-store";
 import { OrderTrackingTimeline } from "@/shared/components/order-tracking-timeline";
 import { toast } from "sonner";
-import { trackPublicOrderAction } from "../server/actions";
+import { trackPublicOrderAction } from "../apis/order.action";
 
 interface OrderItem {
   id?: string;

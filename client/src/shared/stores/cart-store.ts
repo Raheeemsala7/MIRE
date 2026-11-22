@@ -15,7 +15,7 @@ export interface CartItem {
 
 export interface AppliedCoupon {
   code: string;
-  discountType: "PERCENTAGE" | "FIXED_AMOUNT";
+  discountType: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING";
   discountValue: number;
   discountAmount: number;
   minOrderAmount?: number;

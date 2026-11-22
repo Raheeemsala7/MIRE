@@ -178,6 +178,12 @@ export function BundleForm({
           : null,
       discountPercentage:
         values.type === "PERCENTAGE" ? Number(values.discountPercentage) || 0 : null,
+      eligibleProducts: (values.eligibleProducts || []).filter(
+        (id) => Boolean(id && typeof id === "string" && id.trim().length === 24)
+      ),
+      eligibleCategories: (values.eligibleCategories || []).filter(
+        (id) => Boolean(id && typeof id === "string" && id.trim().length === 24)
+      ),
     };
 
     if (isEditMode && initialBundle?._id) {

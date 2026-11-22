@@ -5,12 +5,14 @@ const { getPaginationOptions } = require('../utils/pagination');
 
 class PromotionService {
   generateSlug(title) {
-    return title
+    if (!title || typeof title !== 'string') return `bundle-${Date.now()}`;
+    const slug = title
       .toLowerCase()
       .trim()
-      .replace(/[^\w\s-]/g, '')
       .replace(/[\s_-]+/g, '-')
+      .replace(/[^\p{L}\p{N}-]/gu, '')
       .replace(/^-+|-+$/g, '');
+    return slug || `bundle-${Date.now()}`;
   }
 
   // --- Bundles ---
@@ -47,7 +49,7 @@ class PromotionService {
   }
 
   async createBundle(data) {
-    let slug = this.generateSlug(data.title);
+    let slug = this.generateSlug(data.slug || data.title);
     const existing = await Bundle.findOne({ slug });
     if (existing) slug = `${slug}-${Date.now().toString().slice(-4)}`;
 

@@ -100,6 +100,19 @@ const bundleSchema = new mongoose.Schema(
   }
 );
 
+bundleSchema.pre('validate', function (next) {
+  if (!this.slug || !this.slug.trim()) {
+    const titleSlug = (this.title || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[\s_-]+/g, '-')
+      .replace(/[^\p{L}\p{N}-]/gu, '')
+      .replace(/^-+|-+$/g, '');
+    this.slug = titleSlug || `bundle-${Date.now()}`;
+  }
+  next();
+});
+
 bundleSchema.index({ isActive: 1, startDate: 1, endDate: 1 });
 
 const Bundle = mongoose.model('Bundle', bundleSchema);

@@ -3,6 +3,7 @@ const { BundleTypes } = require('../models/Bundle');
 
 const bundleCreateSchema = z.object({
   title: z.string().min(2, 'Bundle title is required').max(150),
+  slug: z.string().optional(),
   description: z.string().optional(),
   type: z.enum(Object.values(BundleTypes)),
   eligibleProducts: z.array(z.string()).default([]),

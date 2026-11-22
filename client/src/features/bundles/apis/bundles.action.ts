@@ -33,6 +33,16 @@ function invalidateBundleCaches(bundleId?: string) {
   }
 }
 
+function generateClientSlug(title: string): string {
+  const clean = (title || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_-]+/g, "-")
+    .replace(/[^\p{L}\p{N}-]/gu, "")
+    .replace(/^-+|-+$/g, "");
+  return clean || `bundle-${Date.now()}`;
+}
+
 /**
  * Server Action: Create new promotional bundle
  */
@@ -60,18 +70,40 @@ export async function createBundleAction(
   const validatedData = parseResult.data;
   const token = await getNextAuthToken();
 
+  const cleanProducts = (validatedData.eligibleProducts || []).filter(
+    (id) => typeof id === "string" && id.trim().length === 24
+  );
+  const cleanCategories = (validatedData.eligibleCategories || []).filter(
+    (id) => typeof id === "string" && id.trim().length === 24
+  );
+
+  const cleanPayload = {
+    ...validatedData,
+    slug: generateClientSlug(validatedData.title),
+    eligibleProducts: cleanProducts,
+    eligibleCategories: cleanCategories,
+    bannerImage: validatedData.bannerImage?.trim() || "",
+    description: validatedData.description?.trim() || "",
+  };
+
   const res = await fetch(`${API_URL}/bundles`, {
     method: "POST",
     headers: {
       ...HEADERS.JsonBody,
       ...(token?.token ? HEADERS.authorize(token.token) : {}),
     },
-    body: JSON.stringify(validatedData),
+    body: JSON.stringify(cleanPayload),
   });
 
-  const response: SingleBundleResponse = await res.json();
+  const response: any = await res.json().catch(() => null);
   if (!res.ok || !response?.success) {
-    throw new Error((response as any)?.message || "Failed to create bundle");
+    const errorDetails = Array.isArray(response?.errors)
+      ? response.errors.map((e: any) => `${e.field || "field"}: ${e.message || "invalid"}`).join(" | ")
+      : "";
+    const errorMsg = errorDetails
+      ? `${response?.message || "Validation failed"}: ${errorDetails}`
+      : response?.message || `Failed to create bundle (${res.status})`;
+    throw new Error(errorMsg);
   }
 
   invalidateBundleCaches(response?.data?._id);
@@ -115,9 +147,15 @@ export async function updateBundleAction(
     body: JSON.stringify(parseResult.data),
   });
 
-  const response: SingleBundleResponse = await res.json();
+  const response: any = await res.json().catch(() => null);
   if (!res.ok || !response?.success) {
-    throw new Error((response as any)?.message || "Failed to update bundle");
+    const errorDetails = Array.isArray(response?.errors)
+      ? response.errors.map((e: any) => `${e.field || "field"}: ${e.message || "invalid"}`).join(" | ")
+      : "";
+    const errorMsg = errorDetails
+      ? `${response?.message || "Validation failed"}: ${errorDetails}`
+      : response?.message || `Failed to update bundle (${res.status})`;
+    throw new Error(errorMsg);
   }
 
   invalidateBundleCaches(response?.data?._id || id);

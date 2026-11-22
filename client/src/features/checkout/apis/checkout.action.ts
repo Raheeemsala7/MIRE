@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { headers } from "next/headers";
 import { API_URL, HEADERS } from "@/shared/constant/api.constant";
 import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 import { getErrorMessage } from "@/shared/lib/utils/get-error-message";
@@ -19,9 +20,15 @@ export async function checkoutAction(
   }
 ): Promise<{ success: boolean; message: string; data?: PlacedOrder }> {
   const token = await getNextAuthToken();
+  const headerList = await headers();
+  const host = headerList.get("x-forwarded-host") || headerList.get("host") || "localhost:3000";
+  const proto = headerList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+  const currentOrigin = `${proto}://${host}`;
 
   const body: any = {
     ...payload,
+    origin: payload.origin || currentOrigin,
+    returnUrl: payload.returnUrl || `${currentOrigin}/ar/checkout`,
   };
 
   if (token?.id || token?.sub) {
@@ -34,6 +41,8 @@ export async function checkoutAction(
       headers: {
         ...HEADERS.JsonBody,
         ...(token?.token ? HEADERS.authorize(token.token) : {}),
+        origin: currentOrigin,
+        referer: currentOrigin,
       },
       body: JSON.stringify(body),
     });

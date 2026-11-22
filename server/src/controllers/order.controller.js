@@ -14,8 +14,16 @@ class OrderController {
       let checkoutUrl = null;
       if (order.paymentInfo.method === 'DAFTAR_CASH') {
         try {
-          const origin = req.headers.origin || req.headers.referer || 'https://mirefashion.com';
-          const returnUrl = `${origin}/ar/checkout?orderNumber=${order.orderNumber}`;
+          const rawOrigin =
+            req.body.origin ||
+            req.headers.origin ||
+            req.headers.referer ||
+            (req.headers['x-forwarded-host'] ? `https://${req.headers['x-forwarded-host']}` : null) ||
+            'http://localhost:3000';
+          const cleanOrigin = String(rawOrigin).replace(/\/$/, '');
+          const returnUrl =
+            req.body.returnUrl ||
+            `${cleanOrigin}/ar/checkout?orderNumber=${order.orderNumber}&payment=success`;
           const session = await paymentService.createPaymentSession(order._id, 'DAFTAR_CASH', returnUrl);
           checkoutUrl = session.paymentUrl;
         } catch (err) {

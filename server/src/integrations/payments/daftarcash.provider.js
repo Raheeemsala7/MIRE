@@ -21,7 +21,10 @@ class DaftarCashProvider extends PaymentProviderInterface {
     try {
       const amount = Number(order.pricing?.totalAmount || 0);
       const orderNumber = order.orderNumber;
-      const redirectUrl = successUrl || `https://mirefashion.com/ar/checkout?orderNumber=${orderNumber}`;
+      let redirectUrl = successUrl || `http://localhost:3000/ar/checkout`;
+      if (!redirectUrl.includes('orderNumber=')) {
+        redirectUrl += (redirectUrl.includes('?') ? '&' : '?') + `orderNumber=${orderNumber}&payment=success`;
+      }
 
       // Use configured API key or fallback to provided sandbox test key
       const activeApiKey =

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { serverApiPatch, serverApiDelete } from "@/lib/auth/session";
+import { updateCoupon, deleteCoupon } from "@/lib/coupons-store";
 
 export async function PATCH(
   request: NextRequest,
@@ -21,12 +22,14 @@ export async function PATCH(
 
   try {
     const res = await serverApiPatch<any>(`/coupons/${id}`, body);
+    updateCoupon(id, body);
     return NextResponse.json(res);
   } catch {
+    const updated = updateCoupon(id, body);
     return NextResponse.json({
       success: true,
       message: "Coupon updated successfully",
-      data: { id, ...body },
+      data: updated || { id, ...body },
     });
   }
 }
@@ -44,8 +47,10 @@ export async function DELETE(
 
   try {
     const res = await serverApiDelete<any>(`/coupons/${id}`);
+    deleteCoupon(id);
     return NextResponse.json(res);
   } catch {
+    deleteCoupon(id);
     return NextResponse.json({
       success: true,
       message: "Coupon deleted successfully",

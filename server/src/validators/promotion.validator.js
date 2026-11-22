@@ -37,8 +37,9 @@ const couponCreateSchema = z.object({
 const couponUpdateSchema = couponCreateSchema.partial();
 
 const applyCouponSchema = z.object({
-  code: z.string().min(1)
-});
+  code: z.string().min(1),
+  subtotal: z.number().min(0).optional().default(0)
+}).passthrough();
 
 module.exports = {
   bundleCreateSchema,

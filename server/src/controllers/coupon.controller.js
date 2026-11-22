@@ -54,10 +54,11 @@ class CouponController {
 
   async validateCoupon(req, res, next) {
     try {
-      const { code, subtotal } = req.body;
+      const code = req.body.code;
+      const subtotal = Number(req.body.subtotal) || 0;
       const result = await promotionService.evaluateCouponDiscount(
         code,
-        subtotal || 0,
+        subtotal,
         req.user?._id,
         req.user?.email
       );

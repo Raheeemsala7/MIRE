@@ -74,6 +74,21 @@ class PaymentService {
       }
       return { received: true };
     }
+
+    if (providerName.toUpperCase() === 'DAFTAR_CASH') {
+      const isValid = provider.verifyWebhookSignature({ rawBody, headers });
+      if (!isValid) {
+        throw ApiError.badRequest('Invalid DaftarCash signature');
+      }
+      const { orderNumber, status, transactionId, raw } = await provider.handleWebhookEvent(body);
+      if (orderNumber) {
+        const order = await Order.findOne({ orderNumber });
+        if (order) {
+          await this.updatePaymentStatus(order._id, status, transactionId, raw, 'DAFTAR_CASH');
+        }
+      }
+      return { received: true };
+    }
   }
 
   /**

@@ -1,6 +1,7 @@
 const StripeProvider = require('./stripe.provider');
 const PaymobProvider = require('./paymob.provider');
 const CodProvider = require('./cod.provider');
+const DaftarCashProvider = require('./daftarcash.provider');
 const ApiError = require('../../utils/apiError');
 
 class PaymentFactory {
@@ -8,7 +9,8 @@ class PaymentFactory {
     this.providers = {
       STRIPE: new StripeProvider(),
       PAYMOB: new PaymobProvider(),
-      COD: new CodProvider()
+      COD: new CodProvider(),
+      DAFTAR_CASH: new DaftarCashProvider()
     };
   }
 

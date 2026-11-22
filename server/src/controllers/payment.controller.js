@@ -40,6 +40,19 @@ class PaymentController {
     }
   }
 
+  async daftarCashWebhook(req, res, next) {
+    try {
+      const result = await paymentService.processWebhook('DAFTAR_CASH', {
+        rawBody: req.rawBody || req.body,
+        body: req.body,
+        headers: req.headers
+      });
+      return res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async refund(req, res, next) {
     try {
       const { transactionId, amount, reason } = req.body;

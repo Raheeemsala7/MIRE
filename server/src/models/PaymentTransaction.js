@@ -4,7 +4,7 @@ const paymentTransactionSchema = new mongoose.Schema(
   {
     provider: {
       type: String,
-      enum: ['STRIPE', 'PAYMOB', 'COD'],
+      enum: ['STRIPE', 'PAYMOB', 'COD', 'DAFTAR_CASH'],
       required: true,
       index: true
     },

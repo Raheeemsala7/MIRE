@@ -95,4 +95,16 @@ router.post('/webhook/stripe', paymentController.stripeWebhook);
  */
 router.post('/webhook/paymob', paymentController.paymobWebhook);
 
+/**
+ * @swagger
+ * /payments/webhook/daftarcash:
+ *   post:
+ *     summary: DaftarCash E-Wallets & InstaPay Webhook (HMAC verified)
+ *     tags: [Webhooks]
+ *     responses:
+ *       200:
+ *         description: Webhook processed
+ */
+router.post('/webhook/daftarcash', paymentController.daftarCashWebhook);
+
 module.exports = router;

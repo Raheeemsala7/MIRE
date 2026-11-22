@@ -16,7 +16,8 @@ const OrderStatuses = {
 const PaymentMethods = {
   COD: 'COD',
   STRIPE: 'STRIPE',
-  PAYMOB: 'PAYMOB'
+  PAYMOB: 'PAYMOB',
+  DAFTAR_CASH: 'DAFTAR_CASH'
 };
 
 const PaymentStatuses = {

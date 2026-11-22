@@ -38,6 +38,12 @@ const env = {
     HMAC_SECRET: process.env.PAYMOB_HMAC_SECRET || ''
   },
 
+  DAFTAR_CASH: {
+    API_KEY: process.env.DAFTAR_CASH_API_KEY || '',
+    WEBHOOK_SECRET: process.env.DAFTAR_CASH_WEBHOOK_SECRET || '',
+    BASE_URL: process.env.DAFTAR_CASH_BASE_URL || 'https://daftarcash.com'
+  },
+
   META: {
     APP_ID: process.env.META_APP_ID || '',
     APP_SECRET: process.env.META_APP_SECRET || '',

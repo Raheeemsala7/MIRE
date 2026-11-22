@@ -1,4 +1,5 @@
 const orderService = require('../services/order.service');
+const paymentService = require('../services/payment.service');
 const ApiResponse = require('../utils/apiResponse');
 
 class OrderController {
@@ -9,9 +10,25 @@ class OrderController {
         guestId: req.headers['x-guest-id'] || req.body.guestId || null,
         ...req.body
       });
+
+      let checkoutUrl = null;
+      if (order.paymentInfo.method === 'DAFTAR_CASH') {
+        try {
+          const origin = req.headers.origin || req.headers.referer || 'https://mirefashion.com';
+          const returnUrl = `${origin}/ar/checkout?orderNumber=${order.orderNumber}`;
+          const session = await paymentService.createPaymentSession(order._id, 'DAFTAR_CASH', returnUrl);
+          checkoutUrl = session.paymentUrl;
+        } catch (err) {
+          console.error('Failed to create DaftarCash payment session:', err.message);
+        }
+      }
+
       return ApiResponse.created(res, {
         message: 'Order created successfully',
-        data: order
+        data: {
+          ...order.toObject(),
+          checkoutUrl
+        }
       });
     } catch (error) {
       next(error);

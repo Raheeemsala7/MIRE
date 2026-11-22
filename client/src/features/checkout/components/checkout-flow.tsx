@@ -19,6 +19,8 @@ import {
   ChevronRight,
   Phone,
   Tag,
+  Smartphone,
+  Wallet,
 } from "lucide-react";
 import { useCartStore } from "@/src/shared/stores/cart-store";
 import { useAddressStore, AddressList } from "@/src/features/address";
@@ -51,6 +53,22 @@ export function CheckoutFlow() {
 
       clearCart();
       setPlacedOrder(createdOrder);
+
+      // If online payment gateway returned a checkout URL (DaftarCash / Paymob), redirect to it!
+      if (createdOrder.checkoutUrl) {
+        toast.success(
+          isAr
+            ? `تم تسجيل الطلب! جاري تحويلك لصفحة الدفع الإلكتروني وسداد الفاتورة...`
+            : `Order placed! Redirecting to payment checkout...`
+        );
+        setTimeout(() => {
+          if (createdOrder.checkoutUrl) {
+            window.location.href = createdOrder.checkoutUrl;
+          }
+        }, 1200);
+        return;
+      }
+
       toast.success(
         isAr
           ? `تم إنشاء الطلب بنجاح! رقم الطلب: ${createdOrder.orderNumber}`
@@ -105,6 +123,33 @@ export function CheckoutFlow() {
           shippingGovernorate={placedOrder.shippingAddress?.governorate || selectedAddress?.governorate}
           shippingCity={placedOrder.shippingAddress?.city || selectedAddress?.city}
         />
+
+        {/* Online Payment (DaftarCash / Gateway) Pending Invoice Card */}
+        {placedOrder.checkoutUrl && (
+          <div className="p-5 rounded-3xl border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 text-start space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                <Smartphone className="size-4" />
+                {isAr ? "فاتورة سداد المحافظ الإلكترونية وإنستاباي" : "Mobile Wallet & InstaPay Invoice"}
+              </span>
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-200/60 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 font-medium">
+                {isAr ? "في انتظار التحويل" : "Awaiting Transfer"}
+              </span>
+            </div>
+            <p className="text-xs text-ds-text-muted leading-relaxed">
+              {isAr
+                ? "إذا لم يتم توجيهك تلقائياً لصفحة الدفع، يمكنك الضغط على الزر التالي لإتمام التحويل وتأكيد طلبك فوراً:"
+                : "If not automatically redirected, click below to open the checkout page and complete your transfer:"}
+            </p>
+            <a
+              href={placedOrder.checkoutUrl}
+              className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs tracking-wider transition-all shadow-sm"
+            >
+              <CreditCard className="size-4" />
+              <span>{isAr ? "سداد الفاتورة عبر دفتر كاش الآن" : "Pay via DaftarCash Now"}</span>
+            </a>
+          </div>
+        )}
 
         {/* CTA Buttons */}
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -322,6 +367,51 @@ export function CheckoutFlow() {
 
             <div className="space-y-3">
               <label
+                onClick={() => setPaymentMethod("DAFTAR_CASH")}
+                className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 transition-all ${
+                  paymentMethod === "DAFTAR_CASH"
+                    ? "border-emerald-600 bg-emerald-500/[0.04] shadow-xs ring-2 ring-emerald-500/20"
+                    : "border-ds-border-muted bg-ds-plain hover:border-emerald-500/50"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === "DAFTAR_CASH"}
+                  onChange={() => setPaymentMethod("DAFTAR_CASH")}
+                  className="mt-1 size-4 accent-emerald-600"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Smartphone className="size-4 text-emerald-600" />
+                    <span className="font-semibold text-sm text-ds-text-plain">
+                      {isAr
+                        ? "فودافون كاش، محافظ إلكترونية، وإنستاباي (دفتر كاش)"
+                        : "Vodafone Cash, E-Wallets & InstaPay (DaftarCash)"}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      {isAr ? "بدون عمولة تحويل" : "Zero Fee"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-ds-text-muted">
+                    {isAr
+                      ? "سداد إلكتروني مباشر وتأكيد فوري عبر فودافون كاش، أورنج، اتصالات، وي باي، أو تطبيق إنستاباي"
+                      : "Direct mobile payment via Vodafone Cash, Orange, Etisalat, WE Pay, or InstaPay"}
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
+                    {["فودافون كاش", "InstaPay", "أورنج كاش", "اتصالات كاش", "WE Pay"].map((brand) => (
+                      <span
+                        key={brand}
+                        className="text-[10px] font-medium px-2 py-0.5 rounded-md border border-ds-border-muted bg-ds-subtle text-ds-text-soft"
+                      >
+                        {brand}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </label>
+
+              <label
                 onClick={() => setPaymentMethod("COD")}
                 className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 transition-all ${
                   paymentMethod === "COD"
@@ -456,6 +546,8 @@ export function CheckoutFlow() {
                 <p className="mt-0.5 text-ds-text-muted">
                   {paymentMethod === "COD"
                     ? isAr ? "الدفع نقداً عند الاستلام" : "Cash on Delivery"
+                    : paymentMethod === "DAFTAR_CASH"
+                    ? isAr ? "فودافون كاش ومحافظ إلكترونية / إنستاباي (دفتر كاش)" : "Vodafone Cash / InstaPay (DaftarCash)"
                     : isAr ? "بطاقة بنكية / Paymob" : "Card / Paymob"}
                 </p>
               </div>

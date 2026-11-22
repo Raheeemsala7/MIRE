@@ -1,4 +1,4 @@
-export type PaymentMethod = "COD" | "PAYMOB" | "STRIPE";
+export type PaymentMethod = "COD" | "PAYMOB" | "STRIPE" | "DAFTAR_CASH";
 
 export interface CustomerInfo {
   fullName: string;
@@ -65,4 +65,5 @@ export interface PlacedOrder {
   }>;
   status: string;
   createdAt?: string;
+  checkoutUrl?: string;
 }

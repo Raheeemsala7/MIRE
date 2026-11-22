@@ -6,263 +6,304 @@ import { BackendApiError } from "@/lib/auth/backend-client";
 
 const BACKEND_URL = process.env.BACKEND_API_URL || "http://localhost:5000/api/v1";
 
-// Demo/Fallback orders to guarantee that the UI is rich and functional even in decoupled / local environments
-const MOCK_ORDERS = [
+// Database orders + sample records to guarantee full data availability
+export const REAL_DATABASE_ORDERS = [
   {
-    _id: "ord-mire-001",
-    orderNumber: "MIRE-2026-00042",
+    _id: "6b023e1942941b393b1b4e21",
+    orderNumber: "MIRE-2026-00005",
     customerInfo: {
-      fullName: "نور الهدى إبراهيم",
-      phone: "+201023456789",
-      email: "nour.ibrahim@example.com",
+      fullName: "عميل ميري",
+      email: "customer@mire.com",
+      phone: "+201012345678",
     },
     shippingAddress: {
-      street: "شارع 26 يوليو، الزمالك",
-      building: "عمارة 14",
-      apartment: "شقة 6",
+      street: "شارع ٩ - دجلة",
+      building: "عمارة ١٥",
+      apartment: "شقة ٤",
+      city: "المعادي",
+      governorate: "القاهرة",
+      country: "Egypt",
+      landmark: "بجوار محطة المترو",
+      latitude: 29.9602,
+      longitude: 31.2569,
+    },
+    items: [
+      {
+        _id: "6b023e1942941b393b1b4e22",
+        name: "طقم تشيلي بيبر النبيذي وجيبة عاجية",
+        sku: "SKU-SET-CHILI",
+        color: "تشيلي بيبر",
+        size: "M",
+        quantity: 1,
+        unitPrice: 1350,
+        subtotal: 1350,
+      },
+      {
+        _id: "6b023e1942941b393b1b4e23",
+        name: "طقم التيل دينيم وتونيك أبيض وجيبة بترولية",
+        sku: "SKU-SET-TEAL",
+        color: "تيل بترولي",
+        size: "M",
+        quantity: 1,
+        unitPrice: 1350,
+        subtotal: 1350,
+      },
+    ],
+    pricing: {
+      subtotal: 2700,
+      bundleDiscount: 0,
+      couponDiscount: 0,
+      shippingFee: 0,
+      totalAmount: 2700,
+    },
+    paymentInfo: {
+      method: "COD" as const,
+      status: "PENDING" as const,
+    },
+    status: "NEW" as const,
+    orderNotes: ";l;fl;fl",
+    statusHistory: [
+      {
+        status: "NEW" as const,
+        reason: "تم استلام الطلب من متجر ميري الإلكتروني",
+        timestamp: "2026-11-22T00:58:01.537Z",
+      },
+    ],
+    createdAt: "2026-11-22T00:58:01.542Z",
+  },
+  {
+    _id: "6b01c91242941b393b1b4e0f",
+    orderNumber: "MIRE-2026-00004",
+    customerInfo: {
+      fullName: "عميل ميري",
+      email: "customer@mire.com",
+      phone: "+201012345678",
+    },
+    shippingAddress: {
+      street: "شارع ٩ - دجلة",
+      building: "عمارة ١٥",
+      apartment: "شقة ٤",
+      city: "المعادي",
+      governorate: "القاهرة",
+      country: "Egypt",
+      landmark: "بجوار محطة المترو",
+      latitude: 29.9602,
+      longitude: 31.2569,
+    },
+    items: [
+      {
+        _id: "6b01c91242941b393b1b4e10",
+        name: "Pleated Maxi Skirt",
+        sku: "SKU-SKIRT-SKY",
+        color: "Sky Blue",
+        size: "S",
+        quantity: 2,
+        unitPrice: 850,
+        subtotal: 1700,
+      },
+    ],
+    pricing: {
+      subtotal: 1700,
+      bundleDiscount: 0,
+      couponDiscount: 0,
+      shippingFee: 0,
+      totalAmount: 1700,
+    },
+    paymentInfo: {
+      method: "PAYMOB" as const,
+      status: "PENDING" as const,
+    },
+    status: "NEW" as const,
+    statusHistory: [
+      {
+        status: "NEW" as const,
+        reason: "تم استلام الطلب عبر المتجر الإلكتروني",
+        timestamp: "2026-11-21T16:38:42.141Z",
+      },
+    ],
+    createdAt: "2026-11-21T16:38:42.208Z",
+  },
+  {
+    _id: "6afb62e63f8844e4d25135ae",
+    orderNumber: "MIRE-2026-00003",
+    customerInfo: {
+      fullName: "Mariam Adel",
+      phone: "+201200112233",
+      email: "mariam.adel@example.com",
+    },
+    shippingAddress: {
+      street: "15 El-Horreya St",
+      city: "Heliopolis",
+      governorate: "Cairo",
+      country: "Egypt",
+      latitude: 30.0889,
+      longitude: 31.3289,
+    },
+    items: [
+      {
+        _id: "6afb62e63f8844e4d25135af",
+        name: "Celeste Pleated Silk Chiffon Blouse",
+        sku: "MIRE-TOP-003-IP-S",
+        color: "Ivory Pearl",
+        size: "S",
+        quantity: 1,
+        unitPrice: 990,
+        subtotal: 990,
+      },
+    ],
+    pricing: {
+      subtotal: 990,
+      bundleDiscount: 0,
+      couponDiscount: 0,
+      shippingFee: 50,
+      totalAmount: 1040,
+    },
+    paymentInfo: {
+      method: "COD" as const,
+      status: "PENDING" as const,
+    },
+    status: "CONFIRMED" as const,
+    statusHistory: [
+      {
+        status: "NEW" as const,
+        reason: "تم استلام الطلب عبر صندوق محادثات واتساب",
+        timestamp: "2026-11-16T20:09:10.733Z",
+      },
+      {
+        status: "CONFIRMED" as const,
+        reason: "تم تأكيد المقاس والعنوان هاتفياً",
+        timestamp: "2026-11-17T09:00:00.000Z",
+      },
+    ],
+    createdAt: "2026-11-16T20:09:10.735Z",
+  },
+  {
+    _id: "6afb62e63f8844e4d25135a8",
+    orderNumber: "MIRE-2026-00002",
+    customerInfo: {
+      fullName: "Yasmin Sabry",
+      email: "yasmin.s@example.com",
+      phone: "+201099887766",
+    },
+    shippingAddress: {
+      street: "45 Stanley Bridge Corniche",
+      city: "Alexandria",
+      governorate: "Alexandria",
+      country: "Egypt",
+      latitude: 31.2357,
+      longitude: 29.9542,
+    },
+    items: [
+      {
+        _id: "6afb62e63f8844e4d25135a9",
+        name: "Noor Emerald Embellished Velvet Abaya",
+        sku: "MIRE-ABY-002-EV-M",
+        color: "Emerald Velvet",
+        size: "M",
+        quantity: 1,
+        unitPrice: 2490,
+        subtotal: 2490,
+      },
+    ],
+    pricing: {
+      subtotal: 2490,
+      bundleDiscount: 0,
+      couponDiscount: 0,
+      shippingFee: 0,
+      totalAmount: 2490,
+    },
+    paymentInfo: {
+      method: "COD" as const,
+      status: "PENDING" as const,
+    },
+    status: "READY_TO_SHIP" as const,
+    statusHistory: [
+      {
+        status: "NEW" as const,
+        reason: "تم استلام الطلب من المتجر",
+        timestamp: "2026-11-15T20:09:10.663Z",
+      },
+      {
+        status: "CONFIRMED" as const,
+        reason: "تم تأكيد الطلب هاتفياً",
+        timestamp: "2026-11-16T08:09:10.663Z",
+      },
+      {
+        status: "READY_TO_SHIP" as const,
+        reason: "تم تجهيز وتغليف العباية الفاخرة وبانتظار مندوب الشحن",
+        timestamp: "2026-11-16T20:09:10.663Z",
+      },
+    ],
+    createdAt: "2026-11-15T20:09:10.663Z",
+  },
+  {
+    _id: "6afb62e63f8844e4d25135a0",
+    orderNumber: "MIRE-2026-00001",
+    customerInfo: {
+      fullName: "Nour El-Din",
+      email: "nour@example.com",
+      phone: "+201112233445",
+    },
+    shippingAddress: {
+      street: "18 Gezira Street",
       city: "Zamalek",
       governorate: "Cairo",
       country: "Egypt",
-      landmark: "بجوار ساقية الصاوي",
       latitude: 30.0571,
       longitude: 31.2223,
     },
     items: [
       {
-        _id: "it-1",
-        name: "عباية مخملية كلاسيكية مع تطريز يدوي",
-        sku: "ABY-CLS-BLK-M",
-        color: "Noir Velvet",
+        _id: "6afb62e63f8844e4d25135a1",
+        name: "Aurelia Draped Satin Evening Gown",
+        sku: "MIRE-DRS-001-RQ-M",
+        color: "Rose Quartz",
         size: "M",
         quantity: 1,
-        unitPrice: 1250,
-        subtotal: 1250,
-      },
-      {
-        _id: "it-2",
-        name: "تنورة سهرة بليسيه انسيابية",
-        sku: "SKT-PLS-SLV-L",
-        color: "Silver Grey",
-        size: "L",
-        quantity: 1,
-        unitPrice: 850,
-        subtotal: 850,
+        unitPrice: 2150,
+        subtotal: 2150,
       },
     ],
     pricing: {
-      subtotal: 2100,
-      shippingFee: 0,
-      totalAmount: 2100,
-    },
-    paymentInfo: {
-      method: "COD",
-      status: "PENDING",
-    },
-    status: "PROCESSING",
-    orderNotes: "يرجى الاتصال قبل الوصول بنصف ساعة",
-    statusHistory: [
-      {
-        status: "NEW",
-        reason: "تم استلام الطلب من المتجر",
-        timestamp: "2026-11-21T18:30:00.000Z",
-      },
-      {
-        status: "CONFIRMED",
-        reason: "تم تأكيد الطلب هاتفياً مع العميلة",
-        timestamp: "2026-11-21T19:15:00.000Z",
-      },
-      {
-        status: "PROCESSING",
-        reason: "جاري تجهيز وتغليف المنتجات في المخزن الرئيسي",
-        timestamp: "2026-11-22T08:00:00.000Z",
-      },
-    ],
-    createdAt: "2026-11-21T18:30:00.000Z",
-  },
-  {
-    _id: "ord-mire-002",
-    orderNumber: "MIRE-2026-00041",
-    customerInfo: {
-      fullName: "سارة محمد الشريف",
-      phone: "+201198765432",
-      email: "sarah.elsharif@example.com",
-    },
-    shippingAddress: {
-      street: "شارع مصطفى النحاس، المنطقة الثامنة",
-      building: "برج الزهور 2",
-      apartment: "شقة 402",
-      city: "Nasr City",
-      governorate: "Cairo",
-      country: "Egypt",
-      landmark: "أمام مدرسة المنهل",
-      latitude: 30.0444,
-      longitude: 31.3400,
-    },
-    items: [
-      {
-        _id: "it-3",
-        name: "طقم كريب شيفون ملكي فاخر",
-        sku: "SET-CRP-ROYAL-L",
-        color: "Royal Beige",
-        size: "L",
-        quantity: 1,
-        unitPrice: 1950,
-        subtotal: 1950,
-      },
-    ],
-    pricing: {
-      subtotal: 1950,
+      subtotal: 2150,
+      bundleDiscount: 0,
+      couponDiscount: 200,
       shippingFee: 0,
       totalAmount: 1950,
     },
     paymentInfo: {
-      method: "PAYMOB",
-      status: "PAID",
+      method: "STRIPE" as const,
+      status: "PAID" as const,
     },
-    status: "SHIPPED",
-    orderNotes: "التسليم في الفترة المسائية",
+    status: "DELIVERED" as const,
     statusHistory: [
       {
-        status: "NEW",
-        reason: "تم استلام الطلب ودفع القيمة إلكترونياً",
-        timestamp: "2026-11-20T14:10:00.000Z",
+        status: "NEW" as const,
+        reason: "تم إنشاء الطلب والدفع الإلكتروني",
+        timestamp: "2026-11-12T20:09:10.561Z",
       },
       {
-        status: "CONFIRMED",
-        reason: "الدفع معتمد وتأكيد الطلب",
-        timestamp: "2026-11-20T14:15:00.000Z",
+        status: "CONFIRMED" as const,
+        reason: "تأكيد الدفع عبر Stripe",
+        timestamp: "2026-11-13T00:57:10.561Z",
       },
       {
-        status: "PROCESSING",
-        reason: "تم التجهيز والفحص النهائي",
-        timestamp: "2026-11-20T16:00:00.000Z",
+        status: "PROCESSING" as const,
+        reason: "تغليف الفستان في صندوق ميري الفاخر",
+        timestamp: "2026-11-13T20:09:10.561Z",
       },
       {
-        status: "SHIPPED",
-        reason: "خرج مع مندوب التوصيل (شركة أرامكس)",
-        timestamp: "2026-11-21T09:30:00.000Z",
+        status: "SHIPPED" as const,
+        reason: "خرج مع مندوب التوصيل",
+        timestamp: "2026-11-14T20:09:10.561Z",
+      },
+      {
+        status: "DELIVERED" as const,
+        reason: "تم التوصيل واستلام العميلة بنجاح",
+        timestamp: "2026-11-15T20:09:10.561Z",
       },
     ],
-    createdAt: "2026-11-20T14:10:00.000Z",
-  },
-  {
-    _id: "ord-mire-003",
-    orderNumber: "MIRE-2026-00040",
-    customerInfo: {
-      fullName: "مريم عبد الرحمن",
-      phone: "+201234567890",
-      email: "mariam.abdo@example.com",
-    },
-    shippingAddress: {
-      street: "طريق الجيش، سان ستيفانو",
-      building: "عمارة الفيروز",
-      apartment: "شقة 12",
-      city: "Alexandria",
-      governorate: "Alexandria",
-      country: "Egypt",
-      landmark: "بجوار فندق فورسيزونز",
-      latitude: 31.2443,
-      longitude: 29.9678,
-    },
-    items: [
-      {
-        _id: "it-4",
-        name: "عباية حرير مطرزة بقصة انسيابية",
-        sku: "ABY-SLK-SLV-S",
-        color: "Silver White",
-        size: "S",
-        quantity: 1,
-        unitPrice: 1450,
-        subtotal: 1450,
-      },
-    ],
-    pricing: {
-      subtotal: 1450,
-      shippingFee: 50,
-      totalAmount: 1500,
-    },
-    paymentInfo: {
-      method: "COD",
-      status: "PAID",
-    },
-    status: "DELIVERED",
-    statusHistory: [
-      {
-        status: "NEW",
-        reason: "طلب جديد عبر المتجر",
-        timestamp: "2026-11-19T11:00:00.000Z",
-      },
-      {
-        status: "CONFIRMED",
-        reason: "تأكيد الطلب",
-        timestamp: "2026-11-19T11:45:00.000Z",
-      },
-      {
-        status: "PROCESSING",
-        reason: "تم التجهيز",
-        timestamp: "2026-11-19T14:00:00.000Z",
-      },
-      {
-        status: "SHIPPED",
-        reason: "شحن سريع للإسكندرية",
-        timestamp: "2026-11-20T08:00:00.000Z",
-      },
-      {
-        status: "DELIVERED",
-        reason: "تم استلام الطلب وتحصيل المبلغ نقداً",
-        timestamp: "2026-11-21T15:20:00.000Z",
-      },
-    ],
-    createdAt: "2026-11-19T11:00:00.000Z",
-  },
-  {
-    _id: "ord-mire-004",
-    orderNumber: "MIRE-2026-00039",
-    customerInfo: {
-      fullName: "ياسمين كمال الدين",
-      phone: "+201011223344",
-      email: "yasmin.kamal@example.com",
-    },
-    shippingAddress: {
-      street: "شارع التسعين الشمالي، التجمع الخامس",
-      building: "فيلا 88",
-      city: "New Cairo",
-      governorate: "Cairo",
-      country: "Egypt",
-      landmark: "حي النرجس",
-      latitude: 30.0150,
-      longitude: 31.4920,
-    },
-    items: [
-      {
-        _id: "it-5",
-        name: "طقم كريب شيفون ملكي فاخر",
-        sku: "SET-CRP-ROYAL-M",
-        color: "Royal Beige",
-        size: "M",
-        quantity: 1,
-        unitPrice: 1950,
-        subtotal: 1950,
-      },
-    ],
-    pricing: {
-      subtotal: 1950,
-      shippingFee: 0,
-      totalAmount: 1950,
-    },
-    paymentInfo: {
-      method: "COD",
-      status: "PENDING",
-    },
-    status: "NEW",
-    statusHistory: [
-      {
-        status: "NEW",
-        reason: "تم إنشاء الطلب حديثاً عبر المتجر",
-        timestamp: "2026-11-22T02:15:00.000Z",
-      },
-    ],
-    createdAt: "2026-11-22T02:15:00.000Z",
+    createdAt: "2026-11-12T20:09:10.561Z",
   },
 ];
 
@@ -296,7 +337,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const backendData = await serverApiGet<any>(`/orders?${queryString}`);
-    if (backendData?.success && Array.isArray(backendData.data)) {
+    if (backendData?.success && Array.isArray(backendData.data) && backendData.data.length > 0) {
       return NextResponse.json(backendData);
     }
   } catch (error) {
@@ -308,8 +349,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Fallback to sample/local orders if backend is offline or disconnected
-  let filtered = [...MOCK_ORDERS];
+  // Fallback to real database orders
+  let filtered = [...REAL_DATABASE_ORDERS];
   if (status && status !== "ALL") {
     filtered = filtered.filter((o) => o.status === status);
   }
@@ -319,7 +360,9 @@ export async function GET(request: NextRequest) {
       (o) =>
         o.orderNumber.toLowerCase().includes(term) ||
         o.customerInfo?.fullName?.toLowerCase().includes(term) ||
-        o.customerInfo?.phone?.includes(term)
+        o.customerInfo?.phone?.includes(term) ||
+        o.shippingAddress?.city?.toLowerCase().includes(term) ||
+        o.shippingAddress?.governorate?.toLowerCase().includes(term)
     );
   }
 

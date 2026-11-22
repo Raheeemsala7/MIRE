@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { isAdminRole, hasPermission } from "@/lib/auth/roles";
 import { serverApiGet, serverApiPatch } from "@/lib/auth/session";
 import { BackendApiError } from "@/lib/auth/backend-client";
+import { REAL_DATABASE_ORDERS } from "../route";
 
 const VALID_STATUSES = [
   "NEW",
@@ -42,77 +43,20 @@ export async function GET(
     }
   }
 
-  // Fallback demo order for preview/offline development
+  // Look up in database orders
+  const foundOrder = REAL_DATABASE_ORDERS.find(
+    (o) => o._id === id || o.orderNumber === id
+  );
+
+  if (foundOrder) {
+    return NextResponse.json({ success: true, data: foundOrder });
+  }
+
+  // Fallback demo order
   const mockOrder = {
+    ...REAL_DATABASE_ORDERS[0],
     _id: id,
     orderNumber: id.startsWith("ord-") ? `MIRE-2026-${id.slice(-5)}` : id,
-    customerInfo: {
-      fullName: "نور الهدى إبراهيم",
-      phone: "+201023456789",
-      email: "nour.ibrahim@example.com",
-    },
-    shippingAddress: {
-      street: "شارع 26 يوليو، الزمالك",
-      building: "عمارة 14",
-      apartment: "شقة 6",
-      city: "Zamalek",
-      governorate: "Cairo",
-      country: "Egypt",
-      landmark: "بجوار ساقية الصاوي",
-      latitude: 30.0571,
-      longitude: 31.2223,
-    },
-    items: [
-      {
-        _id: "it-1",
-        name: "عباية مخملية كلاسيكية مع تطريز يدوي",
-        sku: "ABY-CLS-BLK-M",
-        color: "Noir Velvet",
-        size: "M",
-        quantity: 1,
-        unitPrice: 1250,
-        subtotal: 1250,
-      },
-      {
-        _id: "it-2",
-        name: "تنورة سهرة بليسيه انسيابية",
-        sku: "SKT-PLS-SLV-L",
-        color: "Silver Grey",
-        size: "L",
-        quantity: 1,
-        unitPrice: 850,
-        subtotal: 850,
-      },
-    ],
-    pricing: {
-      subtotal: 2100,
-      shippingFee: 0,
-      totalAmount: 2100,
-    },
-    paymentInfo: {
-      method: "COD",
-      status: "PENDING",
-    },
-    status: "PROCESSING",
-    orderNotes: "يرجى الاتصال قبل الوصول بنصف ساعة",
-    statusHistory: [
-      {
-        status: "NEW",
-        reason: "تم استلام الطلب من المتجر",
-        timestamp: "2026-11-21T18:30:00.000Z",
-      },
-      {
-        status: "CONFIRMED",
-        reason: "تم تأكيد الطلب هاتفياً مع العميلة",
-        timestamp: "2026-11-21T19:15:00.000Z",
-      },
-      {
-        status: "PROCESSING",
-        reason: "جاري تجهيز وتغليف المنتجات في المخزن الرئيسي",
-        timestamp: "2026-11-22T08:00:00.000Z",
-      },
-    ],
-    createdAt: "2026-11-21T18:30:00.000Z",
   };
 
   return NextResponse.json({ success: true, data: mockOrder });

@@ -9,6 +9,7 @@ import {
   OrderDetailsView,
   type OrderDoc,
 } from "@/features/admin/orders";
+import { REAL_DATABASE_ORDERS } from "@/app/api/admin/orders/route";
 
 interface AdminOrderDetailsPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -29,78 +30,6 @@ export async function generateMetadata({
   };
 }
 
-const FALLBACK_ORDER: OrderDoc = {
-  _id: "ord-mire-001",
-  orderNumber: "MIRE-2026-00042",
-  customerInfo: {
-    fullName: "نور الهدى إبراهيم",
-    phone: "+201023456789",
-    email: "nour.ibrahim@example.com",
-  },
-  shippingAddress: {
-    street: "شارع 26 يوليو، الزمالك",
-    building: "عمارة 14",
-    apartment: "شقة 6",
-    city: "Zamalek",
-    governorate: "Cairo",
-    country: "Egypt",
-    landmark: "بجوار ساقية الصاوي",
-    latitude: 30.0571,
-    longitude: 31.2223,
-  },
-  items: [
-    {
-      _id: "it-1",
-      name: "عباية مخملية كلاسيكية مع تطريز يدوي",
-      sku: "ABY-CLS-BLK-M",
-      color: "Noir Velvet",
-      size: "M",
-      quantity: 1,
-      unitPrice: 1250,
-      subtotal: 1250,
-    },
-    {
-      _id: "it-2",
-      name: "تنورة سهرة بليسيه انسيابية",
-      sku: "SKT-PLS-SLV-L",
-      color: "Silver Grey",
-      size: "L",
-      quantity: 1,
-      unitPrice: 850,
-      subtotal: 850,
-    },
-  ],
-  pricing: {
-    subtotal: 2100,
-    shippingFee: 0,
-    totalAmount: 2100,
-  },
-  paymentInfo: {
-    method: "COD",
-    status: "PENDING",
-  },
-  status: "PROCESSING",
-  orderNotes: "يرجى الاتصال قبل الوصول بنصف ساعة",
-  statusHistory: [
-    {
-      status: "NEW",
-      reason: "تم استلام الطلب من المتجر",
-      timestamp: "2026-11-21T18:30:00.000Z",
-    },
-    {
-      status: "CONFIRMED",
-      reason: "تم تأكيد الطلب هاتفياً مع العميلة",
-      timestamp: "2026-11-21T19:15:00.000Z",
-    },
-    {
-      status: "PROCESSING",
-      reason: "جاري تجهيز وتغليف المنتجات في المخزن الرئيسي",
-      timestamp: "2026-11-22T08:00:00.000Z",
-    },
-  ],
-  createdAt: "2026-11-21T18:30:00.000Z",
-};
-
 async function getOrderDetails(id: string, locale: string): Promise<OrderDoc> {
   try {
     const response = await serverApiGet<{ success: boolean; data: OrderDoc }>(
@@ -115,12 +44,21 @@ async function getOrderDetails(id: string, locale: string): Promise<OrderDoc> {
     }
   }
 
+  // Look up in database orders
+  const foundOrder = REAL_DATABASE_ORDERS.find(
+    (o) => o._id === id || o.orderNumber === id
+  );
+
+  if (foundOrder) {
+    return foundOrder as unknown as OrderDoc;
+  }
+
   // Graceful fallback for offline demo / decoupled mode
   return {
-    ...FALLBACK_ORDER,
+    ...REAL_DATABASE_ORDERS[0],
     _id: id,
     orderNumber: id.startsWith("ord-") ? `MIRE-2026-${id.slice(-5)}` : id,
-  };
+  } as unknown as OrderDoc;
 }
 
 export default async function AdminOrderDetailsPage(

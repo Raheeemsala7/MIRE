@@ -12,6 +12,8 @@ import {
   Search,
   CheckCircle2,
   TrendingUp,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
@@ -34,6 +36,7 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
   const [coupons, setCoupons] = useState<CouponItem[]>(initialCoupons);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"ALL" | "ACTIVE" | "EXPIRED">("ALL");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -224,6 +227,30 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
               {isAr ? "المنتهية" : "Expired"}
             </button>
           </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 rounded-2xl border border-ds-border-muted bg-ds-elevated p-1 text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode("cards")}
+              className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+                viewMode === "cards" ? "bg-ds-primary text-white" : "text-ds-text-soft hover:text-ds-text-plain"
+              }`}
+              title={isAr ? "عرض البطاقات" : "Cards view"}
+            >
+              <LayoutGrid className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+                viewMode === "table" ? "bg-ds-primary text-white" : "text-ds-text-soft hover:text-ds-text-plain"
+              }`}
+              title={isAr ? "عرض الجدول" : "Table view"}
+            >
+              <List className="size-4" />
+            </button>
+          </div>
         </div>
 
         {/* Create Coupon Modal Trigger */}
@@ -360,30 +387,155 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
         </Dialog>
       </div>
 
-      {/* Coupons Table */}
-      <div className="rounded-3xl border border-ds-border-muted bg-ds-elevated overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-start text-xs">
-            <thead className="bg-ds-plain border-b border-ds-border-muted text-ds-text-soft uppercase tracking-wider font-semibold">
-              <tr>
-                <th className="py-4 px-6 text-start">{isAr ? "كود الكوبون" : "Code"}</th>
-                <th className="py-4 px-6 text-start">{isAr ? "قيمة الخصم" : "Discount"}</th>
-                <th className="py-4 px-6 text-start">{isAr ? "الحد الأدنى" : "Min Order"}</th>
-                <th className="py-4 px-6 text-start">{isAr ? "مرات الاستخدام" : "Usage"}</th>
-                <th className="py-4 px-6 text-start">{isAr ? "الصلاحية" : "Validity"}</th>
-                <th className="py-4 px-6 text-center">{isAr ? "الحالة" : "Status"}</th>
-                <th className="py-4 px-6 text-end">{isAr ? "إجراءات" : "Actions"}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ds-border-subtle">
-              {filteredCoupons.length === 0 ? (
+      {/* Coupons Display Area (Cards Grid by default or Table) */}
+      {filteredCoupons.length === 0 ? (
+        <div className="rounded-3xl border border-ds-border-muted bg-ds-elevated p-12 text-center text-ds-text-soft">
+          {isAr ? "لا توجد كوبونات مطابقة للبحث أو التصفية" : "No coupons found"}
+        </div>
+      ) : viewMode === "cards" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredCoupons.map((coupon) => {
+            const isExpired = new Date(coupon.endDate) < new Date();
+            const isCopied = copiedId === coupon.code;
+            const isPercent = coupon.discountType === "PERCENTAGE";
+
+            return (
+              <div
+                key={coupon._id}
+                className="group relative flex flex-col justify-between rounded-3xl border border-ds-border-muted bg-ds-elevated p-6 shadow-xs hover:border-ds-primary/40 hover:shadow-md transition-all duration-300"
+              >
+                {/* Top: Discount Badge & Status Switch */}
+                <div className="flex items-center justify-between pb-3 border-b border-ds-border-subtle">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-ds-primary/10 px-3 py-1 font-mono text-xs font-bold text-ds-primary">
+                    <TicketPercent className="size-3.5" />
+                    <span>
+                      {isPercent
+                        ? `${coupon.discountValue}% ${isAr ? "خصم" : "OFF"}`
+                        : `${coupon.discountValue} ${isAr ? "ج.م خصم" : "EGP OFF"}`}
+                    </span>
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={coupon.isActive && !isExpired}
+                      disabled={isExpired}
+                      onCheckedChange={() => handleToggleStatus(coupon._id, coupon.isActive)}
+                    />
+                    <span
+                      className={`text-[11px] font-semibold ${
+                        isExpired
+                          ? "text-rose-500"
+                          : coupon.isActive
+                          ? "text-emerald-600"
+                          : "text-ds-text-soft"
+                      }`}
+                    >
+                      {isExpired
+                        ? isAr ? "منتهي" : "Expired"
+                        : coupon.isActive
+                        ? isAr ? "نشط" : "Active"
+                        : isAr ? "معطل" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Big Prominent Coupon Code Ticket Box */}
+                <div className="my-4 rounded-2xl border-2 border-dashed border-ds-primary/30 bg-ds-primary/5 p-4 flex items-center justify-between transition-colors group-hover:border-ds-primary/60">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-ds-text-soft">
+                      {isAr ? "كود القسيمة" : "Coupon Code"}
+                    </span>
+                    <div className="font-mono text-xl font-extrabold tracking-widest text-ds-text-plain">
+                      {coupon.code}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => handleCopyCode(coupon.code, e)}
+                    className="flex size-9 items-center justify-center rounded-xl bg-ds-plain border border-ds-border-muted text-ds-text-plain hover:bg-ds-primary hover:text-white shadow-xs transition-all active:scale-95 cursor-pointer"
+                    title={isAr ? "نسخ كود الكوبون" : "Copy coupon code"}
+                  >
+                    {isCopied ? (
+                      <Check className="size-4 text-emerald-600" />
+                    ) : (
+                      <Copy className="size-4" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Details Breakdown */}
+                <div className="space-y-2 text-xs text-ds-text-muted pt-1">
+                  <div className="flex items-center justify-between">
+                    <span>{isAr ? "الحد الأدنى للشراء:" : "Min. Order:"}</span>
+                    <span className="font-mono font-semibold text-ds-text-plain">
+                      {coupon.minOrderAmount > 0
+                        ? `${coupon.minOrderAmount.toLocaleString()} ${isAr ? "ج.م" : "EGP"}`
+                        : isAr ? "بدون حد" : "No minimum"}
+                    </span>
+                  </div>
+
+                  {coupon.maxDiscountAmount ? (
+                    <div className="flex items-center justify-between">
+                      <span>{isAr ? "الحد الأقصى للخصم:" : "Max Discount:"}</span>
+                      <span className="font-mono font-semibold text-ds-text-plain">
+                        {coupon.maxDiscountAmount.toLocaleString()} {isAr ? "ج.م" : "EGP"}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  <div className="flex items-center justify-between">
+                    <span>{isAr ? "مرات الاستخدام:" : "Usage:"}</span>
+                    <span className="font-mono font-semibold text-ds-text-plain">
+                      {coupon.usedCount || 0} / {coupon.usageLimit || "∞"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Footer: Expiry Date & Delete */}
+                <div className="mt-4 flex items-center justify-between border-t border-ds-border-subtle pt-3">
+                  <div className="flex items-center gap-1.5 text-[11px] text-ds-text-soft">
+                    <Calendar className="size-3.5" />
+                    <span>
+                      {new Date(coupon.endDate).toLocaleDateString(isAr ? "ar-EG" : "en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(coupon._id)}
+                    className="flex size-8 items-center justify-center rounded-lg text-ds-text-soft hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                    title={isAr ? "حذف الكوبون" : "Delete coupon"}
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Coupons Table */
+        <div className="rounded-3xl border border-ds-border-muted bg-ds-elevated overflow-hidden shadow-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-start text-xs">
+              <thead className="bg-ds-plain border-b border-ds-border-muted text-ds-text-soft uppercase tracking-wider font-semibold">
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-ds-text-soft">
-                    {isAr ? "لا توجد كوبونات مطابقة للبحث" : "No coupons found"}
-                  </td>
+                  <th className="py-4 px-6 text-start">{isAr ? "كود الكوبون" : "Code"}</th>
+                  <th className="py-4 px-6 text-start">{isAr ? "قيمة الخصم" : "Discount"}</th>
+                  <th className="py-4 px-6 text-start">{isAr ? "الحد الأدنى" : "Min Order"}</th>
+                  <th className="py-4 px-6 text-start">{isAr ? "مرات الاستخدام" : "Usage"}</th>
+                  <th className="py-4 px-6 text-start">{isAr ? "الصلاحية" : "Validity"}</th>
+                  <th className="py-4 px-6 text-center">{isAr ? "الحالة" : "Status"}</th>
+                  <th className="py-4 px-6 text-end">{isAr ? "إجراءات" : "Actions"}</th>
                 </tr>
-              ) : (
-                filteredCoupons.map((coupon) => {
+              </thead>
+              <tbody className="divide-y divide-ds-border-subtle">
+                {filteredCoupons.map((coupon) => {
                   const isExpired = new Date(coupon.endDate) < new Date();
                   const isCopied = copiedId === coupon.code;
 
@@ -503,12 +655,12 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

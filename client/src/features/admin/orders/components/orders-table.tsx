@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Phone,
   Filter,
+  Calendar,
   ChevronRight,
 } from "lucide-react";
 import {
@@ -49,6 +50,8 @@ interface OrdersTableProps {
   totalCount: number;
 }
 
+export type TimeFilterPeriod = "ALL" | "TODAY" | "WEEK" | "MONTH" | "YEAR";
+
 export function OrdersTable({ initialOrders, totalCount }: OrdersTableProps) {
   const locale = useLocale();
   const router = useRouter();
@@ -58,41 +61,66 @@ export function OrdersTable({ initialOrders, totalCount }: OrdersTableProps) {
   const [orders, setOrders] = useState<OrderDoc[]>(initialOrders);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeFilterPeriod>("ALL");
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
-  // Filter orders based on search and status
+  // Filter orders based on search, status, and time range (Day, Week, Month, Year)
   const filteredOrders = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).getTime();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+
     return orders.filter((order) => {
+      // 1. Status Filter
       const matchesStatus =
         selectedStatus === "ALL" || order.status === selectedStatus;
 
+      // 2. Search Filter
       const term = searchTerm.toLowerCase().trim();
       const matchesSearch =
         !term ||
-        order.orderNumber.toLowerCase().includes(term) ||
-        order.customerInfo.fullName.toLowerCase().includes(term) ||
-        order.customerInfo.phone.includes(term) ||
-        order.shippingAddress.city.toLowerCase().includes(term) ||
-        order.shippingAddress.governorate.toLowerCase().includes(term);
+        order.orderNumber?.toLowerCase().includes(term) ||
+        order.customerInfo?.fullName?.toLowerCase().includes(term) ||
+        order.customerInfo?.phone?.includes(term) ||
+        order.shippingAddress?.city?.toLowerCase().includes(term) ||
+        order.shippingAddress?.governorate?.toLowerCase().includes(term);
 
-      return matchesStatus && matchesSearch;
+      // 3. Time Filter (Day, Week, Month, Year)
+      let matchesTime = true;
+      if (selectedTimeRange !== "ALL" && order.createdAt) {
+        const orderTime = new Date(order.createdAt).getTime();
+        if (selectedTimeRange === "TODAY") {
+          matchesTime = orderTime >= startOfToday;
+        } else if (selectedTimeRange === "WEEK") {
+          matchesTime = orderTime >= sevenDaysAgo;
+        } else if (selectedTimeRange === "MONTH") {
+          matchesTime = orderTime >= startOfMonth;
+        } else if (selectedTimeRange === "YEAR") {
+          matchesTime = orderTime >= startOfYear;
+        }
+      }
+
+      return matchesStatus && matchesSearch && matchesTime;
     });
-  }, [orders, selectedStatus, searchTerm]);
+  }, [orders, selectedStatus, searchTerm, selectedTimeRange]);
 
-  // Aggregate stats
+  // Aggregate stats based on current time-filtered and search context
   const stats = useMemo(() => {
-    const total = orders.length;
-    const processing = orders.filter(
+    const targetOrders = selectedTimeRange === "ALL" && !searchTerm && selectedStatus === "ALL" ? orders : filteredOrders;
+    const total = targetOrders.length;
+    const processing = targetOrders.filter(
       (o) => o.status === "NEW" || o.status === "CONFIRMED" || o.status === "PROCESSING"
     ).length;
-    const shipped = orders.filter((o) => o.status === "SHIPPED" || o.status === "READY_TO_SHIP").length;
-    const delivered = orders.filter((o) => o.status === "DELIVERED").length;
-    const totalRevenue = orders
+    const shipped = targetOrders.filter((o) => o.status === "SHIPPED" || o.status === "READY_TO_SHIP").length;
+    const delivered = targetOrders.filter((o) => o.status === "DELIVERED").length;
+    const totalRevenue = targetOrders
       .filter((o) => o.status !== "CANCELLED")
       .reduce((sum, o) => sum + (o.pricing?.totalAmount || 0), 0);
 
     return { total, processing, shipped, delivered, totalRevenue };
-  }, [orders]);
+  }, [orders, filteredOrders, selectedTimeRange, searchTerm, selectedStatus]);
 
   const updateStatusMutation = useUpdateOrderStatus();
 
@@ -245,6 +273,39 @@ export function OrdersTable({ initialOrders, totalCount }: OrdersTableProps) {
       {/* Filters & Search Toolbar */}
       <Card className="rounded-2xl border border-border/60 bg-card shadow-xs">
         <CardContent className="p-4 sm:p-5 space-y-4">
+          {/* Quick Time Period Chips */}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-3">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+              <Calendar className="size-3.5 text-primary" />
+              <span>{isAr ? "تصفية حسب الفترة الزمنية:" : "Filter by Date:"}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[
+                { key: "ALL", labelAr: "الكل", labelEn: "All Time" },
+                { key: "TODAY", labelAr: "اليوم", labelEn: "Today" },
+                { key: "WEEK", labelAr: "هذا الأسبوع", labelEn: "This Week" },
+                { key: "MONTH", labelAr: "هذا الشهر", labelEn: "This Month" },
+                { key: "YEAR", labelAr: "هذه السنة", labelEn: "This Year" },
+              ].map((period) => {
+                const isSelected = selectedTimeRange === period.key;
+                return (
+                  <button
+                    key={period.key}
+                    type="button"
+                    onClick={() => setSelectedTimeRange(period.key as TimeFilterPeriod)}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-150 ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {isAr ? period.labelAr : period.labelEn}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             {/* Search Input */}
             <div className="relative flex-1 max-w-md">
@@ -262,38 +323,57 @@ export function OrdersTable({ initialOrders, totalCount }: OrdersTableProps) {
               />
             </div>
 
-            {/* Status Select Filter */}
-            <div className="flex items-center gap-2">
-              <Filter className="size-3.5 text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground">
-                {isAr ? "الحالة:" : "Status:"}
-              </span>
-              <Select
-                value={selectedStatus}
-                onValueChange={(val) => setSelectedStatus(val)}
-              >
-                <SelectTrigger className="h-9 w-[190px] text-xs rounded-xl border-border/60">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">{isAr ? "جميع الحالات" : "All Statuses"}</SelectItem>
-                  <SelectItem value="NEW">{isAr ? "طلب جديد" : "New Order"}</SelectItem>
-                  <SelectItem value="CONFIRMED">{isAr ? "تم التأكيد" : "Confirmed"}</SelectItem>
-                  <SelectItem value="PROCESSING">{isAr ? "تم التجهيز / جاري التجهيز" : "Processing"}</SelectItem>
-                  <SelectItem value="READY_TO_SHIP">{isAr ? "جاهز للشحن" : "Ready to Ship"}</SelectItem>
-                  <SelectItem value="SHIPPED">{isAr ? "تم الشحن / خرج للتوصيل" : "Shipped"}</SelectItem>
-                  <SelectItem value="DELIVERED">{isAr ? "تم التوصيل" : "Delivered"}</SelectItem>
-                  <SelectItem value="CANCELLED">{isAr ? "ملغي" : "Cancelled"}</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Status Select Filter */}
+              <div className="flex items-center gap-1.5">
+                <Filter className="size-3.5 text-muted-foreground" />
+                <Select
+                  value={selectedStatus}
+                  onValueChange={(val) => setSelectedStatus(val)}
+                >
+                  <SelectTrigger className="h-9 w-[170px] text-xs rounded-xl border-border/60">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">{isAr ? "جميع الحالات" : "All Statuses"}</SelectItem>
+                    <SelectItem value="NEW">{isAr ? "طلب جديد" : "New Order"}</SelectItem>
+                    <SelectItem value="CONFIRMED">{isAr ? "تم التأكيد" : "Confirmed"}</SelectItem>
+                    <SelectItem value="PROCESSING">{isAr ? "تم التجهيز / جاري التجهيز" : "Processing"}</SelectItem>
+                    <SelectItem value="READY_TO_SHIP">{isAr ? "جاهز للشحن" : "Ready to Ship"}</SelectItem>
+                    <SelectItem value="SHIPPED">{isAr ? "تم الشحن / خرج للتوصيل" : "Shipped"}</SelectItem>
+                    <SelectItem value="DELIVERED">{isAr ? "تم التوصيل" : "Delivered"}</SelectItem>
+                    <SelectItem value="CANCELLED">{isAr ? "ملغي" : "Cancelled"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              {searchTerm || selectedStatus !== "ALL" ? (
+              {/* Time Range Select for Quick Pick */}
+              <div className="flex items-center gap-1.5">
+                <Select
+                  value={selectedTimeRange}
+                  onValueChange={(val) => setSelectedTimeRange(val as TimeFilterPeriod)}
+                >
+                  <SelectTrigger className="h-9 w-[140px] text-xs rounded-xl border-border/60">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">{isAr ? "كل الفترات" : "All Time"}</SelectItem>
+                    <SelectItem value="TODAY">{isAr ? "اليوم" : "Today"}</SelectItem>
+                    <SelectItem value="WEEK">{isAr ? "الأسبوع الحالي" : "Current Week"}</SelectItem>
+                    <SelectItem value="MONTH">{isAr ? "الشهر الحالي" : "Current Month"}</SelectItem>
+                    <SelectItem value="YEAR">{isAr ? "السنة الحالية" : "Current Year"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {searchTerm || selectedStatus !== "ALL" || selectedTimeRange !== "ALL" ? (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
                     setSearchTerm("");
                     setSelectedStatus("ALL");
+                    setSelectedTimeRange("ALL");
                   }}
                   className="h-9 text-xs text-muted-foreground hover:text-foreground"
                 >

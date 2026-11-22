@@ -6,7 +6,7 @@ import { Link } from "@/src/i18n/navigation";
 import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/src/shared/stores/cart-store";
-import { WishlistToggle } from "@/src/features/wishlist";
+import { ProductCard } from "./product-card";
 import type { Product } from "../types/product.types";
 
 export interface CatalogProduct {
@@ -222,67 +222,18 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps = {}) 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
         {filteredProducts.map((product) => (
-          <div
+          <ProductCard
             key={product.id}
-            className="group bg-white rounded-lg overflow-hidden border border-ds-border-subtle hover:border-ds-primary/40 transition-all duration-300 shadow-2xs hover:shadow-md flex flex-col justify-between"
-          >
-            {/* Image Container with Link & Wishlist Toggle */}
-            <div className="relative aspect-3/4 overflow-hidden bg-ds-secondary/20 block">
-              <Link
-                href={`/products/${product.slug}`}
-                className="w-full h-full block"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={product.image}
-                  alt={isRTL ? product.titleAr : product.titleEn}
-                  className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700"
-                />
-              </Link>
-              <div className="absolute top-3 start-3 z-10">
-                <WishlistToggle product={product} />
-              </div>
-              <span
-                className="absolute top-3 end-3 w-4 h-4 rounded-full border border-black/10 shadow-xs pointer-events-none"
-                style={{ backgroundColor: product.swatchHex }}
-              />
-            </div>
-
-            {/* Information & Action */}
-            <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-              <div className="space-y-1">
-                <span className="text-[11px] uppercase tracking-wider text-ds-text-soft font-medium">
-                  {isRTL ? product.categoryLabelAr : product.categoryLabelEn}
-                </span>
-                <Link
-                  href={`/products/${product.slug}`}
-                  className="block text-sm font-semibold text-ds-text-plain group-hover:text-ds-primary transition-colors line-clamp-1"
-                >
-                  {isRTL ? product.titleAr : product.titleEn}
-                </Link>
-                <div className="text-sm font-bold text-ds-text-plain pt-1">
-                  {product.price} {t("currency")}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-3 border-t border-zinc-100 flex items-center gap-2">
-                <button
-                  onClick={() => handleQuickAdd(product)}
-                  className="flex-1 py-2.5 px-3 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>{isRTL ? "أضيفي للحقيبة" : "Add to Bag"}</span>
-                </button>
-                <Link
-                  href={`/products/${product.slug}`}
-                  className="py-2.5 px-3 rounded-full border border-ds-border-muted hover:border-ds-primary text-ds-text-plain hover:text-ds-primary text-xs font-semibold transition-colors"
-                >
-                  {isRTL ? "التفاصيل" : "View"}
-                </Link>
-              </div>
-            </div>
-          </div>
+            id={product.id}
+            slug={product.slug}
+            title={product.titleEn}
+            titleAr={product.titleAr}
+            category={product.categoryLabelEn}
+            categoryAr={product.categoryLabelAr}
+            price={product.price}
+            image={product.image}
+            colorHex={product.swatchHex}
+          />
         ))}
       </div>
     </div>

@@ -1,5 +1,6 @@
 export * from "./types/coupon.types";
 export * from "./components/coupons-manager";
+export * from "./components/coupons-skeleton";
 export * from "./apis/coupons.api";
 export * from "./hooks/use-coupons";
 export * from "./hooks/use-create-coupon";

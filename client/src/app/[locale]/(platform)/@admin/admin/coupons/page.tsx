@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { requirePermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
-import { CouponsManager } from "@/features/admin/coupons";
+import { CouponsManager, CouponsSkeleton } from "@/features/admin/coupons";
 import { getAdminCouponsApi } from "@/features/admin/coupons/apis/coupons.api";
 
 interface AdminCouponsPageProps {
@@ -51,7 +51,7 @@ export default async function AdminCouponsPage({
         </div>
       </div>
 
-      <Suspense fallback={<div className="h-96 rounded-3xl bg-ds-elevated animate-pulse" />}>
+      <Suspense fallback={<CouponsSkeleton />}>
         <CouponsManager initialCoupons={initialCoupons} />
       </Suspense>
     </main>

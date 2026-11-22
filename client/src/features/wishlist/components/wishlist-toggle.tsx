@@ -21,13 +21,18 @@ export function WishlistToggle({
   const [mounted, setMounted] = useState(false);
   const locale = useLocale();
   const isRTL = locale === "ar";
-  const { toggleItem, isWishlisted } = useWishlistStore();
+  const toggleItem = useWishlistStore((state) => state.toggleItem);
+  const isItemSaved = useWishlistStore((state) =>
+    state.items.some(
+      (i) => i.id === product.id || (Boolean(product.slug) && i.slug === product.slug)
+    )
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const active = mounted ? isWishlisted(product.id) : false;
+  const active = mounted && isItemSaved;
 
   const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,14 +42,14 @@ export function WishlistToggle({
     if (!active) {
       toast.success(
         isRTL
-          ? `تمت إضافة "${product.titleAr}" إلى قائمة الرغبات`
-          : `Added "${product.titleEn}" to your wishlist`
+          ? `تمت إضافة "${product.titleAr || product.titleEn}" إلى قائمة الرغبات`
+          : `Added "${product.titleEn || product.titleAr}" to your wishlist`
       );
     } else {
       toast.info(
         isRTL
-          ? `تمت إزالة "${product.titleAr}" من قائمة الرغبات`
-          : `Removed "${product.titleEn}" from your wishlist`
+          ? `تمت إزالة "${product.titleAr || product.titleEn}" من قائمة الرغبات`
+          : `Removed "${product.titleEn || product.titleAr}" from your wishlist`
       );
     }
   };
@@ -54,13 +59,17 @@ export function WishlistToggle({
       <button
         type="button"
         onClick={handleToggle}
-        className={`inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full border border-ds-border-muted transition-all cursor-pointer ${
+        className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border transition-all duration-200 cursor-pointer ${
           active
-            ? "bg-rose-50 border-rose-300 text-rose-600 dark:bg-rose-950/40"
-            : "bg-white hover:border-ds-primary text-ds-text-plain hover:text-ds-primary"
+            ? "bg-rose-50 border-rose-300 text-rose-600 dark:bg-rose-950/50 dark:border-rose-800"
+            : "bg-white dark:bg-zinc-900 border-border/80 hover:border-primary text-foreground hover:text-primary"
         } ${className}`}
       >
-        <Heart className={`size-4 ${active ? "fill-rose-500 text-rose-500" : ""}`} />
+        <Heart
+          className={`size-4 transition-transform duration-200 ${
+            active ? "fill-rose-500 text-rose-500 scale-110" : "text-muted-foreground"
+          }`}
+        />
         <span className="text-xs font-semibold">
           {active
             ? isRTL
@@ -78,13 +87,15 @@ export function WishlistToggle({
     <button
       type="button"
       onClick={handleToggle}
-      className={`flex items-center justify-center size-9 rounded-full bg-white/90 hover:bg-white text-zinc-700 shadow-sm border border-black/5 hover:scale-105 transition-all cursor-pointer ${
-        active ? "text-rose-500" : "hover:text-rose-500"
+      className={`flex items-center justify-center size-9 rounded-full shadow-xs border transition-all duration-200 cursor-pointer active:scale-90 ${
+        active
+          ? "bg-rose-50/95 dark:bg-rose-950/80 border-rose-300 dark:border-rose-800 text-rose-500 shadow-sm"
+          : "bg-white/90 dark:bg-zinc-900/90 hover:bg-white text-muted-foreground hover:text-rose-500 border-black/5 hover:scale-105"
       } ${className}`}
       aria-label={active ? "Remove from wishlist" : "Add to wishlist"}
     >
       <Heart
-        className={`size-4 transition-transform ${
+        className={`size-4 transition-transform duration-200 ${
           active ? "fill-rose-500 text-rose-500 scale-110" : ""
         }`}
       />

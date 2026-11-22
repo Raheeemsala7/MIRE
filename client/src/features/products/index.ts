@@ -28,6 +28,7 @@ export { ArchiveProductDialog } from "./components/admin/archive-product-dialog"
 export { ProductsSkeleton } from "./components/admin/products-skeleton";
 
 // Components - Storefront
+export { ProductCard } from "./components/product-card";
 export { ProductView } from "./components/product-view";
 export { ProductsCatalog } from "./components/products-catalog";
 export { RelatedProducts } from "./components/related-products";

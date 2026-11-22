@@ -1,7 +1,7 @@
 import React from "react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/src/i18n/navigation";
-import { WishlistToggle } from "@/src/features/wishlist";
+import { ProductCard } from "@/features/products";
 
 export async function NewArrivals() {
   const t = await getTranslations();
@@ -70,56 +70,18 @@ export async function NewArrivals() {
         {/* 4 Cards Grid with Real Modest Wear Photos */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {products.map((item) => (
-            <Link
+            <ProductCard
               key={item.id}
-              href={`/products/${item.slug}`}
-              className="group block"
-            >
-              <div className="relative aspect-3/4 rounded-md overflow-hidden bg-ds-secondary/20 border border-transparent group-hover:border-ds-primary/30 transition-all duration-300 shadow-2xs group-hover:shadow-md">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-2.5 end-2.5 z-10">
-                  <WishlistToggle
-                    product={{
-                      id: item.id,
-                      slug: item.slug,
-                      titleEn: item.title,
-                      titleAr: item.title,
-                      price: item.price,
-                      image: item.image,
-                      color: item.swatchName,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Product Meta */}
-              <div className="mt-3 space-y-1 px-0.5">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-xs sm:text-sm font-medium text-ds-text-plain group-hover:text-ds-primary transition-colors line-clamp-1">
-                    {item.title}
-                  </h3>
-                  {/* Swatch color dot */}
-                  <span
-                    className="w-3.5 h-3.5 rounded-full border border-black/10 shrink-0 mt-0.5"
-                    style={{ backgroundColor: item.swatchHex }}
-                    title={item.swatchName}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-xs text-ds-text-muted">
-                  <span>
-                    {item.price} {t("common.currency")}
-                  </span>
-                  <span className="text-[11px] text-ds-text-soft">
-                    {item.subtitle}
-                  </span>
-                </div>
-              </div>
-            </Link>
+              id={item.id}
+              slug={item.slug}
+              title={item.title}
+              titleAr={item.title}
+              price={item.price}
+              image={item.image}
+              colorHex={item.swatchHex}
+              colorName={item.swatchName}
+              category={isRTL ? "مجموعة الموسم" : "Season Essential"}
+            />
           ))}
         </div>
       </div>

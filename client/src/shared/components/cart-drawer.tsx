@@ -60,7 +60,7 @@ export function CartDrawer() {
     <div className="fixed inset-0 z-50 overflow-hidden animate-in fade-in duration-300">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[#1c1a1f]/50 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
         onClick={() => setIsOpen(false)}
         aria-hidden="true"
       />
@@ -70,18 +70,18 @@ export function CartDrawer() {
           isRTL ? "left-0" : "right-0"
         } max-w-full flex pl-0`}
       >
-        <div className="w-screen max-w-md bg-[#fdfbf7] dark:bg-[#161517] shadow-2xl flex flex-col justify-between border-s border-ds-border-muted/40">
+        <div className="w-screen max-w-md bg-background shadow-2xl flex flex-col justify-between border-s border-border/60 text-foreground">
           {/* Header */}
-          <div className="px-6 py-5 border-b border-ds-border-subtle bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md flex items-center justify-between">
+          <div className="px-6 py-4.5 border-b border-border/50 bg-background/95 backdrop-blur-md flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex size-9 items-center justify-center rounded-xl bg-ds-primary/10 text-ds-primary">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <ShoppingBag className="size-4" />
               </div>
               <div>
-                <h2 className="text-base font-serif font-semibold text-ds-text-plain tracking-wide">
+                <h2 className="text-base font-serif font-semibold text-foreground tracking-wide">
                   {isRTL ? "حقيبة التسوق" : "Shopping Bag"}
                 </h2>
-                <span className="text-[11px] text-ds-text-muted">
+                <span className="text-[11px] text-muted-foreground">
                   {items.length}{" "}
                   {items.length === 1
                     ? isRTL ? "منتج واحد" : "item"
@@ -92,7 +92,7 @@ export function CartDrawer() {
 
             <button
               onClick={() => setIsOpen(false)}
-              className="size-8 rounded-full flex items-center justify-center hover:bg-black/5 text-ds-text-soft hover:text-ds-text-plain transition-colors cursor-pointer"
+              className="size-8 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               aria-label="Close cart"
             >
               <X className="size-4" />
@@ -101,10 +101,10 @@ export function CartDrawer() {
 
           {/* Luxury Free Shipping Progress Bar */}
           {items.length > 0 && (
-            <div className="px-6 py-3.5 bg-gradient-to-r from-ds-subtle via-ds-plain to-ds-subtle border-b border-ds-border-subtle text-xs space-y-2">
-              <div className="flex items-center justify-between text-ds-text-plain font-medium">
+            <div className="px-6 py-3 bg-muted/40 border-b border-border/40 text-xs space-y-2">
+              <div className="flex items-center justify-between text-foreground font-medium">
                 <div className="flex items-center gap-1.5">
-                  <Truck className="size-3.5 text-ds-primary" />
+                  <Truck className="size-3.5 text-primary" />
                   <span>
                     {isFreeShipping
                       ? isRTL
@@ -115,13 +115,13 @@ export function CartDrawer() {
                       : `Add ${freeShippingThreshold - totalPrice} EGP for free delivery`}
                   </span>
                 </div>
-                <span className="font-mono text-[11px] font-bold text-ds-primary">
+                <span className="font-mono text-[11px] font-bold text-primary">
                   {progressToFreeShipping}%
                 </span>
               </div>
-              <div className="w-full h-1.5 bg-black/5 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-ds-primary to-ds-secondary rounded-full transition-all duration-500 ease-out"
+                  className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${progressToFreeShipping}%` }}
                 />
               </div>
@@ -129,16 +129,16 @@ export function CartDrawer() {
           )}
 
           {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3.5">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-muted/20">
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-16">
-                <div className="size-20 rounded-3xl bg-ds-primary/5 border border-ds-primary/10 flex items-center justify-center mb-4 text-ds-primary shadow-inner">
+                <div className="size-20 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 text-primary shadow-xs">
                   <ShoppingBag className="size-8 stroke-[1.5]" />
                 </div>
-                <p className="font-serif text-lg font-semibold text-ds-text-plain">
+                <p className="font-serif text-lg font-semibold text-foreground">
                   {isRTL ? "حقيبتكِ فارغة حالياً" : "Your bag is empty"}
                 </p>
-                <p className="text-xs text-ds-text-muted mt-1.5 max-w-xs leading-relaxed">
+                <p className="text-xs text-muted-foreground mt-1.5 max-w-xs leading-relaxed">
                   {isRTL
                     ? "تصفحي أحدث القطع المحتشمة والتصاميم الراقية وأضيفيها إلى حقيبتكِ."
                     : "Discover our contemporary silhouettes and curate your personal wardrobe."}
@@ -146,7 +146,7 @@ export function CartDrawer() {
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="mt-6 inline-flex items-center gap-2 px-7 py-3 rounded-full bg-ds-primary text-white text-xs font-semibold tracking-wider hover:bg-ds-primary-saturated transition-all shadow-sm"
+                  className="mt-6 inline-flex items-center gap-2 px-7 py-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold tracking-wider hover:opacity-95 transition-all shadow-sm cursor-pointer"
                 >
                   <span>{isRTL ? "تصفحي التشكيلة" : "Explore Collection"}</span>
                   <ArrowRight className="size-3.5 rtl:rotate-180" />
@@ -156,10 +156,10 @@ export function CartDrawer() {
               items.map((item) => (
                 <div
                   key={`${item.id}-${item.color}-${item.size}`}
-                  className="group relative flex gap-3.5 p-3.5 rounded-2xl border border-ds-border-muted/70 bg-white dark:bg-zinc-900 shadow-2xs hover:border-ds-primary/30 transition-all duration-200"
+                  className="group relative flex gap-3.5 p-3.5 rounded-2xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-xs transition-all duration-200"
                 >
                   {/* Item Image */}
-                  <div className="size-20 rounded-xl overflow-hidden bg-ds-subtle shrink-0 border border-ds-border-subtle">
+                  <div className="size-20 rounded-xl overflow-hidden bg-muted/40 shrink-0 border border-border/40">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={item.image}
@@ -244,13 +244,13 @@ export function CartDrawer() {
 
           {/* Footer & Checkout Area */}
           {items.length > 0 && (
-            <div className="p-5 sm:p-6 border-t border-ds-border-subtle bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md space-y-4">
+            <div className="p-5 sm:p-6 border-t border-border/60 bg-background/95 backdrop-blur-md space-y-4">
               {/* Promo Code Input */}
               <CouponInput />
 
               {/* Price Breakdown */}
               <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between text-ds-text-muted">
+                <div className="flex justify-between text-muted-foreground">
                   <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
                   <span className="font-mono">{totalPrice} {isRTL ? "ج.م" : "EGP"}</span>
                 </div>
@@ -262,7 +262,7 @@ export function CartDrawer() {
                   </div>
                 )}
 
-                <div className="flex justify-between text-ds-text-muted">
+                <div className="flex justify-between text-muted-foreground">
                   <span>{isRTL ? "مصاريف الشحن" : "Shipping"}</span>
                   <span className="font-mono">
                     {isFreeShipping ? (
@@ -273,9 +273,9 @@ export function CartDrawer() {
                   </span>
                 </div>
 
-                <div className="flex justify-between border-t border-ds-border-muted/60 pt-2 font-semibold text-sm text-ds-text-plain">
+                <div className="flex justify-between border-t border-border/60 pt-2 font-semibold text-sm text-foreground">
                   <span>{isRTL ? "المجموع الكلي" : "Total"}</span>
-                  <span className="font-bold text-base text-ds-primary font-mono">
+                  <span className="font-bold text-base text-primary font-mono">
                     {grandTotal} {isRTL ? "ج.م" : "EGP"}
                   </span>
                 </div>
@@ -286,7 +286,7 @@ export function CartDrawer() {
                 <Link
                   href="/checkout"
                   onClick={() => setIsOpen(false)}
-                  className="w-full h-12 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-widest uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer group"
+                  className="w-full h-12 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-semibold tracking-widest uppercase transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer group"
                 >
                   <span>{isRTL ? "متابعة الشراء والدفع" : "Proceed to Checkout"}</span>
                   <ArrowRight className="size-4 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" />
@@ -295,14 +295,14 @@ export function CartDrawer() {
                 <Link
                   href="/cart"
                   onClick={() => setIsOpen(false)}
-                  className="w-full h-10 rounded-full border border-ds-border-muted hover:border-ds-primary text-ds-text-plain text-xs font-semibold transition-all flex items-center justify-center hover:bg-ds-subtle"
+                  className="w-full h-10 rounded-full border border-border/80 hover:border-primary text-foreground text-xs font-semibold transition-all flex items-center justify-center hover:bg-muted/50"
                 >
                   {isRTL ? "عرض تفاصيل الحقيبة" : "View Full Bag"}
                 </Link>
               </div>
 
               {/* Trust Tag */}
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-ds-text-soft pt-1">
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground pt-1">
                 <ShieldCheck className="size-3.5 text-emerald-600" />
                 <span>{isRTL ? "دفع آمن واسترجاع خلال 14 يوماً" : "100% Secure Checkout & Easy Returns"}</span>
               </div>

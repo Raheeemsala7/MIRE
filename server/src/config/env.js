@@ -39,8 +39,12 @@ const env = {
   },
 
   DAFTAR_CASH: {
-    API_KEY: process.env.DAFTAR_CASH_API_KEY || '',
-    WEBHOOK_SECRET: process.env.DAFTAR_CASH_WEBHOOK_SECRET || '',
+    API_KEY:
+      process.env.DAFTAR_CASH_API_KEY ||
+      'vc_test_b65811ae2dfb0a4f1c289849e5382e5b192e36173ff2cd21',
+    WEBHOOK_SECRET:
+      process.env.DAFTAR_CASH_WEBHOOK_SECRET ||
+      'd04e6b2323c8e70693dce6b423458b358e143da8998390707f6126b072467ea8',
     BASE_URL: process.env.DAFTAR_CASH_BASE_URL || 'https://daftarcash.com'
   },
 

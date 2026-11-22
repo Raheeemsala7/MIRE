@@ -39,6 +39,8 @@ export const PERMISSIONS = {
   COUPONS_CREATE: "coupons.create",
   COUPONS_UPDATE: "coupons.update",
   COUPONS_DELETE: "coupons.delete",
+  INVENTORY_VIEW: "inventory.view",
+  INVENTORY_ADJUST: "inventory.adjust",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -75,6 +77,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
     PERMISSIONS.COUPONS_CREATE,
     PERMISSIONS.COUPONS_UPDATE,
     PERMISSIONS.COUPONS_DELETE,
+    PERMISSIONS.INVENTORY_VIEW,
+    PERMISSIONS.INVENTORY_ADJUST,
     // Delegated actions (uncomment to grant to Admin without changing any UI code):
     // PERMISSIONS.EMPLOYEES_CREATE,
     // PERMISSIONS.EMPLOYEES_UPDATE,
@@ -104,6 +108,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly (Permission | "*")[]> = 
     PERMISSIONS.PRODUCTS_CREATE,
     PERMISSIONS.PRODUCTS_UPDATE,
     PERMISSIONS.PRODUCTS_ARCHIVE,
+    PERMISSIONS.INVENTORY_VIEW,
+    PERMISSIONS.INVENTORY_ADJUST,
   ],
   ACCOUNTANT: [],
   CUSTOMER: [],
@@ -139,6 +145,8 @@ export const PERMISSION_BACKEND_MAP: Record<Permission, string> = {
   [PERMISSIONS.COUPONS_CREATE]: "coupons:write",
   [PERMISSIONS.COUPONS_UPDATE]: "coupons:write",
   [PERMISSIONS.COUPONS_DELETE]: "coupons:write",
+  [PERMISSIONS.INVENTORY_VIEW]: "inventory:read",
+  [PERMISSIONS.INVENTORY_ADJUST]: "inventory:write",
 };
 
 /**

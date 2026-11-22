@@ -20,6 +20,7 @@ import {
   BadgePercent,
   ShoppingBag,
   TicketPercent,
+  Warehouse,
 } from "lucide-react";
 import { LogoutButton } from "@/features/auth/components/login/logout-button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -118,6 +119,12 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
     currentUser?.permissions
   );
 
+  const canViewInventory = can(
+    currentUser?.role,
+    PERMISSIONS.INVENTORY_VIEW,
+    currentUser?.permissions
+  );
+
   const navLinks = [
     {
       href: "/admin/dashboard",
@@ -146,6 +153,13 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
       icon: Package,
       active: pathname.startsWith("/admin/products"),
       visible: canViewProducts,
+    },
+    {
+      href: "/admin/inventory",
+      label: t("admin-nav-inventory") || (isAr ? "المخزون" : "Inventory"),
+      icon: Warehouse,
+      active: pathname.startsWith("/admin/inventory"),
+      visible: canViewInventory,
     },
     {
       href: "/admin/bundles",
@@ -229,6 +243,9 @@ export function AdminNav({ currentUser, children }: AdminNavProps) {
         segments.push({ label: productsLabel, href: "/admin/products" });
         segments.push({ label: t("admin-nav-product-details") || (isAr ? "تفاصيل المنتج" : "Product Details") });
       }
+    } else if (pathname.startsWith("/admin/inventory")) {
+      const inventoryLabel = t("admin-nav-inventory") || (isAr ? "المخزون" : "Inventory");
+      segments.push({ label: inventoryLabel });
     } else if (pathname.startsWith("/admin/returns")) {
       const returnsLabel = t("admin-nav-returns") || (isAr ? "إدارة المرتجعات" : "Returns Management");
       if (pathname === "/admin/returns" || pathname === "/admin/returns/") {

@@ -24,6 +24,7 @@ import { useCartStore } from "@/src/shared/stores/cart-store";
 import { useAddressStore, AddressList } from "@/src/features/address";
 import { CouponInput } from "@/src/shared/components/coupon-input";
 import { OrderTrackingTimeline } from "@/src/shared/components/order-tracking-timeline";
+import { useCreateOrder } from "../hooks/use-create-order";
 import type { PaymentMethod, PlacedOrder } from "../types/checkout";
 
 export function CheckoutFlow() {
@@ -36,8 +37,30 @@ export function CheckoutFlow() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
   const [orderNotes, setOrderNotes] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
+
+  const createOrderMutation = useCreateOrder(
+    (createdOrder) => {
+      // Save order to localStorage for offline / guest access
+      try {
+        const stored = localStorage.getItem("mire-recent-orders");
+        const list = stored ? JSON.parse(stored) : [];
+        list.unshift(createdOrder);
+        localStorage.setItem("mire-recent-orders", JSON.stringify(list.slice(0, 20)));
+      } catch {}
+
+      clearCart();
+      setPlacedOrder(createdOrder);
+      toast.success(
+        isAr
+          ? `تم إنشاء الطلب بنجاح! رقم الطلب: ${createdOrder.orderNumber}`
+          : `Order placed successfully! #${createdOrder.orderNumber}`
+      );
+    },
+    (err) => {
+      toast.error(err.message || (isAr ? "حدث خطأ أثناء إنشاء الطلب" : "Error placing order"));
+    }
+  );
 
   // If user has items in cart, ensure placedOrder is cleared and stepper is reset to 1
   useEffect(() => {
@@ -130,86 +153,50 @@ export function CheckoutFlow() {
     );
   }
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
     if (!selectedAddress) {
       toast.error(isAr ? "يرجى تحديد أو إضافة عنوان التوصيل أولاً" : "Please select or add a shipping address");
       setStep(1);
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        customerInfo: {
-          fullName: selectedAddress.fullName,
-          phone: selectedAddress.phone,
-          email: "",
-        },
-        shippingAddress: {
-          street: selectedAddress.street,
-          building: selectedAddress.building || "",
-          apartment: selectedAddress.apartment || "",
-          city: selectedAddress.city,
-          governorate: selectedAddress.governorate,
-          landmark: selectedAddress.landmark || "",
-          country: "Egypt",
-          latitude: selectedAddress.latitude,
-          longitude: selectedAddress.longitude,
-        },
-        paymentMethod,
-        orderNotes,
-        couponCode: coupon?.code,
+    createOrderMutation.mutate({
+      customerInfo: {
+        fullName: selectedAddress.fullName,
+        phone: selectedAddress.phone,
+        email: "",
+      },
+      shippingAddress: {
+        street: selectedAddress.street,
+        building: selectedAddress.building || "",
+        apartment: selectedAddress.apartment || "",
+        city: selectedAddress.city,
+        governorate: selectedAddress.governorate,
+        landmark: selectedAddress.landmark || "",
+        country: "Egypt",
+        latitude: selectedAddress.latitude,
+        longitude: selectedAddress.longitude,
+      },
+      paymentMethod,
+      orderNotes,
+      couponCode: coupon?.code,
+      couponDiscount: discountAmount,
+      pricing: {
+        subtotal,
         couponDiscount: discountAmount,
-        pricing: {
-          subtotal,
-          couponDiscount: discountAmount,
-          shippingFee,
-          totalAmount,
-        },
-        items: items.map((it) => ({
-          productId: it.id,
-          id: it.id,
-          title: it.title,
-          color: it.color,
-          size: it.size,
-          quantity: it.quantity,
-          price: it.price,
-        })),
-      };
-
-      const res = await fetch("/api/customer/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || data.message || "Failed to create order");
-      }
-
-      const createdOrder: PlacedOrder = data.data;
-
-      // Save order to localStorage for offline / guest access
-      try {
-        const stored = localStorage.getItem("mire-recent-orders");
-        const list = stored ? JSON.parse(stored) : [];
-        list.unshift(createdOrder);
-        localStorage.setItem("mire-recent-orders", JSON.stringify(list.slice(0, 20)));
-      } catch {}
-
-      clearCart();
-      setPlacedOrder(createdOrder);
-      toast.success(
-        isAr
-          ? `تم إنشاء الطلب بنجاح! رقم الطلب: ${createdOrder.orderNumber}`
-          : `Order placed successfully! #${createdOrder.orderNumber}`
-      );
-    } catch (err: any) {
-      toast.error(err.message || (isAr ? "حدث خطأ أثناء إنشاء الطلب" : "Error placing order"));
-    } finally {
-      setIsSubmitting(false);
-    }
+        shippingFee,
+        totalAmount,
+      },
+      items: items.map((it) => ({
+        productId: it.id,
+        id: it.id,
+        title: it.title,
+        color: it.color,
+        size: it.size,
+        quantity: it.quantity,
+        price: it.price,
+      })),
+    });
   };
 
   return (
@@ -517,11 +504,11 @@ export function CheckoutFlow() {
 
               <button
                 type="button"
-                disabled={isSubmitting}
+                disabled={createOrderMutation.isPending}
                 onClick={handlePlaceOrder}
                 className="px-8 py-3.5 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-wider transition-all shadow-sm hover:shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-60"
               >
-                {isSubmitting ? (
+                {createOrderMutation.isPending ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : (
                   <Check className="size-4" />

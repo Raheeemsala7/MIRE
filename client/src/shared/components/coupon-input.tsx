@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useLocale } from "next-intl";
 import { Tag, Check, X, Loader2 } from "lucide-react";
 import { useCartStore } from "@/shared/stores/cart-store";
+import { useValidateCoupon } from "@/features/admin/coupons/hooks/use-validate-coupon";
 import { toast } from "sonner";
 
 interface CouponInputProps {
@@ -17,41 +18,17 @@ export function CouponInput({ className = "", onSuccess }: CouponInputProps) {
 
   const { coupon, applyCoupon, removeCoupon, getTotalPrice, getDiscountAmount } = useCartStore();
   const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const subtotal = getTotalPrice();
   const discountAmount = getDiscountAmount();
 
-  const handleApply = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanCode = code.trim().toUpperCase();
-    if (!cleanCode) return;
-
-    if (subtotal <= 0) {
-      setError(isAr ? "حقيبة التسوق فارغة" : "Your cart is empty");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const res = await fetch("/api/coupons/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: cleanCode, subtotal }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.message || (isAr ? "كود الخصم غير صالح" : "Invalid coupon code"));
-      }
-
-      const { discount, appliedCoupon } = json.data;
+  const validateMutation = useValidateCoupon(
+    (data) => {
+      const { discount, appliedCoupon } = data;
 
       applyCoupon({
-        code: cleanCode,
+        code: appliedCoupon.code,
         discountType: appliedCoupon.discountType,
         discountValue: appliedCoupon.discountValue,
         discountAmount: discount,
@@ -64,13 +41,27 @@ export function CouponInput({ className = "", onSuccess }: CouponInputProps) {
           : `Coupon applied! You saved ${discount} EGP`
       );
       setCode("");
+      setError("");
       if (onSuccess) onSuccess();
-    } catch (err: any) {
+    },
+    (err) => {
       setError(err.message || (isAr ? "كود الخصم غير صحيح أو منتهي" : "Invalid or expired coupon"));
       toast.error(err.message || (isAr ? "تعذر تطبيق الكوبون" : "Failed to apply coupon"));
-    } finally {
-      setLoading(false);
     }
+  );
+
+  const handleApply = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanCode = code.trim().toUpperCase();
+    if (!cleanCode) return;
+
+    if (subtotal <= 0) {
+      setError(isAr ? "حقيبة التسوق فارغة" : "Your cart is empty");
+      return;
+    }
+
+    setError("");
+    validateMutation.mutate({ code: cleanCode, subtotal });
   };
 
   const handleRemove = () => {
@@ -132,15 +123,15 @@ export function CouponInput({ className = "", onSuccess }: CouponInputProps) {
             }}
             placeholder={isAr ? "كود الخصم (مثل WELCOME10)" : "Promo code (e.g. WELCOME10)"}
             className="w-full h-10 ps-9 pe-3 rounded-xl border border-ds-border-muted bg-ds-plain text-xs font-medium uppercase tracking-wider text-ds-text-plain placeholder:normal-case placeholder:text-ds-text-soft focus:outline-none focus:ring-1 focus:ring-ds-primary"
-            disabled={loading}
+            disabled={validateMutation.isPending}
           />
         </div>
         <button
           type="submit"
-          disabled={loading || !code.trim()}
+          disabled={validateMutation.isPending || !code.trim()}
           className="h-10 px-4 rounded-xl bg-ds-primary hover:bg-ds-primary/90 disabled:opacity-50 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
         >
-          {loading ? (
+          {validateMutation.isPending ? (
             <Loader2 className="size-3.5 animate-spin" />
           ) : (
             <span>{isAr ? "تطبيق" : "Apply"}</span>

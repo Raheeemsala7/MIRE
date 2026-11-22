@@ -24,6 +24,9 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/shared/components/ui/dialog";
 import { Switch } from "@/shared/components/ui/switch";
+import { useCreateCoupon } from "../hooks/use-create-coupon";
+import { useUpdateCoupon } from "../hooks/use-update-coupon";
+import { useDeleteCoupon } from "../hooks/use-delete-coupon";
 
 export interface CouponItem {
   _id: string;
@@ -54,7 +57,16 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
   const [filterType, setFilterType] = useState<"ALL" | "ACTIVE" | "EXPIRED">("ALL");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+
+  const createMutation = useCreateCoupon((newCoupon) => {
+    setCoupons((prev) => [newCoupon as CouponItem, ...prev]);
+    setIsDialogOpen(false);
+    setFormCode("");
+  });
+
+  const updateMutation = useUpdateCoupon();
+
+  const deleteMutation = useDeleteCoupon();
 
   // Form state for creating a coupon
   const [formCode, setFormCode] = useState("");
@@ -75,50 +87,39 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+  const handleToggleStatus = (id: string, currentStatus: boolean) => {
     const updated = !currentStatus;
     setCoupons((prev) =>
       prev.map((c) => (c._id === id ? { ...c, isActive: updated } : c))
     );
 
-    try {
-      const res = await fetch(`/api/admin/coupons/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: updated }),
-      });
-      if (!res.ok) throw new Error("Failed to update status");
-      toast.success(
-        updated
-          ? isAr ? "تم تفعيل الكوبون بنجاح" : "Coupon activated"
-          : isAr ? "تم تعطيل الكوبون" : "Coupon deactivated"
-      );
-    } catch {
-      // Revert on failure
-      setCoupons((prev) =>
-        prev.map((c) => (c._id === id ? { ...c, isActive: currentStatus } : c))
-      );
-      toast.error(isAr ? "تعذر تحديث حالة الكوبون" : "Error toggling coupon");
-    }
+    updateMutation.mutate(
+      { id, updates: { isActive: updated } },
+      {
+        onError: () => {
+          // Revert on failure
+          setCoupons((prev) =>
+            prev.map((c) => (c._id === id ? { ...c, isActive: currentStatus } : c))
+          );
+        },
+      }
+    );
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm(isAr ? "هل أنتِ متأكدة من حذف هذا الكوبون نهائياً؟" : "Delete this coupon permanently?")) {
       return;
     }
 
     setCoupons((prev) => prev.filter((c) => c._id !== id));
-
-    try {
-      const res = await fetch(`/api/admin/coupons/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-      toast.success(isAr ? "تم حذف الكوبون بنجاح" : "Coupon deleted");
-    } catch {
-      toast.error(isAr ? "حدث خطأ أثناء حذف الكوبون" : "Error deleting coupon");
-    }
+    deleteMutation.mutate(id, {
+      onError: () => {
+        // Re-fetch or keep in state
+      },
+    });
   };
 
-  const handleCreateCoupon = async (e: React.FormEvent) => {
+  const handleCreateCoupon = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanCode = formCode.trim().toUpperCase();
     if (!cleanCode) {
@@ -126,8 +127,7 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
       return;
     }
 
-    setSubmitting(true);
-    const newCouponPayload = {
+    createMutation.mutate({
       code: cleanCode,
       discountType: formDiscountType,
       discountValue: Number(formDiscountValue),
@@ -138,31 +138,7 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
       endDate: new Date(formEndDate).toISOString(),
       isActive: true,
       maxUsesPerCustomer: 1,
-    };
-
-    try {
-      const res = await fetch("/api/admin/coupons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newCouponPayload),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Failed to create coupon");
-      }
-
-      setCoupons((prev) => [data.data, ...prev]);
-      setIsDialogOpen(false);
-      setFormCode("");
-      toast.success(
-        isAr ? `تم إنشاء الكوبون #${cleanCode} بنجاح!` : `Coupon #${cleanCode} created!`
-      );
-    } catch (err: any) {
-      toast.error(err.message || (isAr ? "تعذر إنشاء الكوبون" : "Failed to create coupon"));
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   // Metrics
@@ -394,10 +370,10 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={submitting}
+                  disabled={createMutation.isPending}
                   className="rounded-xl bg-ds-primary text-white text-xs font-semibold px-5"
                 >
-                  {submitting ? (isAr ? "جاري الحفظ..." : "Saving...") : (isAr ? "حفظ الكوبون" : "Save Coupon")}
+                  {createMutation.isPending ? (isAr ? "جاري الحفظ..." : "Saving...") : (isAr ? "حفظ الكوبون" : "Save Coupon")}
                 </Button>
               </div>
             </form>

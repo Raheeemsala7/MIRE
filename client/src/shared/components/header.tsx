@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NextLink from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/src/i18n/navigation";
@@ -15,9 +15,14 @@ export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { getTotalCount, setIsOpen: setCartOpen } = useCartStore();
 
-  const totalCount = getTotalCount();
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const totalCount = mounted ? getTotalCount() : 0;
   const otherLocale = locale === "ar" ? "en" : "ar";
   const isRTL = locale === "ar";
 

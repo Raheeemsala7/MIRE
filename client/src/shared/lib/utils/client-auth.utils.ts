@@ -4,11 +4,6 @@ let isRedirecting = false;
 export function handleClientSessionExpired(locale: string = "ar") {
   if (typeof window === "undefined" || isRedirecting) return;
 
-  // Don't loop if already on the login page
-  if (window.location.pathname.includes("/auth/login")) return;
-
-  isRedirecting = true;
-
   // Best-effort client cookie deletion
   const cookieNames = [
     "authjs.session-token",
@@ -21,6 +16,20 @@ export function handleClientSessionExpired(locale: string = "ar") {
   }
 
   const currentPath = window.location.pathname;
+  const isAdminRoute =
+    /^\/(ar|en)?\/admin(?:\/|$)/.test(currentPath) ||
+    currentPath.includes("/admin");
+
+  // CRITICAL: Public storefront visitors and landing page guests should NEVER be redirected to login!
+  // Only redirect if the user was actively navigating within the admin dashboard.
+  if (!isAdminRoute) {
+    return;
+  }
+
+  // Don't loop if already on the login page
+  if (currentPath.includes("/auth/login")) return;
+
+  isRedirecting = true;
   const isEn = currentPath.startsWith("/en");
   const loginLocale = isEn ? "en" : locale;
   const callbackUrl = encodeURIComponent(window.location.pathname + window.location.search);

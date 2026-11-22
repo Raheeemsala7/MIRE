@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { toast } from "sonner";
@@ -36,14 +36,21 @@ export function CheckoutFlow() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
 
+  // If user has items in cart, ensure placedOrder is cleared and stepper is reset to 1
+  useEffect(() => {
+    if (items.length > 0) {
+      setPlacedOrder(null);
+    }
+  }, [items.length]);
+
   const selectedAddress = getSelectedAddress();
   const subtotal = getTotalPrice();
   const freeShippingThreshold = 1500;
   const shippingFee = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 50;
   const totalAmount = subtotal + shippingFee;
 
-  // If order was successfully placed, render Order Confirmation View
-  if (placedOrder) {
+  // Render Order Confirmation View ONLY if an order was placed AND cart is currently empty
+  if (placedOrder && items.length === 0) {
     return (
       <div className="mx-auto max-w-2xl text-center py-12 px-4 animate-in fade-in duration-300">
         <div className="mx-auto flex size-20 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 ring-8 ring-emerald-500/5 mb-6">
@@ -127,12 +134,14 @@ export function CheckoutFlow() {
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/orders"
+            onClick={() => setPlacedOrder(null)}
             className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-ds-primary hover:bg-ds-primary-saturated text-white text-xs font-semibold tracking-wider transition-all shadow-sm hover:shadow-md"
           >
-            {isAr ? "عرض طلباتي" : "View My Orders"}
+            {isAr ? "عرض ومتابعة طلباتي" : "Track My Orders"}
           </Link>
           <Link
             href="/products"
+            onClick={() => setPlacedOrder(null)}
             className="w-full sm:w-auto px-8 py-3.5 rounded-full border border-ds-border-muted bg-white hover:bg-ds-subtle text-ds-text-plain text-xs font-semibold tracking-wider transition-all"
           >
             {isAr ? "متابعة التسوق" : "Continue Shopping"}

@@ -12,7 +12,7 @@ export async function BrandStory() {
     <section id="about" className="py-20 md:py-28 bg-muted/20 border-b border-border/40">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
         <span className="inline-block text-[11px] tracking-[0.25em] uppercase font-semibold text-primary">
-          {isRTL ? "فلسفة ميري" : "THE MIRÉ PHILOSOPHY"}
+          {isRTL ? "الزهور فقط ترتدي ميري" : "ONLY FLOWERS WEAR MIRÉ"}
         </span>
 
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-brand-serif font-normal text-foreground leading-relaxed">

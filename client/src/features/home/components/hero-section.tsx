@@ -15,9 +15,10 @@ export async function HeroSection() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-14 items-center">
           {/* Text Content Column */}
           <div className="md:col-span-6 space-y-6 text-start">
-            <span className="inline-block text-[11px] tracking-[0.2em] uppercase font-semibold text-muted-foreground">
-              {isRTL ? "تشكيلة ميري الحصرية" : "MIRÉ ATELIER"}
-            </span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary shadow-2xs">
+              <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+              <span>{isRTL ? "«الزهور فقط ترتدي ميري»" : "“Only flowers wear MIRÉ”"}</span>
+            </div>
 
             <div className="space-y-3">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-brand-serif font-normal text-foreground tracking-tight leading-[1.15]">
@@ -25,7 +26,7 @@ export async function HeroSection() {
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground max-w-md leading-relaxed font-normal">
                 {isRTL
-                  ? "تصاميم منسدلة بأقمشة طبيعية وقصات مدروسة، تُجسد الوقار والراحة اليومية."
+                  ? "تصاميم منسدلة بأقمشة طبيعية وقصات مدروسة، تُجسد الوقار والراحة اليومية للمرأة المعاصرة."
                   : "Refined fluid silhouettes and natural fabrics crafted for enduring comfort and quiet confidence."}
               </p>
             </div>

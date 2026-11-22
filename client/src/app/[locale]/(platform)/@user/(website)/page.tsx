@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { HeroSection } from "@/features/home/components/hero-section";
 import { CategoryGrid } from "@/features/home/components/category-grid";
+import { OutfitsGallery } from "@/features/home/components/outfits-gallery";
 import { NewArrivals } from "@/features/home/components/new-arrivals";
 import { BrandStory } from "@/features/home/components/brand-story";
 import { ValuePillars } from "@/features/home/components/value-pillars";
@@ -25,6 +26,7 @@ async function HomeContent({ params }: HomePageProps) {
     <div className="w-full flex flex-col">
       <HeroSection />
       <CategoryGrid />
+      <OutfitsGallery />
       <NewArrivals />
       <BrandStory />
       <ValuePillars />

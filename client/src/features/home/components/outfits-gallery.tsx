@@ -1,138 +1,169 @@
 import React from "react";
-import Image from "next/image";
-import { getTranslations, getLocale } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Sparkles } from "lucide-react";
+import { getPublicBundles } from "@/features/bundles/apis/bundles.api";
+import { BundleCard, type BundleDisplayItem } from "./bundle-card";
 
 export async function OutfitsGallery() {
-  const t = await getTranslations();
   const locale = await getLocale();
   const isRTL = locale === "ar";
 
-  const outfits = [
-    {
-      id: "outfit-yellow-jasper",
-      pantone: "PANTONE® 12-0718 TCX",
-      pantoneName: "Yellow Jasper",
-      title: isRTL ? "طقم يلو جاسبر وجيبة بليسيه بيضاء" : "Yellow Jasper Tunic & White Pleated Skirt",
-      subtitle: isRTL ? "تونيك خردلي متموج مع جيبة بيضاء مكسرة" : "Wavy tunic with crisp white pleated skirt",
-      price: 1350,
-      hex: "#e5d158",
-      image: "/products/outfits/yellow-jasper.jpg",
-      slug: "pleated-skirt",
-    },
-    {
-      id: "outfit-tapioca-brown",
-      pantone: "PANTONE® 13-1008 TCX",
-      pantoneName: "Tapioca",
-      title: isRTL ? "طقم التابيوكا وجيبة بليسيه بنية" : "Tapioca Neutral Set & Brown Pleated Skirt",
-      subtitle: isRTL ? "أناقة هادئة بألوان الأرض والقهوة" : "Earthy mocha & chocolate pleated harmony",
-      price: 1350,
-      hex: "#d8c8b4",
-      image: "/products/outfits/tapioca-brown.jpg",
-      slug: "pleated-skirt",
-    },
-    {
-      id: "outfit-burgundy-cream",
-      pantone: "PANTONE® 18-1618 TCX",
-      pantoneName: "Chili Pepper",
-      title: isRTL ? "طقم تشيلي بيبر وجيبة عاجية" : "Chili Pepper Tunic & Cream Pleated Skirt",
-      subtitle: isRTL ? "نبيذي داكن فاخر مع جيبة عاجية منسدلة" : "Rich burgundy tunic with flowing cream skirt",
-      price: 1350,
-      hex: "#852934",
-      image: "/products/outfits/burgundy-cream.jpg",
-      slug: "pleated-skirt",
-    },
-    {
-      id: "outfit-teal-denim",
-      pantone: "PANTONE® 19-4535 TCX",
-      pantoneName: "Teal-Blue Denim",
-      title: isRTL ? "طقم التيل دينيم وجيبة بترولية" : "Teal Blue Denim Skirt & White Tunic",
-      subtitle: isRTL ? "تونيك أبيض ناصع مع جيبة كحلي بترولي" : "Crisp white drape over deep teal pleated maxi",
-      price: 1350,
-      hex: "#274e5e",
-      image: "/products/outfits/teal-denim.jpg",
-      slug: "pleated-skirt",
-    },
-  ];
+  let bundlesData: BundleDisplayItem[] = [];
+
+  try {
+    const rawBundles = await getPublicBundles(4);
+    if (rawBundles && rawBundles.length > 0) {
+      bundlesData = rawBundles.map((b) => {
+        const primaryImage =
+          b.bannerImage ||
+          (typeof b.eligibleProducts?.[0] === "object" && (b.eligibleProducts[0] as any)?.images?.[0]?.url) ||
+          "/products/outfits/yellow-jasper.jpg";
+
+        const pieces = b.requiredQuantity || b.eligibleProducts?.length || 2;
+        const discount = b.discountPercentage || 15;
+        const price = b.bundlePrice || 1350;
+        const originalPrice = Math.round(price / (1 - discount / 100));
+
+        return {
+          id: b._id,
+          slug: b.slug || "pleated-skirt",
+          title: b.title,
+          subtitle: b.description,
+          price,
+          originalPrice,
+          discountPercentage: discount,
+          savingsAmount: originalPrice - price,
+          piecesCount: pieces,
+          includedItems: [
+            isRTL ? "تونيك منسدل فاخر" : "Fluid Modest Tunic",
+            isRTL ? "جيبة بليسيه ماكسي" : "Maxi Pleated Skirt",
+          ],
+          image: primaryImage,
+        };
+      });
+    }
+  } catch {
+    // Fallback to curated collections below
+  }
+
+  // Graceful fallback if database has no active bundles seeded yet
+  if (bundlesData.length === 0) {
+    bundlesData = [
+      {
+        id: "bundle-yellow-jasper",
+        slug: "pleated-skirt",
+        title: isRTL ? "طقم يلو جاسبر وجيبة بليسيه بيضاء" : "Yellow Jasper Tunic & White Pleated Skirt Set",
+        subtitle: isRTL
+          ? "تونيك خردلي متموج مع جيبة بيضاء مكسرة ناصعة وقماش ياباني بارد."
+          : "Wavy mustard fluid tunic with crisp white pleated maxi skirt.",
+        price: 1350,
+        originalPrice: 1600,
+        discountPercentage: 15,
+        savingsAmount: 250,
+        piecesCount: 2,
+        includedItems: [
+          isRTL ? "تونيك يلو جاسبر متموج" : "Yellow Jasper Tunic",
+          isRTL ? "جيبة بليسيه ماكسي بيضاء" : "White Pleated Skirt",
+        ],
+        swatchHex: "#e5d158",
+        image: "/products/outfits/yellow-jasper.jpg",
+      },
+      {
+        id: "bundle-tapioca-brown",
+        slug: "pleated-skirt",
+        title: isRTL ? "طقم التابيوكا وجيبة بليسيه بنية" : "Tapioca Neutral Set & Brown Pleated Skirt",
+        subtitle: isRTL
+          ? "أناقة هادئة بألوان الأرض والقهوة مع خصر مطاطي مريح للغاية."
+          : "Earthy mocha & chocolate pleated harmony with relaxed fit.",
+        price: 1350,
+        originalPrice: 1600,
+        discountPercentage: 15,
+        savingsAmount: 250,
+        piecesCount: 2,
+        includedItems: [
+          isRTL ? "تونيك تابيوكا ناعم" : "Tapioca Fluid Top",
+          isRTL ? "جيبة بليسيه بنية شوكولاتة" : "Brown Pleated Maxi",
+        ],
+        swatchHex: "#d8c8b4",
+        image: "/products/outfits/tapioca-brown.jpg",
+      },
+      {
+        id: "bundle-burgundy-cream",
+        slug: "pleated-skirt",
+        title: isRTL ? "طقم تشيلي بيبر وجيبة عاجية" : "Chili Pepper Tunic & Cream Pleated Skirt",
+        subtitle: isRTL
+          ? "نبيذي داكن ملكي مع جيبة عاجية منسدلة بكسرات دقيقة تدوم للأبد."
+          : "Rich burgundy tunic with flowing cream micro-pleated skirt.",
+        price: 1350,
+        originalPrice: 1600,
+        discountPercentage: 15,
+        savingsAmount: 250,
+        piecesCount: 2,
+        includedItems: [
+          isRTL ? "تونيك نبيذي ملكي" : "Chili Pepper Tunic",
+          isRTL ? "جيبة بليسيه عاجية منسدلة" : "Cream Pleated Skirt",
+        ],
+        swatchHex: "#852934",
+        image: "/products/outfits/burgundy-cream.jpg",
+      },
+      {
+        id: "bundle-teal-denim",
+        slug: "pleated-skirt",
+        title: isRTL ? "طقم التيل دينيم وجيبة بترولية" : "Teal Blue Denim Skirt & White Tunic Set",
+        subtitle: isRTL
+          ? "تونيك أبيض ناصع مع جيبة كحلي بترولي جذابة للمناسبات والعمل."
+          : "Crisp white drape over deep teal pleated maxi skirt.",
+        price: 1350,
+        originalPrice: 1600,
+        discountPercentage: 15,
+        savingsAmount: 250,
+        piecesCount: 2,
+        includedItems: [
+          isRTL ? "تونيك أبيض ناصع" : "Pure White Tunic",
+          isRTL ? "جيبة بليسيه بترولية ماكسي" : "Teal Blue Pleated Maxi",
+        ],
+        swatchHex: "#274e5e",
+        image: "/products/outfits/teal-denim.jpg",
+      },
+    ];
+  }
 
   return (
-    <section className="py-16 md:py-24 bg-ds-subtle/50 border-b border-ds-border-subtle">
+    <section id="bundles" className="py-14 md:py-24 border-b border-border/40 bg-muted/15">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between mb-12 pb-4 border-b border-ds-border-muted/50 gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-ds-primary text-xs uppercase tracking-widest font-semibold mb-1">
-              <Sparkles className="w-4 h-4" />
-              <span>{isRTL ? "تنسيقات ميري الحصرية" : "MIRÉ CURATED PALETTES"}</span>
+        {/* Section Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 pb-4 border-b border-border/40 gap-4">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 text-primary text-xs uppercase tracking-widest font-semibold">
+              <Sparkles className="size-3.5" />
+              <span>{isRTL ? "تنسيقات وعروض الباقات الحصرية" : "MIRÉ CURATED BUNDLES"}</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-brand-serif text-ds-text-plain">
-              {isRTL ? "أطقم وتنسيقات البليسيه والمحجبات" : "Pantone Modest Outfit Sets"}
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-brand-serif font-normal text-foreground">
+              {isRTL ? "أطقم وتنسيقات البليسيه والمحجبات" : "Coordinated Modest Bundle Sets"}
             </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
+              {isRTL
+                ? "تنسيقات متكاملة تجمع بين التونيك المنسدل والجيبة البليسيه المكسرة بألوان متناغمة وبسعر توفيري خاص."
+                : "Complete curated looks combining fluid tunics and micro-pleated skirts with exclusive package savings."}
+            </p>
           </div>
+
           <Link
             href="/products"
-            className="text-xs uppercase tracking-widest font-semibold text-ds-primary hover:text-ds-primary-saturated transition-colors shrink-0"
+            className="text-xs uppercase tracking-widest font-semibold text-primary hover:underline underline-offset-4 shrink-0"
           >
             {isRTL ? "تسوقي جميع الأطقم ←" : "SHOP ALL SETS →"}
           </Link>
         </div>
 
-        {/* 4 Large Full-Outfit Cards Grid */}
+        {/* 4 Bundle Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {outfits.map((item) => (
-            <Link
-              key={item.id}
-              href={`/products/${item.slug}`}
-              className="group block bg-white rounded-lg overflow-hidden border border-ds-border-subtle hover:border-ds-primary/40 transition-all duration-300 shadow-xs hover:shadow-md"
-            >
-              {/* Full Outfit Image Container */}
-              <div className="relative aspect-3/4 overflow-hidden bg-ds-secondary/20">
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover group-hover:scale-104 transition-transform duration-700"
-                />
-
-                {/* Subtle Pantone chip overlay */}
-                <div className="absolute top-3 start-3 bg-white/95 backdrop-blur-xs px-2.5 py-1.5 rounded-sm shadow-xs border border-black/5 flex items-center gap-2">
-                  <span
-                    className="w-3.5 h-3.5 rounded-xs border border-black/10 shrink-0"
-                    style={{ backgroundColor: item.hex }}
-                  />
-                  <span className="text-[10px] font-mono font-medium text-zinc-800">
-                    {item.pantoneName}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card Meta */}
-              <div className="p-4 space-y-2">
-                <div className="text-[11px] font-mono text-ds-text-soft">
-                  {item.pantone}
-                </div>
-                <h3 className="text-sm font-semibold text-ds-text-plain group-hover:text-ds-primary transition-colors line-clamp-1">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-ds-text-muted line-clamp-1">
-                  {item.subtitle}
-                </p>
-                <div className="pt-2 flex items-center justify-between border-t border-zinc-100">
-                  <span className="text-sm font-bold text-ds-text-plain">
-                    {item.price} {t("common.currency")}
-                  </span>
-                  <span className="text-xs font-semibold text-ds-primary group-hover:underline">
-                    {isRTL ? "عرض التفاصيل" : "View Look"}
-                  </span>
-                </div>
-              </div>
-            </Link>
+          {bundlesData.map((item) => (
+            <BundleCard key={item.id} bundle={item} />
           ))}
         </div>
       </div>
     </section>
   );
 }
-

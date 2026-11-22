@@ -547,7 +547,7 @@ export function CouponsManager({ initialCoupons }: CouponsManagerProps) {
                       {/* Code */}
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-sm text-ds-text-plain tracking-wider bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-ds-border-muted">
+                          <span className="font-mono font-bold text-sm text-ds-text-plain tracking-wider bg-zinc-100  px-2.5 py-1 rounded-lg border border-ds-border-muted">
                             {coupon.code}
                           </span>
                           <button

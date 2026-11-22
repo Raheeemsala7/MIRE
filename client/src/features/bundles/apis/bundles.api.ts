@@ -4,11 +4,32 @@ import { API_URL, HEADERS } from "@/shared/constant/api.constant";
 import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 import { buildBundleQueryParams, getBundleStatus } from "../utils/bundle.util";
 import type {
+  Bundle,
   BundleFilters,
   BundlesPaginatedResponse,
   SingleBundleResponse,
   BundleOverviewStats,
 } from "../types/bundle.types";
+
+/**
+ * Public: Fetch active promotional bundles for storefront showcase
+ */
+export async function getPublicBundles(limit: number = 6): Promise<Bundle[]> {
+  try {
+    const res = await fetch(`${API_URL}/bundles?activeOnly=true&limit=${limit}`, {
+      method: "GET",
+      headers: HEADERS.JsonBody,
+      next: { revalidate: 3600, tags: ["bundles"] },
+    });
+
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json?.data) ? json.data : [];
+  } catch (error) {
+    console.error("getPublicBundles error:", error);
+    return [];
+  }
+}
 
 /**
  * Admin: Fetch paginated promotional bundles with backend query filtering

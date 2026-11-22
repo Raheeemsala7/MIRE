@@ -34,6 +34,7 @@ export async function authorizeCredentials(credentials: Partial<Record<string, u
     const sessionId = await createSession(user, result.accessToken, result.refreshToken, rememberMe);
     return { ...user, sessionId };
   } catch (error) {
+    console.error("Authorize credentials error details:", error);
     if (error instanceof BackendAuthError && error.status === 401) return null;
     throw new LoginUnavailable();
   }

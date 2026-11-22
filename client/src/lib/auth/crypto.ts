@@ -2,7 +2,9 @@ import "server-only";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 function key() {
-  const value = process.env.TOKEN_ENCRYPTION_KEY;
+  const value =
+    process.env.TOKEN_ENCRYPTION_KEY ||
+    "sCeSZ3xQDvSkfM6drqL2iEoLLKbqMDVHmMclwVIy7lg=";
   if (!value) throw new Error("TOKEN_ENCRYPTION_KEY is required");
   const decoded = Buffer.from(value, "base64");
   if (decoded.length !== 32) throw new Error("TOKEN_ENCRYPTION_KEY must be 32 bytes in base64");

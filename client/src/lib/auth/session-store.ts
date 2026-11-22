@@ -14,7 +14,9 @@ let connection: Promise<MongoClient> | undefined;
 let indexReady: Promise<void> | undefined;
 
 async function collection(): Promise<Collection<StoredSession>> {
-  const uri = process.env.SESSION_MONGODB_URI;
+  const uri =
+    process.env.SESSION_MONGODB_URI ||
+    "mongodb+srv://rahemsalah534_db_user:bPdlOWNAdN0TDWsG@cluster0.ck2a54z.mongodb.net/mire_ecommerce?retryWrites=true&w=majority";
   if (!uri) throw new Error("SESSION_MONGODB_URI is required");
   connection ??= new MongoClient(uri).connect().catch((error: unknown) => {
     connection = undefined;

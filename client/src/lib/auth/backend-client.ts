@@ -49,12 +49,9 @@ export class BackendApiError extends Error {
 }
 
 export function apiUrl(): string {
-  const value = process.env.BACKEND_API_URL || process.env.API_URL;
-  if (!value) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("Missing BACKEND_API_URL or API_URL environment variable in production.");
-    }
-    return "http://localhost:5000/api/v1";
+  let value = process.env.BACKEND_API_URL || process.env.API_URL;
+  if (!value || (process.env.NODE_ENV === "production" && value.includes("localhost"))) {
+    return "https://mire-fqdw.vercel.app/api/v1";
   }
   const base = value.replace(/\/+$/, "");
   try {

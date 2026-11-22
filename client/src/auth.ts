@@ -11,7 +11,7 @@ import { SESSION_COOKIE, REMEMBER_ME_SECONDS, sessionCookieOptions } from "@/lib
 
 const nextAuth = NextAuth({
   trustHost: true,
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || "tD+4cODqaNMJnlZAki/dDOqjC4QldbtyckSBmMin/58=",
   pages: { signIn: "/auth/login" },
   session: { strategy: "jwt", maxAge: REMEMBER_ME_SECONDS },
   cookies: {

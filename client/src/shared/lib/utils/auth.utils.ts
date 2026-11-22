@@ -38,21 +38,47 @@ function isJwtExpired(tokenString?: string): boolean {
 export async function getNextAuthToken() {
   const cookiesStore = await cookies();
   const configuredName = process.env.NEXT_AUTH_SESSION_COOKIE_NAME;
-  const token =
-    (configuredName ? cookiesStore.get(configuredName)?.value : undefined) ||
-    cookiesStore.get("authjs.session-token")?.value ||
-    cookiesStore.get("__Secure-authjs.session-token")?.value ||
-    cookiesStore.get("next-auth.session-token")?.value ||
-    cookiesStore.get("__Secure-next-auth.session-token")?.value;
+  let cookieName = configuredName;
+  let token = configuredName ? cookiesStore.get(configuredName)?.value : undefined;
+
+  if (!token) {
+    const candidateNames = [
+      "authjs.session-token",
+      "__Secure-authjs.session-token",
+      "next-auth.session-token",
+      "__Secure-next-auth.session-token",
+    ];
+    for (const name of candidateNames) {
+      const val = cookiesStore.get(name)?.value;
+      if (val) {
+        token = val;
+        cookieName = name;
+        break;
+      }
+    }
+  }
 
   if (!token) return null;
 
   try {
-    const jwt = await decode({
+    const secret = (process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET)!;
+    const salt = cookieName || configuredName || "authjs.session-token";
+
+    let jwt = await decode({
       token,
-      secret: (process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET)!,
-      salt: (configuredName || "authjs.session-token") as any,
-    } as any);
+      secret,
+      salt,
+    } as any).catch(() => null);
+
+    if (!jwt && salt !== "authjs.session-token") {
+      jwt = await decode({
+        token,
+        secret,
+        salt: "authjs.session-token",
+      } as any).catch(() => null);
+    }
+
+    if (!jwt) return null;
 
     // If NextAuth outer session token is expired, clear cookies and return null
     if (jwt?.exp && typeof jwt.exp === "number" && jwt.exp * 1000 < Date.now()) {
@@ -75,7 +101,6 @@ export async function getNextAuthToken() {
 
     return jwt;
   } catch {
-    await clearAuthCookies();
     return null;
   }
 }

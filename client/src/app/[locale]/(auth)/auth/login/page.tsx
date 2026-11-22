@@ -25,13 +25,13 @@ async function LoginPageContent({
   const locale = await getAuthLocale();
   const t = await getTranslations({ locale });
   const token = await getNextAuthToken();
-  const user = (await getServerSession())?.user;
+  const session = await getServerSession();
 
-  // If token is missing, expired, or user explicitly arrived with expired=1, wipe stale cookies
-  if (expired === "1" || !token?.token) {
+  // If user explicitly arrived after an expired session, wipe stale cookies
+  if (expired === "1") {
     await clearAuthCookies();
-  } else if (user) {
-    redirect(destination(user.role, locale, user.permissions));
+  } else if (session?.user && token?.token) {
+    redirect(destination(session.user.role, locale, session.user.permissions));
   }
 
   return (

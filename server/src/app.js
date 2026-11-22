@@ -7,6 +7,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const swaggerUi = require('swagger-ui-express');
 
 const env = require('./config/env');
+const { connectDB } = require('./config/db');
 const swaggerSpec = require('./config/swagger');
 const errorHandler = require('./middlewares/errorHandler');
 const { apiLimiter } = require('./middlewares/rateLimiter');
@@ -78,6 +79,19 @@ if (process.env.NODE_ENV !== 'test') {
 
 // 5. Rate Limiting
 app.use('/api/', apiLimiter);
+
+// 5.1 Ensure Database Connection for Serverless Runtimes (e.g. Vercel)
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api-docs') || req.path === '/favicon.ico') {
+    return next();
+  }
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // 6. Swagger API Documentation (Mandatory Requirement)
 app.use(

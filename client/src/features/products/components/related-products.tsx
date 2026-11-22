@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { getPublicRelatedProducts } from "../server/queries";
+import { getPublicRelatedProducts } from "../apis/products.api";
 import { getPrimaryImageUrl } from "../utils/product.util";
 
 interface RelatedProductsProps {

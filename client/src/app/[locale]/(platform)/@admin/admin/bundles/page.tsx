@@ -14,7 +14,7 @@ import {
 import {
   getAdminBundles,
   getAdminBundleOverviewStats,
-} from "@/features/bundles/server/queries";
+} from "@/features/bundles/apis/bundles.api";
 
 interface AdminBundlesPageProps {
   params: Promise<{ locale: string }>;

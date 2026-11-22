@@ -5,7 +5,7 @@ import { requirePermission } from "@/lib/permissions/server-authorization";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import { PERMISSIONS } from "@/config/rbac.config";
 import { BundleDetails } from "@/features/bundles";
-import { getAdminBundleById } from "@/features/bundles/server/queries";
+import { getAdminBundleById } from "@/features/bundles/apis/bundles.api";
 import AdminBundleDetailLoading from "./loading";
 
 interface AdminBundleDetailPageProps {

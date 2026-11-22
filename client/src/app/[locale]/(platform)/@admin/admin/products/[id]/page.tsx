@@ -5,7 +5,7 @@ import { requirePermission } from "@/lib/permissions/server-authorization";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import { PERMISSIONS } from "@/config/rbac.config";
 import { ProductDetails } from "@/features/products";
-import { getAdminProductById } from "@/features/products/server/queries";
+import { getAdminProductById } from "@/features/products/apis/products.api";
 import AdminProductDetailLoading from "./loading";
 
 interface AdminProductDetailPageProps {

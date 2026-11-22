@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import type { UpdateBundleInput } from "../schemas/bundle.schema";
-import { updateBundleAction } from "../server/actions";
+import { updateBundleAction } from "../apis/bundles.action";
 import { bundleQueryKeys } from "./use-bundles";
 import type { SingleBundleResponse } from "../types/bundle.types";
 

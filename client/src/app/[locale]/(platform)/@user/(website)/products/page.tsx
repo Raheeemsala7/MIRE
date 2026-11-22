@@ -4,7 +4,7 @@ import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
 import { ChevronRight } from "lucide-react";
 import { ProductsCatalog } from "@/features/products/components/products-catalog";
-import { getPublicProducts } from "@/features/products/server/queries";
+import { getPublicProducts } from "@/features/products/apis/products.api";
 import type { Product } from "@/features/products/types/product.types";
 
 interface ProductsPageProps {

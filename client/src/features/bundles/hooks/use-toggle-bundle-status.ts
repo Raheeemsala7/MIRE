@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { toggleBundleStatusAction } from "../server/actions";
+import { toggleBundleStatusAction } from "../apis/bundles.action";
 import { bundleQueryKeys } from "./use-bundles";
 import type { SingleBundleResponse } from "../types/bundle.types";
 

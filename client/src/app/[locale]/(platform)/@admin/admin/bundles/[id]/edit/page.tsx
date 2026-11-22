@@ -5,8 +5,8 @@ import { requirePermission } from "@/lib/permissions/server-authorization";
 import { BackendApiError } from "@/lib/auth/backend-client";
 import { PERMISSIONS } from "@/config/rbac.config";
 import { BundleForm } from "@/features/bundles";
-import { getAdminBundleById } from "@/features/bundles/server/queries";
-import { getCategories, getAdminProducts } from "@/features/products/server/queries";
+import { getAdminBundleById } from "@/features/bundles/apis/bundles.api";
+import { getCategories, getAdminProducts } from "@/features/products/apis/products.api";
 import type { CategoryItem, Product } from "@/features/products";
 import AdminEditBundleLoading from "./loading";
 

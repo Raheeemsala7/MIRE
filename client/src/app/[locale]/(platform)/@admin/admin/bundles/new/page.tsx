@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { requirePermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import { BundleForm } from "@/features/bundles";
-import { getCategories, getAdminProducts } from "@/features/products/server/queries";
+import { getCategories, getAdminProducts } from "@/features/products/apis/products.api";
 import type { CategoryItem, Product } from "@/features/products";
 import AdminNewBundleLoading from "./loading";
 

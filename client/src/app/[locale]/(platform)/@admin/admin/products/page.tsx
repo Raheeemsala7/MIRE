@@ -16,7 +16,7 @@ import {
   getAdminProducts,
   getAdminProductOverviewStats,
   getCategories,
-} from "@/features/products/server/queries";
+} from "@/features/products/apis/products.api";
 
 interface AdminProductsPageProps {
   params: Promise<{ locale: string }>;

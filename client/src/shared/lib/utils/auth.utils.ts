@@ -13,12 +13,20 @@ export async function getNextAuthToken() {
     cookiesStore.get("next-auth.session-token")?.value ||
     cookiesStore.get("__Secure-next-auth.session-token")?.value;
 
+  if (!token) return null;
+
   try {
     const jwt = await decode({
       token,
       secret: (process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET)!,
       salt: (configuredName || "authjs.session-token") as any,
     } as any);
+
+    // If token is expired, return null immediately so user is redirected to login
+    if (jwt?.exp && typeof jwt.exp === "number" && jwt.exp * 1000 < Date.now()) {
+      return null;
+    }
+
     if (jwt) {
       if (!jwt.token && jwt.accessToken) {
         jwt.token = jwt.accessToken as string;

@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { deleteBundleAction } from "../server/actions";
+import { deleteBundleAction } from "../apis/bundles.action";
 import { bundleQueryKeys } from "./use-bundles";
 
 export function useDeleteBundle(onSuccessCallback?: () => void) {

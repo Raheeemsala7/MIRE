@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { requirePermission } from "@/lib/permissions/server-authorization";
 import { PERMISSIONS } from "@/config/rbac.config";
 import { ProductForm, type CategoryItem } from "@/features/products";
-import { getCategories } from "@/features/products/server/queries";
+import { getCategories } from "@/features/products/apis/products.api";
 import AdminNewProductLoading from "./loading";
 
 interface AdminNewProductPageProps {

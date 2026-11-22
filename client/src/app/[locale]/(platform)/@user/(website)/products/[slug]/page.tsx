@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { ProductView } from "@/features/products/components/product-view";
 import { RelatedProducts } from "@/features/products/components/related-products";
 import { ProductDetail } from "@/features/products/types/product";
-import { getPublicProductBySlug } from "@/features/products/server/queries";
+import { getPublicProductBySlug } from "@/features/products/apis/products.api";
 
 interface ProductPageProps {
   params: Promise<{
@@ -83,7 +83,7 @@ async function ProductDetailContent({ params }: ProductPageProps) {
         descriptionEn: p.description,
         descriptionAr: p.description,
         colors: p.colors?.length
-          ? p.colors.map((c, i) => ({
+          ? p.colors.map((c: any, i: number) => ({
               id: c.name.toLowerCase().replace(/\s+/g, "-"),
               nameEn: c.name,
               nameAr: c.name,

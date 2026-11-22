@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import type { UpdateProductInput } from "../schemas/product.schema";
-import { updateProductAction } from "../server/actions";
+import { updateProductAction } from "../apis/products.action";
 import { productQueryKeys } from "./use-products";
 import type { SingleProductResponse } from "../types/product.types";
 

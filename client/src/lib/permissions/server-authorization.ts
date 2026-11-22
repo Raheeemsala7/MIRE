@@ -6,7 +6,8 @@ import type { SafeUser } from "@/lib/auth/types";
 import type { Session } from "next-auth";
 import { normalizeLocale } from "@/lib/auth/permissions";
 import { can } from "./can";
-import { PERMISSIONS, type Permission } from "@/config/rbac.config";
+import { type Permission } from "@/config/rbac.config";
+import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
 
 export interface AuthorizationResult {
   authorized: boolean;
@@ -15,41 +16,35 @@ export interface AuthorizationResult {
   user?: SafeUser;
 }
 
-export interface MutationValidationParams {
-  actingUser: SafeUser;
-  targetUserId?: string;
-  targetUserRole?: string;
-  newRole?: string;
-  newPermissions?: string[];
-  isStatusToggle?: boolean;
-}
-
-export interface MutationValidationResult {
-  valid: boolean;
-  statusCode?: 400 | 403;
-  message?: string;
-}
-
 /**
  * Server Component authorization guard.
- * Verifies session and required permission; redirects to login or 403 if unauthorized.
+ * Verifies session and token; redirects directly to login if missing or expired.
+ * Redirects to /403 if unauthorized.
  */
 export async function requirePermission(
   permission: Permission,
   locale: string = "ar"
 ): Promise<SafeUser> {
-  const session = await auth();
-  locale = normalizeLocale(locale);
+  const normLocale = normalizeLocale(locale);
 
-  if (!session) {
-    redirect(`/${locale}/auth/login`);
+  // 1. Check NextAuth session
+  const session = await auth();
+  if (!session?.user) {
+    redirect(`/${normLocale}/auth/login`);
   }
 
+  // 2. Check token expiration
+  const token = await getNextAuthToken();
+  if (!token?.token && !token?.accessToken && !token?.sub && !token?.id) {
+    redirect(`/${normLocale}/auth/login`);
+  }
+
+  // 3. Check RBAC permissions
   const user = session.user;
   const isAllowed = can(user.role, permission, user.permissions);
 
   if (!isAllowed) {
-    redirect(`/${locale}/403`);
+    redirect(`/${normLocale}/403`);
   }
 
   return user;
@@ -57,17 +52,16 @@ export async function requirePermission(
 
 /**
  * Server Route Handler / Action authorization check.
- * Returns structured result instead of redirecting.
  */
 export function assertSessionPermission(
   session: Session | null,
   permission: Permission
 ): AuthorizationResult {
-  if (!session) {
+  if (!session?.user) {
     return {
       authorized: false,
       status: 401,
-      error: "Authentication required",
+      error: "Authentication required or session expired",
     };
   }
 
@@ -90,130 +84,5 @@ export function assertSessionPermission(
   };
 }
 
-/**
- * Validates security constraints on employee modifications:
- * 1. Only Super Admin can grant or revoke Super Admin privileges.
- * 2. Delegated Admin cannot modify a higher-privileged (Super Admin) account.
- * 3. Delegated Admin cannot promote another user to Super Admin.
- * 4. Delegated Admin cannot grant permissions beyond their own authority.
- * 5. Self-lockout prevention: Cannot deactivate oneself or alter own role.
- * 6. Managing roles requires `employees.manage_roles` permission.
- * 7. Toggling status requires `employees.toggle_status` permission.
- */
-export function validateEmployeeMutation({
-  actingUser,
-  targetUserId,
-  targetUserRole,
-  newRole,
-  newPermissions,
-  isStatusToggle,
-}: MutationValidationParams): MutationValidationResult {
-  const isSuperAdmin = actingUser.role === "SUPER_ADMIN";
-  const isSelf = targetUserId ? String(actingUser.id) === String(targetUserId) : false;
-
-  // 1. Status toggle authorization & rules
-  if (isStatusToggle) {
-    if (!can(actingUser.role, PERMISSIONS.EMPLOYEES_TOGGLE_STATUS, actingUser.permissions)) {
-      return {
-        valid: false,
-        statusCode: 403,
-        message: "You do not have permission to activate or deactivate employees.",
-      };
-    }
-
-    if (isSelf) {
-      return {
-        valid: false,
-        statusCode: 400,
-        message: "Self-deactivation is prohibited to prevent accidental lockout.",
-      };
-    }
-
-    if (targetUserRole === "SUPER_ADMIN") {
-      return {
-        valid: false,
-        statusCode: 403,
-        message: "Super Admin accounts cannot be deactivated.",
-      };
-    }
-  }
-
-  // 2. Target user is Super Admin protection
-  if (targetUserRole === "SUPER_ADMIN" && !isSuperAdmin) {
-    return {
-      valid: false,
-      statusCode: 403,
-      message: "Only Super Admin can modify a Super Admin account.",
-    };
-  }
-
-  // 3. Role change checks
-  if (newRole) {
-    // Changing an existing employee's role requires EMPLOYEES_MANAGE_ROLES
-    if (targetUserId) {
-      if (!can(actingUser.role, PERMISSIONS.EMPLOYEES_MANAGE_ROLES, actingUser.permissions)) {
-        return {
-          valid: false,
-          statusCode: 403,
-          message: "You do not have permission to manage employee roles.",
-        };
-      }
-    }
-
-    if (newRole === "SUPER_ADMIN" && !isSuperAdmin) {
-      return {
-        valid: false,
-        statusCode: 403,
-        message: "Only a Super Admin can promote or create an account as Super Admin.",
-      };
-    }
-
-    if (isSelf && newRole !== actingUser.role) {
-      return {
-        valid: false,
-        statusCode: 400,
-        message: "You cannot change your own role.",
-      };
-    }
-  }
-
-  // 4. Permissions change checks
-  if (newPermissions !== undefined) {
-    // Modifying existing employee permissions requires EMPLOYEES_MANAGE_ROLES
-    if (targetUserId) {
-      if (!can(actingUser.role, PERMISSIONS.EMPLOYEES_MANAGE_ROLES, actingUser.permissions)) {
-        return {
-          valid: false,
-          statusCode: 403,
-          message: "You do not have permission to manage employee permissions.",
-        };
-      }
-    }
-
-    if (!isSuperAdmin) {
-      // Delegated Admin cannot assign wildcard or permissions they do not possess
-      if (newPermissions.includes("*")) {
-        return {
-          valid: false,
-          statusCode: 403,
-          message: "Cannot grant wildcard Super Admin permissions.",
-        };
-      }
-
-      const actingPermissions = actingUser.permissions ?? [];
-      const hasExcessPermission = newPermissions.some(
-        (perm) => !actingPermissions.includes(perm)
-      );
-
-      if (hasExcessPermission) {
-        return {
-          valid: false,
-          statusCode: 403,
-          message: "You cannot grant permissions that you do not hold yourself.",
-        };
-      }
-    }
-  }
-
-  return { valid: true };
-}
+// Re-export employee mutation validator for backwards compatibility
+export * from "@/features/employees/utils/employee-security";

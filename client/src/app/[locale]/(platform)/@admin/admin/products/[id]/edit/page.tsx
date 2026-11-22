@@ -8,7 +8,7 @@ import { ProductForm, type CategoryItem } from "@/features/products";
 import {
   getAdminProductById,
   getCategories,
-} from "@/features/products/server/queries";
+} from "@/features/products/apis/products.api";
 import AdminEditProductLoading from "./loading";
 
 interface AdminEditProductPageProps {

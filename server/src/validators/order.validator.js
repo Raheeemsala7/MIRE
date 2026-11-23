@@ -27,7 +27,20 @@ const checkoutCreateOrderSchema = z.object({
   paymentMethod: z.enum(Object.values(PaymentMethods)).default(PaymentMethods.COD),
   orderNotes: z.string().optional(),
   guestId: z.string().optional(),
-  items: z.array(z.any()).optional()
+  items: z
+    .array(
+      z.object({
+        productId: z.string().optional(),
+        product: z.string().optional(),
+        id: z.string().optional(),
+        variantSku: z.string().optional(),
+        sku: z.string().optional(),
+        color: z.string().optional(),
+        size: z.string().optional(),
+        quantity: z.number().int().min(1).default(1)
+      })
+    )
+    .optional()
 });
 
 const manualCreateOrderSchema = z.object({

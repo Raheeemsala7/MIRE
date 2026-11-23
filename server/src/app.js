@@ -43,12 +43,24 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, or Postman)
+      // Allow requests with no origin (like mobile apps, server-to-server, curl, or Postman)
       if (!origin) return callback(null, true);
-      if (env.CORS_ORIGIN.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+
+      const allowedList = Array.isArray(env.CORS_ORIGIN)
+        ? env.CORS_ORIGIN
+        : typeof env.CORS_ORIGIN === 'string'
+          ? env.CORS_ORIGIN.split(',').map((o) => o.trim())
+          : ['http://localhost:3000'];
+
+      if (allowedList.includes(origin)) {
         return callback(null, true);
       }
-      return callback(null, true);
+
+      if (process.env.NODE_ENV === 'development' && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Blocked by CORS policy'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

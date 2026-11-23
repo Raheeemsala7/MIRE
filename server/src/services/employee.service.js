@@ -2,6 +2,7 @@ const { User, UserRoles, DefaultRolePermissions } = require('../models/User');
 const ApiError = require('../utils/apiError');
 const { getPaginationOptions } = require('../utils/pagination');
 const { recordAudit } = require('../utils/auditLogger');
+const { escapeRegex } = require('../utils/sanitize');
 
 class EmployeeService {
   /**
@@ -24,9 +25,10 @@ class EmployeeService {
       filter.role = query.role;
     }
     if (query.search) {
+      const sanitized = escapeRegex(query.search);
       filter.$or = [
-        { name: { $regex: query.search, $options: 'i' } },
-        { email: { $regex: query.search, $options: 'i' } }
+        { name: { $regex: sanitized, $options: 'i' } },
+        { email: { $regex: sanitized, $options: 'i' } }
       ];
     }
     if (query.isActive !== undefined) {
@@ -56,6 +58,17 @@ class EmployeeService {
    * Create a new employee
    */
   async createEmployee(data, performedBy) {
+    const callerId = performedBy?._id ? performedBy._id.toString() : performedBy?.toString();
+    const callerRole = performedBy?.role || (await User.findById(callerId))?.role;
+
+    if (data.role === UserRoles.SUPER_ADMIN && callerRole !== UserRoles.SUPER_ADMIN) {
+      throw ApiError.forbidden('Only Super Admin can create Super Admin accounts');
+    }
+
+    if (data.permissions && data.permissions.includes('*') && callerRole !== UserRoles.SUPER_ADMIN) {
+      throw ApiError.forbidden('Only Super Admin can assign wildcard permissions');
+    }
+
     const existing = await User.findOne({ email: data.email });
     if (existing) {
       throw ApiError.conflict('An account with this email already exists');
@@ -74,7 +87,7 @@ class EmployeeService {
       action: 'EMPLOYEE_CREATED',
       entityType: 'User',
       entityId: employee._id,
-      performedBy,
+      performedBy: callerId,
       newState: employee.toJSON()
     });
 
@@ -90,8 +103,31 @@ class EmployeeService {
       throw ApiError.notFound('Employee not found');
     }
 
+    const callerId = performedBy?._id ? performedBy._id.toString() : performedBy?.toString();
+    const callerRole = performedBy?.role || (await User.findById(callerId))?.role;
+
+    if (employee.role === UserRoles.SUPER_ADMIN && callerRole !== UserRoles.SUPER_ADMIN) {
+      throw ApiError.forbidden('Only Super Admin can modify Super Admin accounts');
+    }
+
     if (employee.role === UserRoles.SUPER_ADMIN && data.role && data.role !== UserRoles.SUPER_ADMIN) {
       throw ApiError.forbidden('Cannot downgrade Super Admin role');
+    }
+
+    if (data.role && data.role !== employee.role) {
+      if (callerRole !== UserRoles.SUPER_ADMIN) {
+        throw ApiError.forbidden('Only Super Admin can assign or change employee roles');
+      }
+    }
+
+    if (data.permissions && callerRole !== UserRoles.SUPER_ADMIN) {
+      throw ApiError.forbidden('Only Super Admin can modify employee permissions');
+    }
+
+    if (data.password) {
+      if (callerRole !== UserRoles.SUPER_ADMIN && callerId !== id.toString()) {
+        throw ApiError.forbidden('Cannot modify password of another employee');
+      }
     }
 
     const previousState = employee.toJSON();
@@ -114,7 +150,7 @@ class EmployeeService {
       action: 'EMPLOYEE_UPDATED',
       entityType: 'User',
       entityId: employee._id,
-      performedBy,
+      performedBy: callerId,
       previousState,
       newState: employee.toJSON()
     });

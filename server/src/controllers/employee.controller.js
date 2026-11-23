@@ -31,7 +31,7 @@ class EmployeeController {
 
   async createEmployee(req, res, next) {
     try {
-      const employee = await employeeService.createEmployee(req.body, req.user._id);
+      const employee = await employeeService.createEmployee(req.body, req.user);
       return ApiResponse.created(res, {
         message: 'Employee created successfully',
         data: employee
@@ -43,7 +43,7 @@ class EmployeeController {
 
   async updateEmployee(req, res, next) {
     try {
-      const employee = await employeeService.updateEmployee(req.params.id, req.body, req.user._id);
+      const employee = await employeeService.updateEmployee(req.params.id, req.body, req.user);
       return ApiResponse.success(res, {
         message: 'Employee updated successfully',
         data: employee

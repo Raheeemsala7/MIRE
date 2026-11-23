@@ -1,5 +1,6 @@
 const Notification = require('../models/Notification');
 const ApiResponse = require('../utils/apiResponse');
+const ApiError = require('../utils/apiError');
 const { getPaginationOptions } = require('../utils/pagination');
 
 class NotificationController {
@@ -53,7 +54,18 @@ class NotificationController {
 
   async markAsRead(req, res, next) {
     try {
-      await Notification.findByIdAndUpdate(req.params.id, { $set: { isRead: true } });
+      const filter = {
+        _id: req.params.id,
+        $or: [
+          { recipientRole: req.user.role },
+          { recipientRole: null },
+          { recipientUser: req.user._id }
+        ]
+      };
+      const notification = await Notification.findOneAndUpdate(filter, { $set: { isRead: true } });
+      if (!notification) {
+        throw ApiError.notFound('Notification not found or access denied');
+      }
       return ApiResponse.success(res, { message: 'Marked as read' });
     } catch (error) {
       next(error);

@@ -5,7 +5,7 @@ class PaymentController {
   async createSession(req, res, next) {
     try {
       const { orderId, method, returnUrl, cancelUrl } = req.body;
-      const session = await paymentService.createPaymentSession(orderId, method, returnUrl, cancelUrl);
+      const session = await paymentService.createPaymentSession(orderId, method, returnUrl, cancelUrl, req.user);
       return ApiResponse.success(res, {
         message: 'Payment session created',
         data: session

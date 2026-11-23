@@ -11,6 +11,7 @@ const ApiError = require('../utils/apiError');
 const { getIO } = require('../config/socket');
 const { recordAudit } = require('../utils/auditLogger');
 const { getPaginationOptions } = require('../utils/pagination');
+const { escapeRegex } = require('../utils/sanitize');
 
 class OrderService {
   async generateOrderNumber() {
@@ -81,7 +82,7 @@ class OrderService {
           );
         }
 
-        const effectivePrice = item.discountPrice || item.unitPrice;
+        const effectivePrice = product.discountPrice || product.finalPrice || product.price;
         const itemSub = effectivePrice * item.quantity;
         subtotal += itemSub;
         orderItems.push({
@@ -97,22 +98,45 @@ class OrderService {
       }
     } else {
       for (const item of items) {
-        let product = null;
-        if (item.productId || item.id) {
-          try {
-            product = await Product.findById(item.productId || item.id);
-          } catch {}
+        const productId = item.productId || item.product || item.id;
+        if (!productId) {
+          throw ApiError.badRequest('Each item must include a valid product ID');
         }
-        const unitPrice = item.price || item.unitPrice || 850;
-        const quantity = item.quantity || 1;
+        const product = await Product.findById(productId);
+        if (!product || product.status !== 'ACTIVE') {
+          throw ApiError.badRequest(`Product "${item.name || productId}" is unavailable`);
+        }
+
+        let variant = null;
+        if (item.variantSku || item.sku) {
+          variant = product.variants?.find((v) => v.sku === (item.variantSku || item.sku));
+        } else if (item.size && item.color) {
+          variant = product.variants?.find(
+            (v) =>
+              v.size.toLowerCase() === item.size.trim().toLowerCase() &&
+              v.color.toLowerCase() === item.color.trim().toLowerCase()
+          );
+        } else if (product.variants && product.variants.length > 0) {
+          variant = product.variants[0];
+        }
+
+        const quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
+        if (variant && variant.stockQuantity < quantity) {
+          throw ApiError.badRequest(
+            `Insufficient stock for ${product.name} (${variant.sku}). Available: ${variant.stockQuantity}`
+          );
+        }
+
+        // Authoritative pricing strictly from database catalog
+        const unitPrice = product.discountPrice || product.finalPrice || product.price;
         const itemSub = unitPrice * quantity;
         subtotal += itemSub;
         orderItems.push({
-          product: product ? product._id : new (require('mongoose').Types.ObjectId)(),
-          name: item.title || item.name || product?.name || 'Product',
-          sku: item.sku || item.variantSku || 'SKU-DEFAULT',
-          color: item.color || 'Standard',
-          size: item.size || 'M',
+          product: product._id,
+          name: product.name,
+          sku: variant?.sku || item.sku || product.sku || 'SKU-DEFAULT',
+          color: variant?.color || item.color || 'Standard',
+          size: variant?.size || item.size || 'M',
           quantity,
           unitPrice,
           subtotal: itemSub
@@ -421,7 +445,7 @@ class OrderService {
 
     // Public tracking is strictly by orderNumber, never internal database ObjectId
     const order = await Order.findOne({
-      orderNumber: new RegExp(`^${cleanNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
+      orderNumber: new RegExp(`^${escapeRegex(cleanNumber)}$`, 'i')
     })
       .populate('customer')
       .populate('items.product', 'name images')

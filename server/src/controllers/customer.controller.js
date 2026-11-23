@@ -1,4 +1,5 @@
 const Customer = require('../models/Customer');
+const { escapeRegex } = require('../utils/sanitize');
 const { Order } = require('../models/Order');
 const ApiError = require('../utils/apiError');
 const ApiResponse = require('../utils/apiResponse');
@@ -11,10 +12,11 @@ class CustomerController {
       const filter = {};
 
       if (req.query.search) {
+        const sanitized = escapeRegex(req.query.search);
         filter.$or = [
-          { fullName: { $regex: req.query.search, $options: 'i' } },
-          { phone: { $regex: req.query.search, $options: 'i' } },
-          { email: { $regex: req.query.search, $options: 'i' } }
+          { fullName: { $regex: sanitized, $options: 'i' } },
+          { phone: { $regex: sanitized, $options: 'i' } },
+          { email: { $regex: sanitized, $options: 'i' } }
         ];
       }
 

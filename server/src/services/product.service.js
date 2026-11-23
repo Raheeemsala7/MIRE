@@ -5,6 +5,8 @@ const ApiError = require('../utils/apiError');
 const { getPaginationOptions } = require('../utils/pagination');
 const { recordAudit } = require('../utils/auditLogger');
 
+const { escapeRegex } = require('../utils/sanitize');
+
 class ProductService {
   generateSlug(name) {
     return name
@@ -76,11 +78,12 @@ class ProductService {
 
     // Search query
     if (query.search) {
+      const sanitized = escapeRegex(query.search);
       filter.$or = [
-        { name: { $regex: query.search, $options: 'i' } },
-        { sku: { $regex: query.search, $options: 'i' } },
-        { description: { $regex: query.search, $options: 'i' } },
-        { tags: { $in: [new RegExp(query.search, 'i')] } }
+        { name: { $regex: sanitized, $options: 'i' } },
+        { sku: { $regex: sanitized, $options: 'i' } },
+        { description: { $regex: sanitized, $options: 'i' } },
+        { tags: { $in: [new RegExp(sanitized, 'i')] } }
       ];
     }
 

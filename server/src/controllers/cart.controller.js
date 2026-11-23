@@ -25,9 +25,9 @@ class CartController {
     try {
       const { userId, guestId } = this._getAuthIdentifiers(req);
       const cart = await cartService.addItem({
+        ...req.body,
         userId,
-        guestId,
-        ...req.body
+        guestId
       });
       return ApiResponse.success(res, {
         message: 'Item added to cart',

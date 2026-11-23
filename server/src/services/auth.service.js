@@ -159,15 +159,14 @@ class AuthService {
     const user = await User.findOne({ email });
     if (!user) {
       // Do not reveal email existence
-      return { message: 'If an account exists with this email, a reset token has been generated.' };
+      return { message: 'If an account exists with this email, a reset link will be sent.' };
     }
 
-    const resetToken = user.createPasswordResetToken();
+    user.createPasswordResetToken();
     await user.save();
 
     return {
-      message: 'Password reset token generated successfully',
-      resetToken // In production, this would be sent via email/SMS
+      message: 'If an account exists with this email, a reset link will be sent.'
     };
   }
 

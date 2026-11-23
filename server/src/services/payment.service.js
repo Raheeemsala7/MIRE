@@ -9,9 +9,20 @@ class PaymentService {
   /**
    * Initiate payment session with abstract provider
    */
-  async createPaymentSession(orderId, method, returnUrl, cancelUrl) {
+  async createPaymentSession(orderId, method, returnUrl, cancelUrl, user = null) {
     const order = await Order.findById(orderId).populate('customer');
     if (!order) throw ApiError.notFound('Order not found');
+
+    if (order.user) {
+      if (!user) {
+        throw ApiError.unauthorized('Authentication required to access this order payment session');
+      }
+      const isOwner = order.user.toString() === user._id.toString();
+      const isStaff = user.role && user.role !== 'CUSTOMER';
+      if (!isOwner && !isStaff) {
+        throw ApiError.forbidden('Access denied to this order payment session');
+      }
+    }
 
     if (order.paymentInfo.status === PaymentStatuses.PAID) {
       throw ApiError.badRequest('Order is already paid');

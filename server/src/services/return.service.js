@@ -20,11 +20,26 @@ class ReturnService {
   /**
    * Request a new return (Storefront customer or Customer Support)
    */
-  async requestReturn({ originalOrderId, items, reason, reasonDetails, refundMethod, performedBy = null, user = null }) {
-    const isObjectId = mongoose.Types.ObjectId.isValid(originalOrderId);
+  async requestReturn({
+    originalOrderId,
+    orderId,
+    items,
+    reason,
+    reasonDetails,
+    refundMethod,
+    performedBy = null,
+    user = null,
+    customerPhone,
+    phone,
+    customerEmail,
+    email,
+    customerInfo
+  }) {
+    const targetOrderId = originalOrderId || orderId;
+    const isObjectId = mongoose.Types.ObjectId.isValid(targetOrderId);
     const order = isObjectId
-      ? await Order.findById(originalOrderId).populate('customer')
-      : await Order.findOne({ orderNumber: originalOrderId }).populate('customer');
+      ? await Order.findById(targetOrderId).populate('customer')
+      : await Order.findOne({ orderNumber: targetOrderId }).populate('customer');
 
     if (!order) {
       throw ApiError.notFound('Original order not found');
@@ -53,6 +68,19 @@ class ReturnService {
         if (!isOwner) {
           throw ApiError.forbidden('You are not authorized to request a return for this order');
         }
+      }
+    } else {
+      // For guest orders, verify phone or email matches the order record
+      const orderPhone = order.customerInfo?.phone || order.customer?.phone;
+      const orderEmail = order.customerInfo?.email || order.customer?.email;
+      const providedPhone = customerPhone || phone || customerInfo?.phone;
+      const providedEmail = customerEmail || email || customerInfo?.email;
+
+      const phoneMatches = orderPhone && providedPhone && String(orderPhone).replace(/\D/g, '').endsWith(String(providedPhone).replace(/\D/g, ''));
+      const emailMatches = orderEmail && providedEmail && orderEmail.toLowerCase() === providedEmail.toLowerCase();
+
+      if (!phoneMatches && !emailMatches) {
+        throw ApiError.forbidden('Verification required: phone number or email must match the guest order record');
       }
     }
 

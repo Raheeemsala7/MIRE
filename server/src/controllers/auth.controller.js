@@ -54,8 +54,7 @@ class AuthController {
     try {
       const result = await authService.forgotPassword(req.body.email);
       return ApiResponse.success(res, {
-        message: result.message,
-        data: result
+        message: result.message
       });
     } catch (error) {
       next(error);

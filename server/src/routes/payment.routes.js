@@ -1,6 +1,6 @@
 const express = require('express');
 const paymentController = require('../controllers/payment.controller');
-const { authenticate } = require('../middlewares/auth');
+const { authenticate, optionalAuth } = require('../middlewares/auth');
 const { requirePermission } = require('../middlewares/rbac');
 
 const router = express.Router();
@@ -25,7 +25,7 @@ const router = express.Router();
  *       200:
  *         description: Payment session URL and ID
  */
-router.post('/session', paymentController.createSession);
+router.post('/session', optionalAuth, paymentController.createSession);
 
 /**
  * @swagger

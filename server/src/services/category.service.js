@@ -1,4 +1,5 @@
 const Category = require('../models/Category');
+const { escapeRegex } = require('../utils/sanitize');
 const ApiError = require('../utils/apiError');
 const { recordAudit } = require('../utils/auditLogger');
 
@@ -29,9 +30,10 @@ class CategoryService {
 
     const filter = includeInactive === 'true' || includeInactive === true ? {} : { isActive: true };
     if (search) {
+      const sanitized = escapeRegex(search);
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { name: { $regex: sanitized, $options: 'i' } },
+        { description: { $regex: sanitized, $options: 'i' } }
       ];
     }
 

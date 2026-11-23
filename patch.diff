@@ -1,0 +1,966 @@
+diff --git a/server/src/app.js b/server/src/app.js
+index 610c1f6..cb0f410 100644
+--- a/server/src/app.js
++++ b/server/src/app.js
+@@ -43,12 +43,24 @@ app.use(
+ app.use(
+   cors({
+     origin: (origin, callback) => {
+-      // Allow requests with no origin (like mobile apps, curl, or Postman)
++      // Allow requests with no origin (like mobile apps, server-to-server, curl, or Postman)
+       if (!origin) return callback(null, true);
+-      if (env.CORS_ORIGIN.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
++
++      const allowedList = Array.isArray(env.CORS_ORIGIN)
++        ? env.CORS_ORIGIN
++        : typeof env.CORS_ORIGIN === 'string'
++          ? env.CORS_ORIGIN.split(',').map((o) => o.trim())
++          : ['http://localhost:3000'];
++
++      if (allowedList.includes(origin)) {
++        return callback(null, true);
++      }
++
++      if (process.env.NODE_ENV === 'development' && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+         return callback(null, true);
+       }
+-      return callback(null, true);
++
++      return callback(new Error('Blocked by CORS policy'));
+     },
+     credentials: true,
+     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+diff --git a/server/src/controllers/auth.controller.js b/server/src/controllers/auth.controller.js
+index 60eca3a..977afe0 100644
+--- a/server/src/controllers/auth.controller.js
++++ b/server/src/controllers/auth.controller.js
+@@ -54,8 +54,7 @@ class AuthController {
+     try {
+       const result = await authService.forgotPassword(req.body.email);
+       return ApiResponse.success(res, {
+-        message: result.message,
+-        data: result
++        message: result.message
+       });
+     } catch (error) {
+       next(error);
+diff --git a/server/src/controllers/cart.controller.js b/server/src/controllers/cart.controller.js
+index fb15c30..f2d7ab1 100644
+--- a/server/src/controllers/cart.controller.js
++++ b/server/src/controllers/cart.controller.js
+@@ -25,9 +25,9 @@ class CartController {
+     try {
+       const { userId, guestId } = this._getAuthIdentifiers(req);
+       const cart = await cartService.addItem({
++        ...req.body,
+         userId,
+-        guestId,
+-        ...req.body
++        guestId
+       });
+       return ApiResponse.success(res, {
+         message: 'Item added to cart',
+diff --git a/server/src/controllers/customer.controller.js b/server/src/controllers/customer.controller.js
+index 65ceb76..b15d937 100644
+--- a/server/src/controllers/customer.controller.js
++++ b/server/src/controllers/customer.controller.js
+@@ -1,4 +1,5 @@
+ const Customer = require('../models/Customer');
++const { escapeRegex } = require('../utils/sanitize');
+ const { Order } = require('../models/Order');
+ const ApiError = require('../utils/apiError');
+ const ApiResponse = require('../utils/apiResponse');
+@@ -11,10 +12,11 @@ class CustomerController {
+       const filter = {};
+ 
+       if (req.query.search) {
++        const sanitized = escapeRegex(req.query.search);
+         filter.$or = [
+-          { fullName: { $regex: req.query.search, $options: 'i' } },
+-          { phone: { $regex: req.query.search, $options: 'i' } },
+-          { email: { $regex: req.query.search, $options: 'i' } }
++          { fullName: { $regex: sanitized, $options: 'i' } },
++          { phone: { $regex: sanitized, $options: 'i' } },
++          { email: { $regex: sanitized, $options: 'i' } }
+         ];
+       }
+ 
+diff --git a/server/src/controllers/employee.controller.js b/server/src/controllers/employee.controller.js
+index eeb4c29..ebe7a33 100644
+--- a/server/src/controllers/employee.controller.js
++++ b/server/src/controllers/employee.controller.js
+@@ -31,7 +31,7 @@ class EmployeeController {
+ 
+   async createEmployee(req, res, next) {
+     try {
+-      const employee = await employeeService.createEmployee(req.body, req.user._id);
++      const employee = await employeeService.createEmployee(req.body, req.user);
+       return ApiResponse.created(res, {
+         message: 'Employee created successfully',
+         data: employee
+@@ -43,7 +43,7 @@ class EmployeeController {
+ 
+   async updateEmployee(req, res, next) {
+     try {
+-      const employee = await employeeService.updateEmployee(req.params.id, req.body, req.user._id);
++      const employee = await employeeService.updateEmployee(req.params.id, req.body, req.user);
+       return ApiResponse.success(res, {
+         message: 'Employee updated successfully',
+         data: employee
+diff --git a/server/src/controllers/notification.controller.js b/server/src/controllers/notification.controller.js
+index 7040e69..7e9d4b5 100644
+--- a/server/src/controllers/notification.controller.js
++++ b/server/src/controllers/notification.controller.js
+@@ -1,5 +1,6 @@
+ const Notification = require('../models/Notification');
+ const ApiResponse = require('../utils/apiResponse');
++const ApiError = require('../utils/apiError');
+ const { getPaginationOptions } = require('../utils/pagination');
+ 
+ class NotificationController {
+@@ -53,7 +54,18 @@ class NotificationController {
+ 
+   async markAsRead(req, res, next) {
+     try {
+-      await Notification.findByIdAndUpdate(req.params.id, { $set: { isRead: true } });
++      const filter = {
++        _id: req.params.id,
++        $or: [
++          { recipientRole: req.user.role },
++          { recipientRole: null },
++          { recipientUser: req.user._id }
++        ]
++      };
++      const notification = await Notification.findOneAndUpdate(filter, { $set: { isRead: true } });
++      if (!notification) {
++        throw ApiError.notFound('Notification not found or access denied');
++      }
+       return ApiResponse.success(res, { message: 'Marked as read' });
+     } catch (error) {
+       next(error);
+diff --git a/server/src/controllers/order.controller.js b/server/src/controllers/order.controller.js
+index 03812c0..96057a4 100644
+--- a/server/src/controllers/order.controller.js
++++ b/server/src/controllers/order.controller.js
+@@ -8,9 +8,9 @@ class OrderController {
+   async checkout(req, res, next) {
+     try {
+       const order = await orderService.createOrderFromCart({
++        ...req.body,
+         userId: req.user?._id || null,
+-        guestId: req.headers['x-guest-id'] || req.body.guestId || null,
+-        ...req.body
++        guestId: req.user ? null : (req.headers['x-guest-id'] || req.body.guestId || null)
+       });
+ 
+       let checkoutUrl = null;
+diff --git a/server/src/controllers/payment.controller.js b/server/src/controllers/payment.controller.js
+index 97b0342..e6ab3ce 100644
+--- a/server/src/controllers/payment.controller.js
++++ b/server/src/controllers/payment.controller.js
+@@ -5,7 +5,7 @@ class PaymentController {
+   async createSession(req, res, next) {
+     try {
+       const { orderId, method, returnUrl, cancelUrl } = req.body;
+-      const session = await paymentService.createPaymentSession(orderId, method, returnUrl, cancelUrl);
++      const session = await paymentService.createPaymentSession(orderId, method, returnUrl, cancelUrl, req.user);
+       return ApiResponse.success(res, {
+         message: 'Payment session created',
+         data: session
+diff --git a/server/src/routes/payment.routes.js b/server/src/routes/payment.routes.js
+index 3c0f84c..5b8f3dc 100644
+--- a/server/src/routes/payment.routes.js
++++ b/server/src/routes/payment.routes.js
+@@ -1,6 +1,6 @@
+ const express = require('express');
+ const paymentController = require('../controllers/payment.controller');
+-const { authenticate } = require('../middlewares/auth');
++const { authenticate, optionalAuth } = require('../middlewares/auth');
+ const { requirePermission } = require('../middlewares/rbac');
+ 
+ const router = express.Router();
+@@ -25,7 +25,7 @@ const router = express.Router();
+  *       200:
+  *         description: Payment session URL and ID
+  */
+-router.post('/session', paymentController.createSession);
++router.post('/session', optionalAuth, paymentController.createSession);
+ 
+ /**
+  * @swagger
+diff --git a/server/src/services/auth.service.js b/server/src/services/auth.service.js
+index 90d816b..b4a853f 100644
+--- a/server/src/services/auth.service.js
++++ b/server/src/services/auth.service.js
+@@ -159,15 +159,14 @@ class AuthService {
+     const user = await User.findOne({ email });
+     if (!user) {
+       // Do not reveal email existence
+-      return { message: 'If an account exists with this email, a reset token has been generated.' };
++      return { message: 'If an account exists with this email, a reset link will be sent.' };
+     }
+ 
+-    const resetToken = user.createPasswordResetToken();
++    user.createPasswordResetToken();
+     await user.save();
+ 
+     return {
+-      message: 'Password reset token generated successfully',
+-      resetToken // In production, this would be sent via email/SMS
++      message: 'If an account exists with this email, a reset link will be sent.'
+     };
+   }
+ 
+diff --git a/server/src/services/category.service.js b/server/src/services/category.service.js
+index fda69e0..af4faea 100644
+--- a/server/src/services/category.service.js
++++ b/server/src/services/category.service.js
+@@ -1,4 +1,5 @@
+ const Category = require('../models/Category');
++const { escapeRegex } = require('../utils/sanitize');
+ const ApiError = require('../utils/apiError');
+ const { recordAudit } = require('../utils/auditLogger');
+ 
+@@ -29,9 +30,10 @@ class CategoryService {
+ 
+     const filter = includeInactive === 'true' || includeInactive === true ? {} : { isActive: true };
+     if (search) {
++      const sanitized = escapeRegex(search);
+       filter.$or = [
+-        { name: { $regex: search, $options: 'i' } },
+-        { description: { $regex: search, $options: 'i' } }
++        { name: { $regex: sanitized, $options: 'i' } },
++        { description: { $regex: sanitized, $options: 'i' } }
+       ];
+     }
+ 
+diff --git a/server/src/services/employee.service.js b/server/src/services/employee.service.js
+index e37682e..b6908cf 100644
+--- a/server/src/services/employee.service.js
++++ b/server/src/services/employee.service.js
+@@ -2,6 +2,7 @@ const { User, UserRoles, DefaultRolePermissions } = require('../models/User');
+ const ApiError = require('../utils/apiError');
+ const { getPaginationOptions } = require('../utils/pagination');
+ const { recordAudit } = require('../utils/auditLogger');
++const { escapeRegex } = require('../utils/sanitize');
+ 
+ class EmployeeService {
+   /**
+@@ -24,9 +25,10 @@ class EmployeeService {
+       filter.role = query.role;
+     }
+     if (query.search) {
++      const sanitized = escapeRegex(query.search);
+       filter.$or = [
+-        { name: { $regex: query.search, $options: 'i' } },
+-        { email: { $regex: query.search, $options: 'i' } }
++        { name: { $regex: sanitized, $options: 'i' } },
++        { email: { $regex: sanitized, $options: 'i' } }
+       ];
+     }
+     if (query.isActive !== undefined) {
+@@ -56,6 +58,17 @@ class EmployeeService {
+    * Create a new employee
+    */
+   async createEmployee(data, performedBy) {
++    const callerId = performedBy?._id ? performedBy._id.toString() : performedBy?.toString();
++    const callerRole = performedBy?.role || (await User.findById(callerId))?.role;
++
++    if (data.role === UserRoles.SUPER_ADMIN && callerRole !== UserRoles.SUPER_ADMIN) {
++      throw ApiError.forbidden('Only Super Admin can create Super Admin accounts');
++    }
++
++    if (data.permissions && data.permissions.includes('*') && callerRole !== UserRoles.SUPER_ADMIN) {
++      throw ApiError.forbidden('Only Super Admin can assign wildcard permissions');
++    }
++
+     const existing = await User.findOne({ email: data.email });
+     if (existing) {
+       throw ApiError.conflict('An account with this email already exists');
+@@ -74,7 +87,7 @@ class EmployeeService {
+       action: 'EMPLOYEE_CREATED',
+       entityType: 'User',
+       entityId: employee._id,
+-      performedBy,
++      performedBy: callerId,
+       newState: employee.toJSON()
+     });
+ 
+@@ -90,10 +103,33 @@ class EmployeeService {
+       throw ApiError.notFound('Employee not found');
+     }
+ 
++    const callerId = performedBy?._id ? performedBy._id.toString() : performedBy?.toString();
++    const callerRole = performedBy?.role || (await User.findById(callerId))?.role;
++
++    if (employee.role === UserRoles.SUPER_ADMIN && callerRole !== UserRoles.SUPER_ADMIN) {
++      throw ApiError.forbidden('Only Super Admin can modify Super Admin accounts');
++    }
++
+     if (employee.role === UserRoles.SUPER_ADMIN && data.role && data.role !== UserRoles.SUPER_ADMIN) {
+       throw ApiError.forbidden('Cannot downgrade Super Admin role');
+     }
+ 
++    if (data.role && data.role !== employee.role) {
++      if (callerRole !== UserRoles.SUPER_ADMIN) {
++        throw ApiError.forbidden('Only Super Admin can assign or change employee roles');
++      }
++    }
++
++    if (data.permissions && callerRole !== UserRoles.SUPER_ADMIN) {
++      throw ApiError.forbidden('Only Super Admin can modify employee permissions');
++    }
++
++    if (data.password) {
++      if (callerRole !== UserRoles.SUPER_ADMIN && callerId !== id.toString()) {
++        throw ApiError.forbidden('Cannot modify password of another employee');
++      }
++    }
++
+     const previousState = employee.toJSON();
+ 
+     if (data.name) employee.name = data.name;
+@@ -114,7 +150,7 @@ class EmployeeService {
+       action: 'EMPLOYEE_UPDATED',
+       entityType: 'User',
+       entityId: employee._id,
+-      performedBy,
++      performedBy: callerId,
+       previousState,
+       newState: employee.toJSON()
+     });
+diff --git a/server/src/services/order.service.js b/server/src/services/order.service.js
+index cb20fba..2172a08 100644
+--- a/server/src/services/order.service.js
++++ b/server/src/services/order.service.js
+@@ -81,7 +81,7 @@ class OrderService {
+           );
+         }
+ 
+-        const effectivePrice = item.discountPrice || item.unitPrice;
++        const effectivePrice = product.discountPrice || product.finalPrice || product.price;
+         const itemSub = effectivePrice * item.quantity;
+         subtotal += itemSub;
+         orderItems.push({
+@@ -97,22 +97,45 @@ class OrderService {
+       }
+     } else {
+       for (const item of items) {
+-        let product = null;
+-        if (item.productId || item.id) {
+-          try {
+-            product = await Product.findById(item.productId || item.id);
+-          } catch {}
++        const productId = item.productId || item.product || item.id;
++        if (!productId) {
++          throw ApiError.badRequest('Each item must include a valid product ID');
++        }
++        const product = await Product.findById(productId);
++        if (!product || product.status !== 'ACTIVE') {
++          throw ApiError.badRequest(`Product "${item.name || productId}" is unavailable`);
+         }
+-        const unitPrice = item.price || item.unitPrice || 850;
+-        const quantity = item.quantity || 1;
++
++        let variant = null;
++        if (item.variantSku || item.sku) {
++          variant = product.variants?.find((v) => v.sku === (item.variantSku || item.sku));
++        } else if (item.size && item.color) {
++          variant = product.variants?.find(
++            (v) =>
++              v.size.toLowerCase() === item.size.trim().toLowerCase() &&
++              v.color.toLowerCase() === item.color.trim().toLowerCase()
++          );
++        } else if (product.variants && product.variants.length > 0) {
++          variant = product.variants[0];
++        }
++
++        const quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
++        if (variant && variant.stockQuantity < quantity) {
++          throw ApiError.badRequest(
++            `Insufficient stock for ${product.name} (${variant.sku}). Available: ${variant.stockQuantity}`
++          );
++        }
++
++        // Authoritative pricing strictly from database catalog
++        const unitPrice = product.discountPrice || product.finalPrice || product.price;
+         const itemSub = unitPrice * quantity;
+         subtotal += itemSub;
+         orderItems.push({
+-          product: product ? product._id : new (require('mongoose').Types.ObjectId)(),
+-          name: item.title || item.name || product?.name || 'Product',
+-          sku: item.sku || item.variantSku || 'SKU-DEFAULT',
+-          color: item.color || 'Standard',
+-          size: item.size || 'M',
++          product: product._id,
++          name: product.name,
++          sku: variant?.sku || item.sku || product.sku || 'SKU-DEFAULT',
++          color: variant?.color || item.color || 'Standard',
++          size: variant?.size || item.size || 'M',
+           quantity,
+           unitPrice,
+           subtotal: itemSub
+diff --git a/server/src/services/payment.service.js b/server/src/services/payment.service.js
+index 8b2ab28..6287cc5 100644
+--- a/server/src/services/payment.service.js
++++ b/server/src/services/payment.service.js
+@@ -9,10 +9,21 @@ class PaymentService {
+   /**
+    * Initiate payment session with abstract provider
+    */
+-  async createPaymentSession(orderId, method, returnUrl, cancelUrl) {
++  async createPaymentSession(orderId, method, returnUrl, cancelUrl, user = null) {
+     const order = await Order.findById(orderId).populate('customer');
+     if (!order) throw ApiError.notFound('Order not found');
+ 
++    if (order.user) {
++      if (!user) {
++        throw ApiError.unauthorized('Authentication required to access this order payment session');
++      }
++      const isOwner = order.user.toString() === user._id.toString();
++      const isStaff = user.role && user.role !== 'CUSTOMER';
++      if (!isOwner && !isStaff) {
++        throw ApiError.forbidden('Access denied to this order payment session');
++      }
++    }
++
+     if (order.paymentInfo.status === PaymentStatuses.PAID) {
+       throw ApiError.badRequest('Order is already paid');
+     }
+diff --git a/server/src/services/product.service.js b/server/src/services/product.service.js
+index a084f8a..d74c5bf 100644
+--- a/server/src/services/product.service.js
++++ b/server/src/services/product.service.js
+@@ -5,6 +5,8 @@ const ApiError = require('../utils/apiError');
+ const { getPaginationOptions } = require('../utils/pagination');
+ const { recordAudit } = require('../utils/auditLogger');
+ 
++const { escapeRegex } = require('../utils/sanitize');
++
+ class ProductService {
+   generateSlug(name) {
+     return name
+@@ -76,11 +78,12 @@ class ProductService {
+ 
+     // Search query
+     if (query.search) {
++      const sanitized = escapeRegex(query.search);
+       filter.$or = [
+-        { name: { $regex: query.search, $options: 'i' } },
+-        { sku: { $regex: query.search, $options: 'i' } },
+-        { description: { $regex: query.search, $options: 'i' } },
+-        { tags: { $in: [new RegExp(query.search, 'i')] } }
++        { name: { $regex: sanitized, $options: 'i' } },
++        { sku: { $regex: sanitized, $options: 'i' } },
++        { description: { $regex: sanitized, $options: 'i' } },
++        { tags: { $in: [new RegExp(sanitized, 'i')] } }
+       ];
+     }
+ 
+diff --git a/server/src/services/return.service.js b/server/src/services/return.service.js
+index 62c94ef..a7681d7 100644
+--- a/server/src/services/return.service.js
++++ b/server/src/services/return.service.js
+@@ -20,11 +20,26 @@ class ReturnService {
+   /**
+    * Request a new return (Storefront customer or Customer Support)
+    */
+-  async requestReturn({ originalOrderId, items, reason, reasonDetails, refundMethod, performedBy = null, user = null }) {
+-    const isObjectId = mongoose.Types.ObjectId.isValid(originalOrderId);
++  async requestReturn({
++    originalOrderId,
++    orderId,
++    items,
++    reason,
++    reasonDetails,
++    refundMethod,
++    performedBy = null,
++    user = null,
++    customerPhone,
++    phone,
++    customerEmail,
++    email,
++    customerInfo
++  }) {
++    const targetOrderId = originalOrderId || orderId;
++    const isObjectId = mongoose.Types.ObjectId.isValid(targetOrderId);
+     const order = isObjectId
+-      ? await Order.findById(originalOrderId).populate('customer')
+-      : await Order.findOne({ orderNumber: originalOrderId }).populate('customer');
++      ? await Order.findById(targetOrderId).populate('customer')
++      : await Order.findOne({ orderNumber: targetOrderId }).populate('customer');
+ 
+     if (!order) {
+       throw ApiError.notFound('Original order not found');
+@@ -54,6 +69,19 @@ class ReturnService {
+           throw ApiError.forbidden('You are not authorized to request a return for this order');
+         }
+       }
++    } else {
++      // For guest orders, verify phone or email matches the order record
++      const orderPhone = order.customerInfo?.phone || order.customer?.phone;
++      const orderEmail = order.customerInfo?.email || order.customer?.email;
++      const providedPhone = customerPhone || phone || customerInfo?.phone;
++      const providedEmail = customerEmail || email || customerInfo?.email;
++
++      const phoneMatches = orderPhone && providedPhone && String(orderPhone).replace(/\D/g, '').endsWith(String(providedPhone).replace(/\D/g, ''));
++      const emailMatches = orderEmail && providedEmail && orderEmail.toLowerCase() === providedEmail.toLowerCase();
++
++      if (!phoneMatches && !emailMatches) {
++        throw ApiError.forbidden('Verification required: phone number or email must match the guest order record');
++      }
+     }
+ 
+     if (order.status !== OrderStatuses.DELIVERED) {
+diff --git a/server/src/utils/sanitize.js b/server/src/utils/sanitize.js
+new file mode 100644
+index 0000000..a3a0dc6
+--- /dev/null
++++ b/server/src/utils/sanitize.js
+@@ -0,0 +1,14 @@
++/**
++ * Escapes characters with special meaning in regular expressions
++ * to prevent ReDoS and regex injection.
++ * @param {string} string - The string to escape.
++ * @returns {string} - Escaped string safe for new RegExp or Mongoose $regex.
++ */
++function escapeRegex(string) {
++  if (typeof string !== 'string') return '';
++  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++}
++
++module.exports = {
++  escapeRegex
++};
+diff --git a/server/src/validators/order.validator.js b/server/src/validators/order.validator.js
+index 75f6e2e..24085fb 100644
+--- a/server/src/validators/order.validator.js
++++ b/server/src/validators/order.validator.js
+@@ -27,7 +27,20 @@ const checkoutCreateOrderSchema = z.object({
+   paymentMethod: z.enum(Object.values(PaymentMethods)).default(PaymentMethods.COD),
+   orderNotes: z.string().optional(),
+   guestId: z.string().optional(),
+-  items: z.array(z.any()).optional()
++  items: z
++    .array(
++      z.object({
++        productId: z.string().optional(),
++        product: z.string().optional(),
++        id: z.string().optional(),
++        variantSku: z.string().optional(),
++        sku: z.string().optional(),
++        color: z.string().optional(),
++        size: z.string().optional(),
++        quantity: z.number().int().min(1).default(1)
++      })
++    )
++    .optional()
+ });
+ 
+ const manualCreateOrderSchema = z.object({
+diff --git a/server/tests/security-patches.test.js b/server/tests/security-patches.test.js
+new file mode 100644
+index 0000000..8772af9
+--- /dev/null
++++ b/server/tests/security-patches.test.js
+@@ -0,0 +1,400 @@
++const authService = require('../src/services/auth.service');
++const { User, UserRoles } = require('../src/models/User');
++const orderService = require('../src/services/order.service');
++const orderController = require('../src/controllers/order.controller');
++const cartController = require('../src/controllers/cart.controller');
++const cartService = require('../src/services/cart.service');
++const notificationController = require('../src/controllers/notification.controller');
++const Notification = require('../src/models/Notification');
++const paymentService = require('../src/services/payment.service');
++const returnService = require('../src/services/return.service');
++const employeeService = require('../src/services/employee.service');
++const { Product } = require('../src/models/Product');
++const Customer = require('../src/models/Customer');
++const { Order } = require('../src/models/Order');
++const { escapeRegex } = require('../src/utils/sanitize');
++const app = require('../src/app');
++const request = require('supertest');
++
++jest.mock('../src/models/User', () => ({
++  User: {
++    findOne: jest.fn(),
++    findById: jest.fn()
++  },
++  UserRoles: {
++    CUSTOMER: 'CUSTOMER',
++    ADMIN: 'ADMIN',
++    SUPER_ADMIN: 'SUPER_ADMIN'
++  },
++  DefaultRolePermissions: {
++    ADMIN: ['MANAGE_ORDERS', 'VIEW_REPORTS'],
++    SUPER_ADMIN: ['*']
++  }
++}));
++
++jest.mock('../src/models/Product', () => ({
++  Product: {
++    findById: jest.fn(),
++    find: jest.fn(),
++    countDocuments: jest.fn()
++  }
++}));
++
++jest.mock('../src/models/Customer');
++jest.mock('../src/models/Notification', () => ({
++  create: jest.fn().mockResolvedValue({})
++}));
++jest.mock('../src/models/Order', () => {
++  const MockOrder = jest.fn().mockImplementation(function (data) {
++    Object.assign(this, data);
++    this.save = jest.fn().mockResolvedValue(this);
++  });
++  MockOrder.countDocuments = jest.fn().mockResolvedValue(10);
++  MockOrder.findById = jest.fn();
++  MockOrder.findOne = jest.fn();
++  return {
++    Order: MockOrder,
++    OrderStatuses: { PENDING: 'PENDING', NEW: 'NEW', DELIVERED: 'DELIVERED' },
++    PaymentMethods: { COD: 'COD' },
++    PaymentStatuses: { PENDING: 'PENDING' }
++  };
++});
++jest.mock('../src/models/Cart');
++jest.mock('../src/utils/auditLogger', () => ({
++  recordAudit: jest.fn().mockResolvedValue(true)
++}));
++
++describe('Security Verification & Regression Test Suite', () => {
++  beforeEach(() => {
++    jest.clearAllMocks();
++  });
++
++  describe('MIRE-SEC-001: Password reset token exposure fix', () => {
++    it('PROVES FIX: forgotPassword never exposes resetToken in return object for existing user', async () => {
++      const mockUser = {
++        email: 'victim@example.com',
++        createPasswordResetToken: jest.fn().mockReturnValue('super_secret_reset_token'),
++        save: jest.fn().mockResolvedValue(true)
++      };
++      User.findOne.mockResolvedValue(mockUser);
++
++      const result = await authService.forgotPassword('victim@example.com');
++
++      expect(result).not.toHaveProperty('resetToken');
++      expect(result.message).toBe('If an account exists with this email, a reset link will be sent.');
++      expect(mockUser.createPasswordResetToken).toHaveBeenCalledTimes(1);
++      expect(mockUser.save).toHaveBeenCalledTimes(1);
++    });
++
++    it('PROVES FIX: forgotPassword returns identical message when user does not exist (no enumeration)', async () => {
++      User.findOne.mockResolvedValue(null);
++
++      const result = await authService.forgotPassword('nonexistent@example.com');
++
++      expect(result).not.toHaveProperty('resetToken');
++      expect(result.message).toBe('If an account exists with this email, a reset link will be sent.');
++    });
++  });
++
++  describe('MIRE-SEC-002: Arbitrary client-controlled unit price fix', () => {
++    it('PROVES FIX: createOrderFromCart ignores client-supplied price and enforces database catalog price', async () => {
++      const mockCustomer = {
++        _id: 'cust_123',
++        fullName: 'Test Customer',
++        phone: '01012345678',
++        totalOrders: 0,
++        totalSpent: 0,
++        save: jest.fn().mockResolvedValue(true)
++      };
++      Customer.findOne.mockResolvedValue(mockCustomer);
++
++      // Authoritative catalog price in database is 1500
++      Product.findById.mockResolvedValue({
++        _id: 'prod_123',
++        name: 'Luxury Silk Dress',
++        price: 1500,
++        discountPrice: null,
++        finalPrice: 1500,
++        status: 'ACTIVE',
++        variants: [{ sku: 'SKU-SILK-M', stockQuantity: 50 }]
++      });
++
++      // Attacker attempts to purchase at price: 0.01
++      const order = await orderService.createOrderFromCart({
++        customerInfo: { fullName: 'Attacker', phone: '01012345678' },
++        shippingAddress: { street: '123 Fake St', city: 'Cairo', governorate: 'Cairo' },
++        items: [
++          {
++            productId: 'prod_123',
++            name: 'Luxury Silk Dress',
++            variantSku: 'SKU-SILK-M',
++            price: 0.01,
++            unitPrice: 0.01,
++            quantity: 2
++          }
++        ]
++      });
++
++      // Verified: unitPrice is 1500 from catalog, subtotal is 3000 (NOT 0.02)
++      expect(order.items[0].unitPrice).toBe(1500);
++      expect(order.pricing.subtotal).toBe(3000);
++    });
++
++    it('PROVES REGRESSION: rejects orders with inactive or non-existent products', async () => {
++      Product.findById.mockResolvedValue(null);
++
++      await expect(
++        orderService.createOrderFromCart({
++          customerInfo: { fullName: 'Attacker', phone: '01012345678' },
++          shippingAddress: { street: '123 Fake St', city: 'Cairo', governorate: 'Cairo' },
++          items: [{ productId: 'non_existent_prod', quantity: 1 }]
++        })
++      ).rejects.toThrow('unavailable');
++    });
++  });
++
++  describe('MIRE-SEC-003: Employee RBAC privilege escalation fix', () => {
++    it('PROVES FIX: forbids non-SUPER_ADMIN employee from escalating to SUPER_ADMIN', async () => {
++      const targetEmployee = {
++        _id: 'emp_123',
++        name: 'Regular Admin',
++        role: 'ADMIN',
++        save: jest.fn().mockResolvedValue(true),
++        toJSON: jest.fn().mockReturnValue({ _id: 'emp_123', role: 'ADMIN' })
++      };
++
++      User.findById.mockReturnValue({
++        select: jest.fn().mockResolvedValue(targetEmployee)
++      });
++
++      // Caller is an ADMIN employee
++      const callerAdmin = { _id: 'caller_admin_456', role: 'ADMIN' };
++
++      await expect(
++        employeeService.updateEmployee('emp_123', { role: 'SUPER_ADMIN' }, callerAdmin)
++      ).rejects.toThrow('Only Super Admin can assign or change employee roles');
++    });
++
++    it('PROVES FIX: forbids non-SUPER_ADMIN from changing another employee password', async () => {
++      const targetEmployee = {
++        _id: 'emp_123',
++        name: 'Victim Admin',
++        role: 'ADMIN',
++        save: jest.fn().mockResolvedValue(true),
++        toJSON: jest.fn().mockReturnValue({ _id: 'emp_123', role: 'ADMIN' })
++      };
++
++      User.findById.mockReturnValue({
++        select: jest.fn().mockResolvedValue(targetEmployee)
++      });
++
++      const callerAdmin = { _id: 'caller_admin_456', role: 'ADMIN' };
++
++      await expect(
++        employeeService.updateEmployee('emp_123', { password: 'HackedPassword123!' }, callerAdmin)
++      ).rejects.toThrow('Cannot modify password of another employee');
++    });
++
++    it('PROVES REGRESSION: allows SUPER_ADMIN to update roles and manage staff', async () => {
++      const targetEmployee = {
++        _id: 'emp_123',
++        name: 'Regular Admin',
++        role: 'ADMIN',
++        save: jest.fn().mockResolvedValue(true),
++        toJSON: jest.fn().mockReturnValue({ _id: 'emp_123', role: 'ADMIN' })
++      };
++
++      User.findById.mockReturnValue({
++        select: jest.fn().mockResolvedValue(targetEmployee)
++      });
++
++      const callerSuperAdmin = { _id: 'super_admin_root', role: 'SUPER_ADMIN' };
++
++      const updated = await employeeService.updateEmployee('emp_123', { name: 'Updated Name' }, callerSuperAdmin);
++      expect(updated.name).toBe('Updated Name');
++    });
++  });
++
++  describe('MIRE-SEC-008: Customer account pollution parameter overwrite fix', () => {
++    it('PROVES FIX: authenticated req.user._id cannot be overwritten by client-supplied req.body.userId', async () => {
++      let passedData = null;
++      jest.spyOn(orderService, 'createOrderFromCart').mockImplementation(async (data) => {
++        passedData = data;
++        return {
++          _id: 'ord_123',
++          orderNumber: 'ORD-1234',
++          paymentInfo: { method: 'COD' }
++        };
++      });
++
++      const req = {
++        user: { _id: 'authenticated_user_789' },
++        headers: {},
++        body: {
++          userId: 'malicious_injected_victim_id',
++          customerInfo: { fullName: 'Test Customer', phone: '01012345678' },
++          shippingAddress: { street: '123 St', city: 'Cairo', governorate: 'Cairo' }
++        }
++      };
++      const res = {
++        status: jest.fn().mockReturnThis(),
++        json: jest.fn()
++      };
++      const next = jest.fn();
++
++      await orderController.checkout(req, res, next);
++
++      // Verified: req.body.userId is overridden; authenticated user ID is preserved!
++      expect(passedData.userId).toBe('authenticated_user_789');
++    });
++  });
++
++  describe('MIRE-SEC-005: CORS origin restriction fix', () => {
++    it('PROVES FIX: CORS rejects arbitrary untrusted origin', async () => {
++      const res = await request(app)
++        .options('/api/v1/auth/me')
++        .set('Origin', 'https://malicious-site.example')
++        .set('Access-Control-Request-Method', 'GET');
++
++      // Untrusted origin is not reflected in Access-Control-Allow-Origin
++      expect(res.headers['access-control-allow-origin']).toBeUndefined();
++    });
++  });
++
++  describe('MIRE-SEC-007: Database regex escaping utility (ReDoS prevention)', () => {
++    it('PROVES FIX: escapeRegex neutralizes regex metacharacters', () => {
++      const maliciousPattern = '((a+)+)+$';
++      const escaped = escapeRegex(maliciousPattern);
++
++      expect(escaped).toBe('\\(\\(a\\+\\)\\+\\)\\+\\$');
++      // Verifies that escaped pattern safely compiles as literal without catastrophic backtracking
++      const regex = new RegExp(escaped, 'i');
++      expect(regex.test('((a+)+)+$')).toBe(true);
++      expect(regex.test('aaaa')).toBe(false);
++    });
++
++    it('PROVES FIX: escapeRegex handles all regex control characters safely', () => {
++      const specialChars = '.*+?^${}()|[]\\';
++      const escaped = escapeRegex(specialChars);
++
++      expect(escaped).toBe('\\.\\*\\+\\?\\^\\$\\{\\}\\(\\)\\|\\[\\]\\\\');
++    });
++  });
++
++  describe('MIRE-SEC-008 (Variant): Cart parameter pollution fix', () => {
++    it('PROVES FIX: CartController.addItem prevents req.body.userId from overriding session userId', async () => {
++      let passedData = null;
++      jest.spyOn(cartService, 'addItem').mockImplementation(async (data) => {
++        passedData = data;
++        return { items: [] };
++      });
++
++      const req = {
++        user: { _id: 'authenticated_cart_owner' },
++        headers: {},
++        query: {},
++        body: {
++          productId: 'prod_999',
++          quantity: 1,
++          userId: 'malicious_cart_target_user'
++        }
++      };
++      const res = {
++        status: jest.fn().mockReturnThis(),
++        json: jest.fn()
++      };
++      const next = jest.fn();
++
++      await cartController.addItem(req, res, next);
++
++      expect(passedData.userId).toBe('authenticated_cart_owner');
++    });
++  });
++
++  describe('MIRE-SEC-009: Notification IDOR fix', () => {
++    it('PROVES FIX: markAsRead rejects modifying notification when recipient does not match', async () => {
++      Notification.findOneAndUpdate = jest.fn().mockResolvedValue(null);
++
++      const req = {
++        params: { id: 'notif_of_user_b' },
++        user: { _id: 'user_a_id', role: 'CUSTOMER' }
++      };
++      const res = {
++        status: jest.fn().mockReturnThis(),
++        json: jest.fn()
++      };
++      const next = jest.fn();
++
++      await notificationController.markAsRead(req, res, next);
++
++      expect(Notification.findOneAndUpdate).toHaveBeenCalledWith(
++        expect.objectContaining({
++          _id: 'notif_of_user_b',
++          $or: expect.arrayContaining([{ recipientUser: 'user_a_id' }])
++        }),
++        expect.any(Object)
++      );
++      expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 404 }));
++    });
++  });
++
++  describe('MIRE-SEC-010: Payment session access control fix', () => {
++    it('PROVES FIX: createPaymentSession blocks unauthenticated callers from paying for an authenticated user order', async () => {
++      Order.findById.mockReturnValue({
++        populate: jest.fn().mockResolvedValue({
++          _id: 'ord_private_123',
++          user: 'user_owner_id',
++          paymentInfo: { status: 'PENDING', method: 'COD' },
++          pricing: { totalAmount: 500 }
++        })
++      });
++
++      // Unauthenticated caller (user = null)
++      await expect(
++        paymentService.createPaymentSession('ord_private_123', 'COD', null, null, null)
++      ).rejects.toThrow('Authentication required');
++    });
++
++    it('PROVES FIX: createPaymentSession blocks unauthorized customer from paying for another user order', async () => {
++      Order.findById.mockReturnValue({
++        populate: jest.fn().mockResolvedValue({
++          _id: 'ord_private_123',
++          user: 'user_owner_id',
++          paymentInfo: { status: 'PENDING', method: 'COD' },
++          pricing: { totalAmount: 500 }
++        })
++      });
++
++      const unauthorizedCustomer = { _id: 'different_user_id', role: 'CUSTOMER' };
++
++      await expect(
++        paymentService.createPaymentSession('ord_private_123', 'COD', null, null, unauthorizedCustomer)
++      ).rejects.toThrow('Access denied');
++    });
++  });
++
++  describe('MIRE-SEC-011: Guest return verification fix', () => {
++    it('PROVES FIX: requestReturn rejects guest return when phone number does not match order', async () => {
++      Order.findOne.mockReturnValue({
++        populate: jest.fn().mockResolvedValue({
++          _id: 'guest_ord_1',
++          orderNumber: 'MIRE-2026-00001',
++          user: null,
++          customer: { phone: '01012345678' },
++          customerInfo: { phone: '01012345678' },
++          status: 'DELIVERED',
++          items: [{ sku: 'SKU-1', unitPrice: 100 }]
++        })
++      });
++
++      // Attacker provides wrong phone number
++      await expect(
++        returnService.requestReturn({
++          orderId: 'guest_ord_1',
++          customerPhone: '01099999999',
++          items: [{ sku: 'SKU-1', quantity: 1, reason: 'DEFECTIVE' }]
++        })
++      ).rejects.toThrow('Verification required');
++    });
++  });
++});

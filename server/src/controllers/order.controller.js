@@ -8,9 +8,9 @@ class OrderController {
   async checkout(req, res, next) {
     try {
       const order = await orderService.createOrderFromCart({
+        ...req.body,
         userId: req.user?._id || null,
-        guestId: req.headers['x-guest-id'] || req.body.guestId || null,
-        ...req.body
+        guestId: req.user ? null : (req.headers['x-guest-id'] || req.body.guestId || null)
       });
 
       let checkoutUrl = null;

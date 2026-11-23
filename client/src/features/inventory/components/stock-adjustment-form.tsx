@@ -328,8 +328,8 @@ export function StockAdjustmentForm({
                 />
               </SelectTrigger>
               <SelectContent>
-                {selectedProduct.variants.map((v) => (
-                  <SelectItem key={v.sku} value={v.sku} className="text-xs">
+                {selectedProduct.variants.map((v, index) => (
+                  <SelectItem key={v._id || `${v.sku}-${index}`} value={v.sku} className="text-xs">
                     {v.sku} — {v.color} / {v.size} (Current Stock: {v.stockQuantity})
                   </SelectItem>
                 ))}

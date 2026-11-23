@@ -366,7 +366,7 @@ export function AllProductsStockTable({
                               product.totalStock === 0
                                 ? "text-destructive"
                                 : product.totalStock <= (product.lowStockThreshold || 5)
-                                ? "text-amber-600 dark:text-amber-400"
+                                ? "text-amber-600 dark:text-amber-300"
                                 : "text-foreground"
                             }`}
                           >
@@ -392,15 +392,16 @@ export function AllProductsStockTable({
                         ) : (
                           <div className="space-y-1.5">
                             <div className="flex flex-wrap gap-1.5">
-                              {displayedVariants.map((variant) => {
+                              {displayedVariants.map((variant, index) => {
                                 const isZero = variant.stockQuantity === 0;
                                 const isLow =
                                   variant.stockQuantity > 0 &&
                                   variant.stockQuantity <= (product.lowStockThreshold || 5);
+                                const variantKey = `${product._id}-${variant._id || variant.sku || "variant"}-${variant.color || ""}-${variant.size || ""}-${index}`;
 
                                 return (
                                   <div
-                                    key={variant.sku}
+                                    key={variantKey}
                                     className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors ${
                                       isZero
                                         ? "border-destructive/30 bg-destructive/5 text-destructive"

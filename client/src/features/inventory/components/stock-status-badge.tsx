@@ -29,7 +29,7 @@ export function StockStatusBadge({ status, className }: StockStatusBadgeProps) {
     return (
       <span
         className={cn(
-          "inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-500/40 dark:text-amber-300",
+          "inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-500/40 dark:text-red-600",
           className
         )}
       >

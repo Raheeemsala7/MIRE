@@ -344,7 +344,7 @@ export function ProductDetails({ product, currentUser }: ProductDetailsProps) {
             <TableBody>
               {product.variants?.length ? (
                 product.variants.map((v, i) => (
-                  <TableRow key={v.sku || i} className="border-border/40">
+                  <TableRow key={v._id || `${v.sku || "variant"}-${i}`} className="border-border/40">
                     <TableCell className="font-mono text-xs font-semibold text-foreground" dir="ltr">
                       {v.sku}
                     </TableCell>

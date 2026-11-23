@@ -28,10 +28,10 @@ export function CustomerReturnsHub({
   const steps = [
     {
       icon: Package,
-      titleEn: "1. Select Delivered Order",
+      titleEn: "1. Choose Order & Items",
       titleAr: "١. اختاري الطلب والقطع",
-      descEn: "Choose any delivered order within the 14-day window and pick items to return.",
-      descAr: "اختاري أي طلب مستلم خلال 14 يوماً وحددي القطع المراد إرجاعها والسبب.",
+      descEn: "Select an eligible order and choose the items you wish to return.",
+      descAr: "اختاري الطلب المؤهل وحددي القطع المراد إرجاعها والسبب.",
     },
     {
       icon: Truck,
@@ -61,8 +61,8 @@ export function CustomerReturnsHub({
         </h1>
         <p className="mx-auto mt-2.5 max-w-lg text-sm text-muted-foreground">
           {isAr
-            ? `مرحباً ${userName || "عزيزتي"}، في ميري نحرص على رضاكِ التام. يمكنكِ طلب إرجاع المنتجات المستلمة بكل سهولة وبشروط مرنة.`
-            : `Welcome ${userName || ""}, at MIRÉ we are committed to your complete satisfaction. Request a return for eligible delivered items smoothly.`}
+            ? `مرحباً ${userName || "عزيزتي"}، في ميري نحرص على رضاكِ التام. يمكنكِ متابعة طلبات الإرجاع وإدارة استبدال المنتجات وفق سياسة المتجر.`
+            : `Welcome ${userName || ""}, at MIRÉ we are committed to your complete satisfaction. Track return requests and manage product exchanges according to store policy.`}
         </p>
 
         {/* Primary CTA */}
@@ -124,8 +124,8 @@ export function CustomerReturnsHub({
           <ul className="space-y-2 list-disc list-inside">
             <li>
               {isAr
-                ? "يجب تقديم طلب الإرجاع خلال 14 يوماً من تاريخ استلام الشحنة."
-                : "Return requests must be initiated within 14 calendar days of delivery."}
+                ? "طلبات الإرجاع غير متاحة للطلبات بعد تسليمها (حالة الطلب: مستلم DELIVERED)."
+                : "Return requests are unavailable for orders once their status is DELIVERED."}
             </li>
             <li>
               {isAr

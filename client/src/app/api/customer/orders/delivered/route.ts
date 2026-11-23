@@ -1,6 +1,7 @@
 import { serverApiGet, handleApiError } from "@/lib/auth/session";
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/auth";
+import { canCustomerRequestReturn } from "@/features/returns/utils/return-eligibility.util";
 
 export async function GET() {
   const session = await getServerSession();
@@ -13,7 +14,7 @@ export async function GET() {
   }
 
   try {
-    // When customer calls /orders?status=DELIVERED, backend restricts to their own orders
+    // Fetch customer's own orders from backend
     const response = await serverApiGet<{
       success: boolean;
       data: Array<{
@@ -38,9 +39,20 @@ export async function GET() {
         };
       }>;
       total: number;
-    }>("/orders?status=DELIVERED&limit=50");
+    }>("/orders?limit=50");
 
-    return NextResponse.json(response);
+    // Filter strictly using centralized customer eligibility policy:
+    // Requires non-DELIVERED status, customer ownership, and explicit backend acceptance.
+    const eligibleOrders = (response?.data || []).filter((order) => {
+      const eligibility = canCustomerRequestReturn(order, session.user.id);
+      return eligibility.eligible;
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: eligibleOrders,
+      total: eligibleOrders.length,
+    });
   } catch (error) {
     return handleApiError(error);
   }

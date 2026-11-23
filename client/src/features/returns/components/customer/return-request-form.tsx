@@ -31,6 +31,7 @@ import {
   REASON_CONFIG,
   REFUND_METHOD_CONFIG,
 } from "../../utils/return.util";
+import { canCustomerRequestReturn } from "../../utils/return-eligibility.util";
 import {
   fetchCustomerDeliveredOrders,
 } from "../../services/returns.service";
@@ -51,7 +52,11 @@ export function ReturnRequestForm({ locale = "en" }: ReturnRequestFormProps) {
     staleTime: 1000 * 60,
   });
 
-  const orders = useMemo(() => ordersData?.data || [], [ordersData?.data]);
+  const orders = useMemo(() => {
+    const raw = ordersData?.data || [];
+    // Strictly filter using centralized customer eligibility policy
+    return raw.filter((o) => canCustomerRequestReturn(o).eligible);
+  }, [ordersData?.data]);
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
   const [submittedReturn, setSubmittedReturn] = useState<ReturnDoc | null>(null);
 
@@ -177,7 +182,7 @@ export function ReturnRequestForm({ locale = "en" }: ReturnRequestFormProps) {
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
         <div className="size-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
         <p className="text-sm text-muted-foreground">
-          {isAr ? "جاري تحميل الطلبات المؤهلة للإرجاع..." : "Loading eligible delivered orders..."}
+          {isAr ? "جاري تحميل الطلبات المؤهلة للإرجاع..." : "Loading eligible orders..."}
         </p>
       </div>
     );
@@ -188,12 +193,12 @@ export function ReturnRequestForm({ locale = "en" }: ReturnRequestFormProps) {
       <div className="mx-auto max-w-xl text-center rounded-3xl border border-dashed border-border p-12 bg-card/60 shadow-xs">
         <Package className="mx-auto size-12 text-muted-foreground/60" />
         <h3 className="mt-4 font-serif text-xl font-medium text-foreground">
-          {isAr ? "لا توجد طلبات مستلمة مؤهلة" : "No Eligible Delivered Orders Found"}
+          {isAr ? "لا توجد طلبات مؤهلة للإرجاع" : "No Eligible Orders Available"}
         </h3>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
           {isAr
-            ? "يمكن تقديم طلبات الإرجاع فقط للطلبات التي تم توصيلها بنجاح وخلال فترة الإرجاع المسموحة (14 يوماً)."
-            : "Returns can only be requested for orders that have been successfully delivered within the 14-day return window."}
+            ? "وفقاً لسياسة المتجر الحالية، طلبات الإرجاع غير متاحة للطلبات بعد استلامها بنجاح (حالة الطلب: مستلم). للمساعدة أو الاستفسارات، يرجى التواصل مع فريق خدمة العملاء."
+            : "Under current store policy, return requests are unavailable for delivered orders. For assistance or inquiries regarding your order, please contact customer support."}
         </p>
       </div>
     );
@@ -201,17 +206,17 @@ export function ReturnRequestForm({ locale = "en" }: ReturnRequestFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mx-auto max-w-2xl space-y-6">
-      {/* Step 1: Select Delivered Order */}
+      {/* Step 1: Select Order */}
       <Card className="border-border/60 shadow-xs">
         <CardHeader className="p-5 pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <span className="flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
               1
             </span>
-            <span>{isAr ? "اختيار الطلب المستلم" : "Select Delivered Order"}</span>
+            <span>{isAr ? "اختيار الطلب" : "Select Order"}</span>
           </CardTitle>
           <CardDescription className="text-xs">
-            {isAr ? "اختاري الطلب الذي ترغبين في إرجاع بعض أو كل منتجاته" : "Choose the delivered order containing items you wish to return"}
+            {isAr ? "اختاري الطلب الذي ترغبين في إرجاع بعض أو كل منتجاته" : "Choose the order containing items you wish to return"}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-5 pt-0 space-y-3">

@@ -6,9 +6,11 @@ export * from "./schemas/return.schema";
 
 // Utils
 export * from "./utils/return.util";
+export * from "./utils/return-eligibility.util";
 
-// Services
+// Services & Actions
 export * from "./services/returns.service";
+export * from "./actions/return.actions";
 
 // Hooks
 export * from "./hooks/use-returns";
@@ -18,6 +20,7 @@ export * from "./hooks/use-inspect-return";
 export * from "./hooks/use-log-call-attempt";
 export * from "./hooks/use-assign-return";
 export * from "./hooks/use-submit-return-request";
+export * from "./hooks/use-admin-create-return";
 
 // Shared Components
 export * from "./components/shared/return-status-badge";
@@ -26,6 +29,7 @@ export * from "./components/shared/return-timeline";
 
 // Admin Components
 export * from "./components/admin/returns-dashboard";
+export * from "./components/admin/admin-return-create-form";
 export * from "./components/admin/returns-overview";
 export * from "./components/admin/returns-filters";
 export * from "./components/admin/returns-table";

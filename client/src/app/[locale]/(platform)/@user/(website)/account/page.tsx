@@ -89,8 +89,8 @@ async function AccountPageContent({ params }: AccountPageProps) {
                 </p>
                 <p className="text-xs text-ds-text-muted mt-0.5">
                   {isAr
-                    ? "تقديم ومتابعة طلبات إرجاع واستبدال المنتجات المستلمة وفق سياسة المتجر"
-                    : "Request return or exchange for eligible delivered orders within 14 days"}
+                    ? "متابعة طلبات الإرجاع وإدارة الاستبدال وفق سياسة المتجر"
+                    : "Track return requests and manage product exchanges according to store policy"}
                 </p>
               </div>
             </div>

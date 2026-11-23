@@ -11,7 +11,6 @@ import {
   Truck,
   MapPin,
   CreditCard,
-  Banknote,
   ChevronDown,
   ChevronUp,
   Search,
@@ -19,7 +18,6 @@ import {
   Check,
   RotateCcw,
   MessageCircle,
-  Sparkles,
   Calendar,
   Box,
 } from "lucide-react";
@@ -27,6 +25,7 @@ import { useCartStore } from "@/src/shared/stores/cart-store";
 import { OrderTrackingTimeline } from "@/shared/components/order-tracking-timeline";
 import { toast } from "sonner";
 import { trackPublicOrderAction } from "../apis/order.action";
+import { canCustomerRequestReturn } from "@/features/returns/utils/return-eligibility.util";
 
 interface OrderItem {
   id?: string;
@@ -510,15 +509,28 @@ export function OrdersView({
                 <span>{isAr ? "مساعدة فورية عبر واتساب" : "WhatsApp Support"}</span>
               </a>
 
-              {/* Re-order button */}
-              <button
-                type="button"
-                onClick={(e) => handleReorder(order, e)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-ds-plain border border-ds-border-muted hover:border-ds-primary text-xs font-semibold text-ds-text-plain hover:text-ds-primary transition-all shadow-2xs"
-              >
-                <RotateCcw className="size-3.5" />
-                <span>{isAr ? "إعادة طلب هذه القطع" : "Re-order Items"}</span>
-              </button>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                {canCustomerRequestReturn(order).eligible && (
+                  <Link
+                    href={`/account/returns/request?orderId=${order._id || order.orderNumber}`}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 hover:border-primary text-xs font-semibold text-primary transition-all shadow-2xs"
+                  >
+                    <RotateCcw className="size-3.5" />
+                    <span>{isAr ? "طلب إرجاع" : "Request Return"}</span>
+                  </Link>
+                )}
+
+                {/* Re-order button */}
+                <button
+                  type="button"
+                  onClick={(e) => handleReorder(order, e)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-ds-plain border border-ds-border-muted hover:border-ds-primary text-xs font-semibold text-ds-text-plain hover:text-ds-primary transition-all shadow-2xs"
+                >
+                  <RotateCcw className="size-3.5" />
+                  <span>{isAr ? "إعادة طلب هذه القطع" : "Re-order Items"}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

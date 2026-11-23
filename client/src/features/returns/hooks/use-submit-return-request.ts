@@ -21,6 +21,7 @@ export function useSubmitReturnRequest(
       submitReturnRequestAction(payload),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: returnQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: returnQueryKeys.deliveredOrders() });
       toast.success(
         t("customer-returns-success-title") ||
           "Return request submitted successfully"

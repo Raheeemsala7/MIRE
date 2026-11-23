@@ -26,6 +26,7 @@ import {
   MessageCircle,
   AlertCircle,
   Layers,
+  RotateCcw,
 } from "lucide-react";
 import {
   Card,
@@ -253,6 +254,20 @@ export function OrderDetailsView({ order: initialOrder }: OrderDetailsViewProps)
               <span>{isAr ? "اتصال هاتفي" : "Call Customer"}</span>
             </a>
           </Button>
+
+          {order.status === "DELIVERED" && (
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="h-9 px-3 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+            >
+              <Link href={`/admin/returns/new?orderId=${order._id}`}>
+                <RotateCcw className="size-3.5" />
+                <span>{isAr ? "إنشاء طلب إرجاع" : "Create Return"}</span>
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 

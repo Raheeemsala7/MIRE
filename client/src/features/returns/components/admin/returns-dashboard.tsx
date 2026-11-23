@@ -2,9 +2,12 @@
 
 import React, { useState, useTransition, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname } from "@/i18n/navigation";
+import { useRouter, usePathname, Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
+import { Plus } from "lucide-react";
 import type { SafeUser } from "@/lib/auth/types";
+import { can } from "@/lib/permissions/can";
+import { PERMISSIONS } from "@/config/rbac.config";
 import type {
   ReturnsFilterParams,
   ReturnsPaginatedResponse,
@@ -27,12 +30,17 @@ export function ReturnsDashboard({
   initialData,
   initialStats,
   locale,
+  currentUser,
 }: ReturnsDashboardProps) {
   const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPendingTransition, startTransition] = useTransition();
+
+  const canCreateReturn = currentUser
+    ? can(currentUser.role, PERMISSIONS.RETURNS_CREATE, currentUser.permissions)
+    : false;
 
   // URL searchParams as initial state
   const [filters, setFilters] = useState<ReturnsFilterParams>({
@@ -104,14 +112,26 @@ export function ReturnsDashboard({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-1 border-b border-border/60 pb-5">
-        <h1 className="font-serif text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          {t("returns-title") || "Returns Management"}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("returns-description") ||
-            "Manage return requests, customer follow-ups, inspections, and inventory restocking."}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/60 pb-5">
+        <div className="space-y-1">
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            {t("returns-title") || "Returns Management"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t("returns-description") ||
+              "Manage return requests, customer follow-ups, inspections, and inventory restocking."}
+          </p>
+        </div>
+
+        {canCreateReturn && (
+          <Link
+            href="/admin/returns/new"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 shrink-0"
+          >
+            <Plus className="size-4" />
+            <span>{t("returns-create-button") || "Create Return"}</span>
+          </Link>
+        )}
       </div>
 
       {/* Overview Cards */}

@@ -4,29 +4,13 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Address, AddressStore } from "../types/address";
 
-const INITIAL_ADDRESSES: Address[] = [
-  {
-    id: "default-addr-1",
-    title: "المنزل (الرئيسي)",
-    fullName: "عميل ميري",
-    phone: "+201012345678",
-    governorate: "القاهرة",
-    city: "المعادي",
-    street: "شارع ٩ - دجلة",
-    building: "عمارة ١٥",
-    apartment: "شقة ٤",
-    landmark: "بجوار محطة المترو",
-    latitude: 29.9602,
-    longitude: 31.2569,
-    isDefault: true,
-  },
-];
+const INITIAL_ADDRESSES: Address[] = [];
 
 export const useAddressStore = create<AddressStore>()(
   persist(
     (set, get) => ({
       addresses: INITIAL_ADDRESSES,
-      selectedAddressId: "default-addr-1",
+      selectedAddressId: null,
       addAddress: (addressData) => {
         const newAddress: Address = {
           ...addressData,

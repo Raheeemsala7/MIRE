@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { canCustomerRequestReturn } from "@/features/returns/utils/return-eligibility.util";
+import { isOrderOwnedByUser } from "../utils/order-ownership.util";
 
 // Types simulating database documents
 interface MockOrder {
@@ -502,6 +503,43 @@ describe("CRITICAL SECURITY FIX — Customer Orders Data Isolation & Ownership A
       expect(tracking.customerInfo).toBeUndefined();
       expect(tracking.internalNotes).toBeUndefined();
       expect(tracking.assignedEmployee).toBeUndefined();
+    });
+  });
+
+  describe("Frontend isOrderOwnedByUser Defense-in-Depth IDOR Validator", () => {
+    it("returns true when order.user matches the authenticated user ID", () => {
+      const order = { orderNumber: "ORD-1", user: "user-123", pricing: { subtotal: 100, shippingFee: 0, totalAmount: 100 }, status: "PENDING", items: [] };
+      expect(isOrderOwnedByUser(order, "user-123", "CUSTOMER")).toBe(true);
+    });
+
+    it("returns true when order.customer matches the authenticated user ID", () => {
+      const order = { orderNumber: "ORD-2", customer: "cust-456", pricing: { subtotal: 100, shippingFee: 0, totalAmount: 100 }, status: "PENDING", items: [] };
+      expect(isOrderOwnedByUser(order, "cust-456", "CUSTOMER")).toBe(true);
+    });
+
+    it("returns true when order.customer is an object with matching _id or user", () => {
+      const order1 = { orderNumber: "ORD-3", customer: { _id: "cust-789" }, pricing: { subtotal: 100, shippingFee: 0, totalAmount: 100 }, status: "PENDING", items: [] };
+      expect(isOrderOwnedByUser(order1, "cust-789", "CUSTOMER")).toBe(true);
+
+      const order2 = { orderNumber: "ORD-4", customer: { _id: "doc-1", user: "user-target" }, pricing: { subtotal: 100, shippingFee: 0, totalAmount: 100 }, status: "PENDING", items: [] };
+      expect(isOrderOwnedByUser(order2, "user-target", "CUSTOMER")).toBe(true);
+    });
+
+    it("strictly returns false when order belongs to a different user (IDOR prevention)", () => {
+      const order = { orderNumber: "ORD-5", user: "victim-user", customer: "victim-cust", pricing: { subtotal: 100, shippingFee: 0, totalAmount: 100 }, status: "PENDING", items: [] };
+      expect(isOrderOwnedByUser(order, "attacker-user", "CUSTOMER")).toBe(false);
+    });
+
+    it("allows ADMIN or SUPER_ADMIN role to inspect orders regardless of ownership", () => {
+      const order = { orderNumber: "ORD-6", user: "customer-1", pricing: { subtotal: 100, shippingFee: 0, totalAmount: 100 }, status: "PENDING", items: [] };
+      expect(isOrderOwnedByUser(order, "admin-user", "ADMIN")).toBe(true);
+      expect(isOrderOwnedByUser(order, "superadmin-user", "SUPER_ADMIN")).toBe(true);
+    });
+
+    it("fails closed when order or userId is null/undefined", () => {
+      expect(isOrderOwnedByUser(null, "user-123", "CUSTOMER")).toBe(false);
+      expect(isOrderOwnedByUser(undefined, "user-123", "CUSTOMER")).toBe(false);
+      expect(isOrderOwnedByUser({ orderNumber: "ORD-7", pricing: { subtotal: 0, shippingFee: 0, totalAmount: 0 }, status: "PENDING", items: [] }, null, "CUSTOMER")).toBe(false);
     });
   });
 });

@@ -137,9 +137,6 @@ const nextAuth = NextAuth({
           permissions: (token.user as SafeUser).permissions,
         };
       }
-      if (token.accessToken) {
-        session.accessToken = token.accessToken as string;
-      }
       if (token.error) {
         session.error = token.error as string;
       }

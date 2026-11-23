@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { registerAction } from "../actions/register";
 import { createRegisterSchema, type RegistrationFields } from "../schemas/register.schema";
+import { purgeClientSessionStorage } from "@/shared/lib/utils/client-auth.utils";
 
 const FIELD_NAMES = ["name", "email", "phone", "password"] as const;
 
@@ -46,6 +47,7 @@ export function useRegister() {
       const result = await mutation.mutateAsync(values);
 
       if (result.success) {
+        purgeClientSessionStorage();
         form.reset();
         mutation.reset();
         setIsRegistered(true);

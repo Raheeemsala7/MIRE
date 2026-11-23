@@ -25,14 +25,32 @@ export async function checkoutAction(
   const proto = headerList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
   const currentOrigin = `${proto}://${host}`;
 
+  // Validate returnUrl strictly against open redirect and external gateway phishing
+  let safeReturnUrl = `${currentOrigin}/ar/checkout`;
+  if (typeof payload.returnUrl === "string") {
+    const rawUrl = payload.returnUrl.trim();
+    if (rawUrl.startsWith("/") && !rawUrl.startsWith("//") && !/[\\\u0000-\u0020]/.test(rawUrl)) {
+      safeReturnUrl = `${currentOrigin}${rawUrl}`;
+    } else {
+      try {
+        const parsed = new URL(rawUrl);
+        if (parsed.origin === currentOrigin) {
+          safeReturnUrl = parsed.toString();
+        }
+      } catch {}
+    }
+  }
+
   const body: any = {
     ...payload,
-    origin: payload.origin || currentOrigin,
-    returnUrl: payload.returnUrl || `${currentOrigin}/ar/checkout`,
+    origin: currentOrigin,
+    returnUrl: safeReturnUrl,
   };
 
   if (token?.id || token?.sub) {
     body.userId = token.id || token.sub;
+  } else {
+    delete body.userId;
   }
 
   try {

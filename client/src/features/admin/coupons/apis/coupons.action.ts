@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { getServerSession } from "@/auth";
+import { assertSessionPermission } from "@/lib/permissions/server-authorization";
+import { PERMISSIONS } from "@/config/rbac.config";
 import { API_URL, HEADERS } from "@/shared/constant/api.constant";
 import { RESPONSES } from "@/shared/constant/api.responses";
 import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
@@ -15,6 +18,15 @@ import type {
 export async function createCouponAction(
   input: CreateCouponInput
 ): Promise<{ success: boolean; message: string; data?: CouponItem }> {
+  const session = await getServerSession();
+  const auth = assertSessionPermission(session, PERMISSIONS.COUPONS_CREATE);
+  if (!auth.authorized) {
+    return {
+      success: false,
+      message: auth.error || "Unauthorized",
+    };
+  }
+
   const token = await getNextAuthToken();
   if (!token?.token) {
     return RESPONSES.unauthorizedS;
@@ -74,6 +86,15 @@ export async function updateCouponAction(
   id: string,
   input: UpdateCouponInput
 ): Promise<{ success: boolean; message: string; data?: CouponItem }> {
+  const session = await getServerSession();
+  const auth = assertSessionPermission(session, PERMISSIONS.COUPONS_UPDATE);
+  if (!auth.authorized) {
+    return {
+      success: false,
+      message: auth.error || "Unauthorized",
+    };
+  }
+
   const token = await getNextAuthToken();
   if (!token?.token) {
     return RESPONSES.unauthorizedS;
@@ -120,6 +141,15 @@ export async function updateCouponAction(
 export async function deleteCouponAction(
   id: string
 ): Promise<{ success: boolean; message: string }> {
+  const session = await getServerSession();
+  const auth = assertSessionPermission(session, PERMISSIONS.COUPONS_DELETE);
+  if (!auth.authorized) {
+    return {
+      success: false,
+      message: auth.error || "Unauthorized",
+    };
+  }
+
   const token = await getNextAuthToken();
   if (!token?.token) {
     return RESPONSES.unauthorizedS;

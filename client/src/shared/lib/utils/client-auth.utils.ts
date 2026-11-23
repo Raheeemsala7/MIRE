@@ -1,5 +1,19 @@
 import { clearBrowserQueryCache } from "@/shared/context/global/react-query-providers";
 
+/** Purges all cached client stores, recent orders, addresses, and carts on session end/switch */
+export function purgeClientSessionStorage() {
+  if (typeof window === "undefined") return;
+  try {
+    clearBrowserQueryCache();
+    localStorage.removeItem("mire-recent-orders");
+    localStorage.removeItem("mire-addresses");
+    localStorage.removeItem("mire-cart");
+    sessionStorage.removeItem("mire-recent-orders");
+    sessionStorage.removeItem("mire-addresses");
+    sessionStorage.removeItem("mire-cart");
+  } catch {}
+}
+
 /** Client-side helper to clear tokens and redirect to login when session expires */
 let isRedirecting = false;
 
@@ -7,11 +21,7 @@ export function handleClientSessionExpired(locale: string = "ar") {
   if (typeof window === "undefined" || isRedirecting) return;
 
   // Clear query cache and storage on session expiry
-  try {
-    clearBrowserQueryCache();
-    localStorage.removeItem("mire-recent-orders");
-    sessionStorage.removeItem("mire-recent-orders");
-  } catch {}
+  purgeClientSessionStorage();
 
   // Best-effort client cookie deletion
   const cookieNames = [

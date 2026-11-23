@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { getServerSession } from "@/auth";
+import { assertSessionPermission } from "@/lib/permissions/server-authorization";
+import { PERMISSIONS } from "@/config/rbac.config";
 import { API_URL, HEADERS } from "@/shared/constant/api.constant";
 import { RESPONSES } from "@/shared/constant/api.responses";
 import { getNextAuthToken } from "@/shared/lib/utils/auth.utils";
@@ -12,6 +15,15 @@ export async function updateOrderStatusAction(payload: {
   status: OrderStatus;
   reason?: string;
 }): Promise<{ success: boolean; message: string; data?: OrderDoc }> {
+  const session = await getServerSession();
+  const auth = assertSessionPermission(session, PERMISSIONS.ORDERS_UPDATE);
+  if (!auth.authorized) {
+    return {
+      success: false,
+      message: auth.error || "Unauthorized",
+    };
+  }
+
   const token = await getNextAuthToken();
   if (!token?.token) {
     return RESPONSES.unauthorizedS;

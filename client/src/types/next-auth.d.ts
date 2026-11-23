@@ -17,7 +17,6 @@ declare module "next-auth" {
     user: SafeUser & {
       emailVerified?: Date | null;
     };
-    accessToken?: string;
     error?: string;
   }
 }

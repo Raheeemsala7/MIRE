@@ -8,6 +8,7 @@ import { hasRole } from "@/lib/auth/roles";
 import { Truck } from "lucide-react";
 import { OrdersView } from "@/src/features/order";
 import { getOrdersApi } from "@/src/features/order/apis/order.api";
+import { isOrderOwnedByUser } from "@/features/order/utils/order-ownership.util";
 import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
 
 interface OrdersPageProps {
@@ -46,7 +47,10 @@ async function OrdersPageContent({ params }: OrdersPageProps) {
   const user = session.user;
 
   // Fetch only authenticated customer's own orders on the server
-  const initialOrders = await getOrdersApi();
+  const rawOrders = await getOrdersApi({ userId: user.id });
+  const initialOrders = rawOrders.filter((order) =>
+    isOrderOwnedByUser(order, user.id, user.role)
+  );
 
   return (
     <main className="mx-auto min-h-[65vh] max-w-5xl px-4 py-12 sm:px-6 lg:px-8">

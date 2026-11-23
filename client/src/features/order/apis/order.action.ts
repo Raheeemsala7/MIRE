@@ -1,6 +1,8 @@
 "use server";
 
+import { getServerSession } from "@/auth";
 import { trackOrderApi, getCustomerOrderByIdApi } from "./order.api";
+import { isOrderOwnedByUser } from "../utils/order-ownership.util";
 import type { OrderDisplay } from "../types/order";
 
 export async function searchCustomerOrderAction(
@@ -12,8 +14,16 @@ export async function searchCustomerOrderAction(
       return { success: false, error: "رقم الطلب مطلوب" };
     }
 
+    const session = await getServerSession();
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: "يجب تسجيل الدخول للبحث عن الطلبات في حسابكِ",
+      };
+    }
+
     const order = await getCustomerOrderByIdApi(cleanQuery);
-    if (!order) {
+    if (!order || !isOrderOwnedByUser(order, session.user.id, session.user.role)) {
       return {
         success: false,
         error: "لم يتم العثور على طلب بهذا الرقم في حسابكِ، يرجى التأكد من صحة الرقم والمحاولة مجدداً",
@@ -39,7 +49,34 @@ export async function trackPublicOrderAction(
         error: "لم يتم العثور على طلب بهذا الرقم، يرجى التأكد والمحاولة مجدداً",
       };
     }
-    return { success: true, data: order };
+
+    // Mask sensitive PII for unauthenticated public tracking responses
+    const sanitizedOrder: OrderDisplay = {
+      ...order,
+      customerInfo: order.customerInfo
+        ? {
+            fullName: order.customerInfo.fullName,
+            phone: order.customerInfo.phone
+              ? order.customerInfo.phone.slice(0, 5) + "****" + order.customerInfo.phone.slice(-3)
+              : "",
+            email: undefined,
+          }
+        : undefined,
+      shippingAddress: order.shippingAddress
+        ? {
+            city: order.shippingAddress.city,
+            governorate: order.shippingAddress.governorate,
+            street: "—",
+            building: undefined,
+            apartment: undefined,
+            landmark: undefined,
+            latitude: undefined,
+            longitude: undefined,
+          }
+        : undefined,
+    };
+
+    return { success: true, data: sanitizedOrder };
   } catch (err: any) {
     return {
       success: false,

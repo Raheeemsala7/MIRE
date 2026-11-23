@@ -1,13 +1,11 @@
 "use client";
 
 import { logoutAction } from "../../actions/logout";
+import { purgeClientSessionStorage } from "@/shared/lib/utils/client-auth.utils";
 
 export function LogoutButton() {
   const handleSignOut = () => {
-    try {
-      localStorage.removeItem("mire-recent-orders");
-      sessionStorage.removeItem("mire-recent-orders");
-    } catch {}
+    purgeClientSessionStorage();
   };
 
   return (

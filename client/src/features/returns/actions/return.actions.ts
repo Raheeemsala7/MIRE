@@ -75,8 +75,15 @@ export async function submitReturnRequestAction(
       ? orderData.customer
       : orderData?.customer?._id || orderData?.customer?.id || orderData?.customerId;
 
+  const orderUserId =
+    typeof (orderData as any)?.user === "string"
+      ? (orderData as any).user
+      : (orderData as any)?.user?._id || (orderData as any)?.user?.id || (orderData as any)?.userId;
+
   if (session.user.role === "CUSTOMER") {
-    if (!orderCustomerId || String(orderCustomerId) !== String(session.user.id)) {
+    const matchesCustomer = orderCustomerId && String(orderCustomerId) === String(session.user.id);
+    const matchesUser = orderUserId && String(orderUserId) === String(session.user.id);
+    if (!matchesCustomer && !matchesUser) {
       throw new Error("Unauthorized: You can only request returns for your own orders");
     }
   }

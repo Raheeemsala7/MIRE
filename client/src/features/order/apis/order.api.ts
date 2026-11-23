@@ -5,12 +5,14 @@ import type { OrderDisplay } from "../types/order";
 export async function getOrdersApi({
   page = 1,
   limit = 50,
-}: { page?: number; limit?: number } = {}): Promise<OrderDisplay[]> {
+  userId,
+}: { page?: number; limit?: number; userId?: string } = {}): Promise<OrderDisplay[]> {
   const token = await getNextAuthToken();
   if (!token?.token) return [];
 
   try {
-    const res = await fetch(`${API_URL}/orders?page=${page}&limit=${limit}`, {
+    const userFilter = userId ? `&user=${encodeURIComponent(userId)}` : "";
+    const res = await fetch(`${API_URL}/orders?page=${page}&limit=${limit}${userFilter}`, {
       method: "GET",
       headers: {
         ...HEADERS.JsonBody,

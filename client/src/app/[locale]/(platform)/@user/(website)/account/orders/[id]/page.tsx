@@ -7,6 +7,7 @@ import { normalizeLocale } from "@/lib/auth/permissions";
 import { hasRole } from "@/lib/auth/roles";
 import { CustomerOrderDetailView } from "@/src/features/order";
 import { getCustomerOrderByIdApi } from "@/src/features/order/apis/order.api";
+import { isOrderOwnedByUser } from "@/features/order/utils/order-ownership.util";
 import { AuthSkeleton } from "@/features/auth/components/auth-skeleton";
 
 interface AccountOrderDetailPageProps {
@@ -48,7 +49,7 @@ async function AccountOrderDetailPageContent({
   // Fetch single order strictly scoped to authenticated user
   const order = await getCustomerOrderByIdApi(id);
 
-  if (!order) {
+  if (!order || !isOrderOwnedByUser(order, session.user.id, session.user.role)) {
     notFound();
   }
 

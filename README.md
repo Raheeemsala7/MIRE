@@ -279,7 +279,7 @@ services:
       - "5000:5000"
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=mongodb://mongodb:27017/mire_ecommerce
+      - 
     depends_on:
       - mongodb
 

@@ -31,7 +31,7 @@ export function StockAdjustmentDialog({
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-base font-semibold flex items-center gap-2">
-            <SlidersHorizontal className="size-4.5 text-amber-500" />
+            <SlidersHorizontal className="size-4.5 text-red-500" />
             <span>
               {t("inventory-adjust-dialog-title") || "Manual Stock Adjustment"}
             </span>

@@ -53,8 +53,11 @@ import type {
   Product,
   ProductVariantItem,
   ProductsPaginatedResponse,
+  ProductFilters,
 } from "@/features/products/types/product.types";
 import type { LowStockItem } from "../types/inventory.types";
+
+type StockStatusFilter = Exclude<ProductFilters["stockStatus"], undefined>;
 
 interface AllProductsStockTableProps {
   initialData?: ProductsPaginatedResponse;
@@ -76,16 +79,17 @@ export function AllProductsStockTable({
   const [page, setPage] = React.useState(1);
   const [searchInput, setSearchInput] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
-  const [stockStatus, setStockStatus] = React.useState<string>("ALL");
+  const [stockStatus, setStockStatus] = React.useState<StockStatusFilter>("ALL");
   const [expandedProducts, setExpandedProducts] = React.useState<Record<string, boolean>>({});
 
   const limit = 20;
 
-  // Search debounce
+  // Search debounce with expansion reset
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchInput.trim());
       setPage(1);
+      setExpandedProducts({});
     }, 350);
     return () => clearTimeout(timer);
   }, [searchInput]);
@@ -96,7 +100,7 @@ export function AllProductsStockTable({
       page,
       limit,
       search: debouncedSearch || undefined,
-      stockStatus: stockStatus !== "ALL" ? (stockStatus as any) : undefined,
+      stockStatus: stockStatus !== "ALL" ? stockStatus : undefined,
       admin: true,
     },
     page === 1 && !debouncedSearch && stockStatus === "ALL" ? initialData : undefined,
@@ -119,6 +123,12 @@ export function AllProductsStockTable({
 
   const startRecord = (page - 1) * limit + 1;
   const endRecord = Math.min(page * limit, meta.total);
+
+  // Page navigation handler with expansion cleanup
+  function handlePageChange(newPage: number) {
+    setPage(newPage);
+    setExpandedProducts({});
+  }
 
   // Toggle variant expansion for long variant lists
   function toggleExpanded(productId: string) {
@@ -151,15 +161,21 @@ export function AllProductsStockTable({
     };
   }
 
-  function handleAdjustVariant(product: Product, variant: ProductVariantItem) {
-    if (!canAdjust) return;
-    onAdjustStock(createAdjustmentTarget(product, variant));
-  }
+  const handleAdjustVariant = React.useCallback(
+    (product: Product, variant: ProductVariantItem) => {
+      if (!canAdjust) return;
+      onAdjustStock(createAdjustmentTarget(product, variant));
+    },
+    [canAdjust, onAdjustStock]
+  );
 
-  function handleAdjustProduct(product: Product) {
-    if (!canAdjust) return;
-    onAdjustStock(createAdjustmentTarget(product));
-  }
+  const handleAdjustProduct = React.useCallback(
+    (product: Product) => {
+      if (!canAdjust) return;
+      onAdjustStock(createAdjustmentTarget(product));
+    },
+    [canAdjust, onAdjustStock]
+  );
 
   return (
     <Card className="border border-border/70 shadow-xs">
@@ -226,8 +242,9 @@ export function AllProductsStockTable({
             <Select
               value={stockStatus}
               onValueChange={(val) => {
-                setStockStatus(val);
+                setStockStatus(val as StockStatusFilter);
                 setPage(1);
+                setExpandedProducts({});
               }}
             >
               <SelectTrigger className="h-9 text-xs">
@@ -273,7 +290,7 @@ export function AllProductsStockTable({
             </p>
           </div>
         ) : (
-          <div className="rounded-md border border-border overflow-hidden">
+          <div className="rounded-md border border-border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40">
@@ -296,7 +313,7 @@ export function AllProductsStockTable({
               </TableHeader>
 
               <TableBody>
-                {products.map((product) => {
+                {products.map((product, pIndex) => {
                   const status = getProductStockStatus(product);
                   const imageUrl = getPrimaryImageUrl(product.images);
                   const isExpanded = !!expandedProducts[product._id];
@@ -325,6 +342,7 @@ export function AllProductsStockTable({
                                 alt={product.name}
                                 fill
                                 sizes="40px"
+                                priority={pIndex < 4}
                                 className="object-cover"
                               />
                             ) : (
@@ -366,7 +384,7 @@ export function AllProductsStockTable({
                               product.totalStock === 0
                                 ? "text-destructive"
                                 : product.totalStock <= (product.lowStockThreshold || 5)
-                                ? "text-amber-600 dark:text-amber-300"
+                                ? "text-red-600 dark:text-red-600"
                                 : "text-foreground"
                             }`}
                           >
@@ -406,7 +424,7 @@ export function AllProductsStockTable({
                                       isZero
                                         ? "border-destructive/30 bg-destructive/5 text-destructive"
                                         : isLow
-                                        ? "border-amber-500/30 bg-amber-500/5 text-amber-800 dark:text-amber-300"
+                                        ? "border-amber-500/30 bg-amber-500/5 text-red-600 dark:text-red-600"
                                         : "border-border/70 bg-muted/40 text-foreground"
                                     }`}
                                   >
@@ -421,7 +439,7 @@ export function AllProductsStockTable({
                                         isZero
                                           ? "bg-destructive/10 text-destructive"
                                           : isLow
-                                          ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                                          ? "bg-red-500/15 text-red-600 dark:text-red-600"
                                           : "bg-background text-foreground"
                                       }`}
                                     >
@@ -536,7 +554,7 @@ export function AllProductsStockTable({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() => handlePageChange(Math.max(1, page - 1))}
                 disabled={page <= 1}
                 className="h-8 gap-1 text-xs"
               >
@@ -548,14 +566,14 @@ export function AllProductsStockTable({
                 <span>{t("inventory-pagination-prev") || "Previous"}</span>
               </Button>
 
-              <span className="text-xs text-muted-foreground px-2">
+              <span className="text-xs text-muted-foreground px-2" dir="ltr">
                 {numberFormatter.format(page)} / {numberFormatter.format(meta.totalPages)}
               </span>
 
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+                onClick={() => handlePageChange(Math.min(meta.totalPages, page + 1))}
                 disabled={page >= meta.totalPages}
                 className="h-8 gap-1 text-xs"
               >

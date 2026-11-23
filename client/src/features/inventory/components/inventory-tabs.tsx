@@ -48,7 +48,7 @@ export function InventoryTabs({
           value="alerts"
           className="gap-2 text-xs data-[state=active]:bg-background"
         >
-          <AlertTriangle className="size-3.5 text-amber-500" />
+          <AlertTriangle className="size-3.5 text-red-500" />
           <span>{t("inventory-tab-overview") || "Low Stock Alerts"}</span>
         </TabsTrigger>
         <TabsTrigger

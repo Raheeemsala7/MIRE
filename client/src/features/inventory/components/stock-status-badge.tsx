@@ -84,7 +84,7 @@ export function MovementTypeBadge({ type, className }: MovementTypeBadgeProps) {
       labelKey: "inventory-movement-ADJUSTMENT",
       defaultLabel: "Manual Adjustment",
       className:
-        "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:border-amber-500/40 dark:text-amber-300",
+        "border-amber-500/30 bg-orange-800/10 text-amber-700 dark:border-orange-800/40 dark:text-orange-800",
     },
     DAMAGE: {
       labelKey: "inventory-movement-DAMAGE",

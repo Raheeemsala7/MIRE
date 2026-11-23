@@ -60,6 +60,7 @@ export async function checkoutAction(
     try {
       revalidateTag("orders", "default");
       revalidatePath("/[locale]/orders", "page");
+      revalidatePath("/[locale]/account/orders", "page");
       revalidatePath("/[locale]/admin/orders", "page");
     } catch {}
 

@@ -46,6 +46,8 @@ export async function updateOrderStatusAction(payload: {
       revalidateTag("orders", "default");
       revalidatePath("/[locale]/admin/orders", "page");
       revalidatePath(`/[locale]/admin/orders/${orderId}`, "page");
+      revalidatePath("/[locale]/orders", "page");
+      revalidatePath("/[locale]/account/orders", "page");
     } catch {}
 
     return {

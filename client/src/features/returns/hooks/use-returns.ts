@@ -15,7 +15,7 @@ export const returnQueryKeys = {
   details: () => [...returnQueryKeys.all, "detail"] as const,
   detail: (id: string) => [...returnQueryKeys.details(), id] as const,
   stats: () => [...returnQueryKeys.all, "stats"] as const,
-  deliveredOrders: () => ["customer-delivered-orders"] as const,
+  deliveredOrders: (userId?: string) => ["customer-delivered-orders", userId ?? "me"] as const,
 };
 
 export function useReturns(

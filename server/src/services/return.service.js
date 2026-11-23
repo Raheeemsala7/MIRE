@@ -1,5 +1,7 @@
+const mongoose = require('mongoose');
 const { Return, ReturnStatuses } = require('../models/Return');
 const { Order, OrderStatuses } = require('../models/Order');
+const Customer = require('../models/Customer');
 const Notification = require('../models/Notification');
 const inventoryService = require('./inventory.service');
 const ApiError = require('../utils/apiError');
@@ -18,10 +20,40 @@ class ReturnService {
   /**
    * Request a new return (Storefront customer or Customer Support)
    */
-  async requestReturn({ originalOrderId, items, reason, reasonDetails, refundMethod, performedBy = null }) {
-    const order = await Order.findById(originalOrderId);
+  async requestReturn({ originalOrderId, items, reason, reasonDetails, refundMethod, performedBy = null, user = null }) {
+    const isObjectId = mongoose.Types.ObjectId.isValid(originalOrderId);
+    const order = isObjectId
+      ? await Order.findById(originalOrderId).populate('customer')
+      : await Order.findOne({ orderNumber: originalOrderId }).populate('customer');
+
     if (!order) {
       throw ApiError.notFound('Original order not found');
+    }
+
+    const orderUserId = order.user?._id?.toString() || order.user?.toString();
+    const customerUserId = order.customer?.user?._id?.toString() || order.customer?.user?.toString();
+    const currentUserId = user?._id?.toString();
+
+    // If order is linked to a registered account, caller MUST be authenticated as that user (or staff)
+    if (orderUserId || customerUserId) {
+      if (!user) {
+        throw ApiError.unauthorized('Authentication required to request a return for this order');
+      }
+
+      if (user.role === 'CUSTOMER') {
+        let isOwner = (orderUserId && orderUserId === currentUserId) ||
+                      (customerUserId && customerUserId === currentUserId);
+
+        if (!isOwner && order.customer) {
+          const custId = order.customer._id || order.customer;
+          const matchingCustomer = await Customer.findOne({ _id: custId, user: user._id });
+          isOwner = Boolean(matchingCustomer);
+        }
+
+        if (!isOwner) {
+          throw ApiError.forbidden('You are not authorized to request a return for this order');
+        }
+      }
     }
 
     if (order.status !== OrderStatuses.DELIVERED) {

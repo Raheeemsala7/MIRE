@@ -6,7 +6,8 @@ class ReturnController {
     try {
       const returnDoc = await returnService.requestReturn({
         ...req.body,
-        performedBy: req.user?._id || null
+        performedBy: req.user?._id || null,
+        user: req.user || null
       });
       return ApiResponse.created(res, {
         message: 'Return request submitted successfully',

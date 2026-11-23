@@ -48,12 +48,13 @@ export function CheckoutFlow() {
 
   const createOrderMutation = useCreateOrder(
     (createdOrder) => {
-      // Save order to localStorage for offline / guest access
+      // Save order to sessionStorage for in-tab confirmation (isolated from other users)
       try {
-        const stored = localStorage.getItem("mire-recent-orders");
+        localStorage.removeItem("mire-recent-orders");
+        const stored = sessionStorage.getItem("mire-recent-orders");
         const list = stored ? JSON.parse(stored) : [];
         list.unshift(createdOrder);
-        localStorage.setItem("mire-recent-orders", JSON.stringify(list.slice(0, 20)));
+        sessionStorage.setItem("mire-recent-orders", JSON.stringify(list.slice(0, 5)));
       } catch {}
 
       clearCart();
@@ -96,7 +97,8 @@ export function CheckoutFlow() {
   useEffect(() => {
     if (orderNumberParam && items.length === 0) {
       try {
-        const stored = localStorage.getItem("mire-recent-orders");
+        const stored = sessionStorage.getItem("mire-recent-orders") || localStorage.getItem("mire-recent-orders");
+        localStorage.removeItem("mire-recent-orders");
         const list = stored ? JSON.parse(stored) : [];
         const found = list.find((o: PlacedOrder) => o.orderNumber === orderNumberParam);
         if (found) {

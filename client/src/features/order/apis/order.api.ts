@@ -30,15 +30,47 @@ export async function getOrdersApi({
   }
 }
 
+export async function getCustomerOrderByIdApi(id: string): Promise<OrderDisplay | null> {
+  const cleanId = id.trim();
+  if (!cleanId) return null;
+
+  const token = await getNextAuthToken();
+  if (!token?.token) return null;
+
+  try {
+    const res = await fetch(`${API_URL}/orders/${encodeURIComponent(cleanId)}`, {
+      method: "GET",
+      headers: {
+        ...HEADERS.JsonBody,
+        ...HEADERS.authorize(token.token),
+      },
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+    if (res.ok && data?.success && data?.data) {
+      return data.data;
+    }
+    return null;
+  } catch (error) {
+    console.error("getCustomerOrderByIdApi error:", error);
+    return null;
+  }
+}
+
 export async function trackOrderApi(orderNumber: string): Promise<OrderDisplay | null> {
   const cleanNumber = orderNumber.trim();
   if (!cleanNumber) return null;
+
+  const token = await getNextAuthToken();
+  const authHeaders = token?.token ? HEADERS.authorize(token.token) : {};
 
   try {
     const res = await fetch(`${API_URL}/orders/track/${encodeURIComponent(cleanNumber)}`, {
       method: "GET",
       headers: {
         ...HEADERS.JsonBody,
+        ...authHeaders,
       },
       cache: "no-store",
     });

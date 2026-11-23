@@ -346,17 +346,39 @@ class OrderService {
     if (query.assignedEmployee) {
       filter.assignedEmployee = query.assignedEmployee;
     }
-    if (query.search) {
-      filter.$or = [
-        { orderNumber: { $regex: query.search, $options: 'i' } },
-        { 'customerInfo.fullName': { $regex: query.search, $options: 'i' } },
-        { 'customerInfo.phone': { $regex: query.search, $options: 'i' } }
-      ];
-    }
     if (query.startDate || query.endDate) {
       filter.createdAt = {};
       if (query.startDate) filter.createdAt.$gte = new Date(query.startDate);
       if (query.endDate) filter.createdAt.$lte = new Date(query.endDate);
+    }
+
+    const conditions = [];
+
+    // Ownership scoping: query.user restricts orders strictly to authenticated user
+    if (query.user) {
+      const customerIds = await Customer.find({ user: query.user }).distinct('_id');
+      conditions.push({
+        $or: [
+          { user: query.user },
+          ...(customerIds.length > 0 ? [{ customer: { $in: customerIds } }] : [])
+        ]
+      });
+    } else if (query.customer) {
+      conditions.push({ customer: query.customer });
+    }
+
+    if (query.search) {
+      conditions.push({
+        $or: [
+          { orderNumber: { $regex: query.search, $options: 'i' } },
+          { 'customerInfo.fullName': { $regex: query.search, $options: 'i' } },
+          { 'customerInfo.phone': { $regex: query.search, $options: 'i' } }
+        ]
+      });
+    }
+
+    if (conditions.length > 0) {
+      filter.$and = conditions;
     }
 
     const [orders, total] = await Promise.all([
@@ -391,8 +413,87 @@ class OrderService {
     return order;
   }
 
-  async trackOrder(orderNumber) {
-    return this.getOrderById(orderNumber);
+  async trackOrder(orderNumber, currentUser = null) {
+    const cleanNumber = String(orderNumber || '').trim();
+    if (!cleanNumber) {
+      throw ApiError.badRequest('Order number is required');
+    }
+
+    // Public tracking is strictly by orderNumber, never internal database ObjectId
+    const order = await Order.findOne({
+      orderNumber: new RegExp(`^${cleanNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
+    })
+      .populate('customer')
+      .populate('items.product', 'name images')
+      .lean();
+
+    if (!order) throw ApiError.notFound('Order not found');
+
+    const orderUserId = order.user?._id?.toString() || order.user?.toString();
+    const customerUserId = order.customer?.user?._id?.toString() || order.customer?.user?.toString();
+    const isRegisteredAccountOrder = Boolean(orderUserId || customerUserId);
+
+    // If order is linked to a registered customer account
+    if (isRegisteredAccountOrder) {
+      if (!currentUser) {
+        throw ApiError.unauthorized('Please log in to track orders associated with an account');
+      }
+
+      if (currentUser.role === 'CUSTOMER') {
+        const currentUserId = currentUser._id.toString();
+        let isOwner = (orderUserId && orderUserId === currentUserId) ||
+                      (customerUserId && customerUserId === currentUserId);
+
+        if (!isOwner && order.customer) {
+          const custId = order.customer._id || order.customer;
+          const matchingCustomer = await Customer.findOne({ _id: custId, user: currentUser._id });
+          isOwner = Boolean(matchingCustomer);
+        }
+
+        if (!isOwner) {
+          throw ApiError.forbidden('You are not authorized to track this order');
+        }
+      }
+    }
+
+    // Sanitize tracking data - NEVER expose internal notes, staff info, or private PII
+    return {
+      _id: currentUser ? order._id : undefined,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      createdAt: order.createdAt,
+      statusHistory: (order.statusHistory || []).map((h) => ({
+        status: h.status,
+        timestamp: h.timestamp,
+        reason: h.reason
+      })),
+      shippingAddress: {
+        city: order.shippingAddress?.city,
+        governorate: order.shippingAddress?.governorate
+      },
+      items: (order.items || []).map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+        color: item.color,
+        size: item.size,
+        unitPrice: currentUser ? item.unitPrice : undefined,
+        subtotal: currentUser ? item.subtotal : undefined,
+        image: item.product?.images?.[0] || undefined
+      })),
+      pricing: currentUser
+        ? {
+            subtotal: order.pricing?.subtotal,
+            shippingFee: order.pricing?.shippingFee,
+            totalAmount: order.pricing?.totalAmount
+          }
+        : undefined,
+      paymentInfo: currentUser
+        ? {
+            method: order.paymentInfo?.method,
+            status: order.paymentInfo?.status
+          }
+        : undefined
+    };
   }
 
   /**

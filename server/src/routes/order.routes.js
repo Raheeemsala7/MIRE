@@ -160,7 +160,7 @@ router.patch(
  *       200:
  *         description: Live order tracking details
  */
-router.get('/track/:orderNumber', orderController.trackOrder.bind(orderController));
+router.get('/track/:orderNumber', optionalAuth, orderController.trackOrder.bind(orderController));
 
 /**
  * @swagger

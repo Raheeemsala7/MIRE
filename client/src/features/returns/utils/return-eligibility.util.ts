@@ -44,6 +44,8 @@ export interface MinimalOrderForEligibility {
   status: string;
   customer?: string | { _id: string; id?: string } | null;
   customerId?: string | null;
+  user?: string | { _id: string; id?: string } | null;
+  userId?: string | null;
 }
 
 /**
@@ -103,8 +105,15 @@ export function canCustomerRequestReturn(
       typeof order.customer === "string"
         ? order.customer
         : order.customer?._id || order.customer?.id || order.customerId;
+    const orderUserId =
+      typeof order.user === "string"
+        ? order.user
+        : order.user?._id || order.user?.id || order.userId;
 
-    if (!orderCustomerId || String(orderCustomerId) !== String(currentUserId)) {
+    const matchesCustomer = orderCustomerId && String(orderCustomerId) === String(currentUserId);
+    const matchesUser = orderUserId && String(orderUserId) === String(currentUserId);
+
+    if (!matchesCustomer && !matchesUser) {
       return {
         eligible: false,
         reason: "ORDER_NOT_OWNED",

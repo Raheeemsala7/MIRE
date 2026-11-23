@@ -1,8 +1,17 @@
+import { clearBrowserQueryCache } from "@/shared/context/global/react-query-providers";
+
 /** Client-side helper to clear tokens and redirect to login when session expires */
 let isRedirecting = false;
 
 export function handleClientSessionExpired(locale: string = "ar") {
   if (typeof window === "undefined" || isRedirecting) return;
+
+  // Clear query cache and storage on session expiry
+  try {
+    clearBrowserQueryCache();
+    localStorage.removeItem("mire-recent-orders");
+    sessionStorage.removeItem("mire-recent-orders");
+  } catch {}
 
   // Best-effort client cookie deletion
   const cookieNames = [

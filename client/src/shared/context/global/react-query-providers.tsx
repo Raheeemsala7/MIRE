@@ -57,6 +57,12 @@ function makeQueryClient() {
 
 let browserQueryClient: QueryClient | undefined = undefined;
 
+export function clearBrowserQueryCache() {
+  if (browserQueryClient) {
+    browserQueryClient.clear();
+  }
+}
+
 function getQueryClient() {
   if (isServer) {
     // Server: always make a new query client

@@ -98,6 +98,7 @@ export async function submitReturnRequestAction(
 
     revalidatePath("/[locale]/account/returns", "page");
     revalidatePath("/[locale]/orders", "page");
+    revalidatePath("/[locale]/account/orders", "page");
 
     return response;
   } catch (error) {

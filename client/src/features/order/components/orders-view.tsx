@@ -24,7 +24,7 @@ import {
 import { useCartStore } from "@/src/shared/stores/cart-store";
 import { OrderTrackingTimeline } from "@/shared/components/order-tracking-timeline";
 import { toast } from "sonner";
-import { trackPublicOrderAction } from "../apis/order.action";
+import { searchCustomerOrderAction } from "../apis/order.action";
 import { canCustomerRequestReturn } from "@/features/returns/utils/return-eligibility.util";
 
 interface OrderItem {
@@ -125,26 +125,10 @@ export function OrdersView({
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Merge client guest orders from localStorage once mounted
+  // Sync with server-provided orders (never merge unauthenticated localStorage data)
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("mire-recent-orders");
-      if (stored) {
-        const localOrders: OrderDisplay[] = JSON.parse(stored);
-        if (localOrders.length > 0) {
-          setOrders((prev) => {
-            const combined = [...localOrders];
-            for (const so of prev) {
-              if (!combined.some((o) => o.orderNumber === so.orderNumber)) {
-                combined.push(so);
-              }
-            }
-            return combined;
-          });
-        }
-      }
-    } catch {}
-  }, []);
+    setOrders(initialOrders);
+  }, [initialOrders]);
 
   const handleCopyOrderNumber = (num: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -195,22 +179,22 @@ export function OrdersView({
       return;
     }
 
-    // Otherwise query tracking via Server Action
+    // Query backend for this customer's own order
     try {
-      const res = await trackPublicOrderAction(query);
+      const res = await searchCustomerOrderAction(query);
       if (res.success && res.data) {
         setSearchedOrder(res.data as any);
       } else {
         setSearchError(
           res.error ||
             (isAr
-              ? "لم نتمكن من العثور على طلب بهذا الرقم، يرجى التأكد والمحاولة مجدداً"
-              : "No order found with this tracking number")
+              ? "لم يتم العثور على طلب بهذا الرقم في حسابكِ، يرجى التأكد والمحاولة مجدداً"
+              : "No order found with this tracking number in your account")
         );
       }
     } catch {
       setSearchError(
-        isAr ? "تعذر الاتصال بخدمة التتبع حالياً" : "Tracking service temporarily unavailable"
+        isAr ? "تعذر البحث عن الطلب حالياً" : "Order search temporarily unavailable"
       );
     } finally {
       setSearchLoading(false);
@@ -664,12 +648,18 @@ export function OrdersView({
             <div className="mt-8 flex flex-col items-center justify-center rounded-3xl border border-dashed border-ds-border-muted bg-ds-elevated/40 p-12 text-center max-w-md mx-auto">
               <Package className="size-12 text-ds-text-soft stroke-[1.5]" />
               <h2 className="mt-4 font-serif text-xl font-semibold text-ds-text-plain">
-                {activeTab === "active"
+                {orders.length === 0
+                  ? isAr ? "لا توجد طلبات حتى الآن" : "No Orders Yet"
+                  : activeTab === "active"
                   ? isAr ? "لا توجد طلبات جارية حالياً" : "No active orders right now"
                   : isAr ? "لا توجد طلبات مكتملة سابقة" : "No completed orders yet"}
               </h2>
               <p className="mt-2 text-xs text-ds-text-muted max-w-xs leading-relaxed">
-                {activeTab === "active"
+                {orders.length === 0
+                  ? isAr
+                    ? "لم تقم بإجراء أي طلبات بعد. تصفح منتجاتنا وابدأ التسوق."
+                    : "You haven't placed any orders yet. Explore our products and start shopping."
+                  : activeTab === "active"
                   ? isAr
                     ? "عند إتمام أي طلب جديد، ستتمكنين من متابعة مراحل التجهيز والتوصيل هنا خطوة بخطوة."
                     : "When you place an order, its live preparation and shipping timeline will appear here."
